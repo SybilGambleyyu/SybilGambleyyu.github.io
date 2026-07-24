@@ -12,7 +12,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name and Excel-table definition changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
-For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
+For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE array outputs, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
 
 ```bash
 formulafence check approved.xlsx candidate.xlsx \
@@ -33,6 +33,7 @@ rules:
   no_new_dynamic_references: true
   no_new_spill_references: true
   no_new_implicit_intersections: true
+  no_array_formula_semantics_changes: true
   no_new_tokenization_failures: true
   no_table_definition_changes: true
   no_3d_reference_scope_changes: true
@@ -58,9 +59,11 @@ Version 0.10.0 traces the anchor behind a direct internal spill reference such a
 
 Version 0.11.0 makes the adjacent implicit-intersection boundary visible. Excel’s `@` operator can reduce a range or array to one value, and Excel-compatible files persist the unusual mixed cases as `_xlfn.SINGLE(...)`. When that wrapper contains one direct static A1 cell or range with an unambiguous row/column intersection, FormulaFence adds only the selected cell edge: `=_xlfn.SINGLE(Inputs!B2:B4)` in row 3 depends on `Inputs!B3`, not every cell in the range. It records literal `@A1:A3`, `@` applied to function results, and stored `SINGLE()` forms; a new use emits `FF017`, and `no_new_implicit_intersections` can require review. Function results retain their visible static inputs without being evaluated, and context-dependent formula-defined names remain unresolved. This is distinct from table `[@Column]` syntax. The scope follows Microsoft’s [implicit-intersection guidance](https://support.microsoft.com/en-us/excel/implicit-intersection-operator), its [Formula versus Formula2 documentation](https://learn.microsoft.com/en-us/office/vba/excel/concepts/cells-and-ranges/range-formula-vs-formula2), and [XlsxWriter’s OOXML guidance](https://xlsxwriter.readthedocs.io/working_with_formulas.html).
 
+Version 0.12.0 closes a quieter graph gap in old but still material models. A legacy CSE formula can declare a fixed result range such as `B1:B3`, while the formula itself is stored only at `B1`. A downstream `=B2*10` or `=SUM(B2:B3)` therefore looks disconnected unless the tool understands the result members. FormulaFence now keeps that fixed range compact and links its anchor to known formulas that read its members, so input changes reach those consumers without creating one virtual node per output cell. It distinguishes this from a dynamic array using the workbook’s dynamic-array metadata: the profile records that anchor, but never treats a current spill size as a permanent dependency. Unrecognized metadata remains a coverage warning rather than a guess. The release also emits `FF018` when array mode or a fixed CSE output range changes; `no_array_formula_semantics_changes` makes that a CI boundary. The behavior follows [Microsoft’s distinction between dynamic and legacy arrays](https://support.microsoft.com/en-us/excel/dynamic-array-formulas-and-spilled-array-behavior) and [XlsxWriter’s documented storage forms](https://xlsxwriter.readthedocs.io/working_with_formulas.html).
+
 It now traces common row-scoped forms without turning a row calculation into a dependency on every row of a table. Inside a table data cell, `[@[Sales Amount]]` and `[Sales Amount]` bind to that row. Qualified forms such as `Sales[@Amount]` and `Sales[[#This Row],[Amount]:[Rate]]` bind to the named table's data row even from an adjacent cell. That follows [Excel's documented structured-reference semantics](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables); header, total, cross-sheet, ambiguous, and complex bracket-escape cases remain coverage notes instead of guessed dependency paths.
 
-One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, explicit implicit intersection, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, `no_new_implicit_intersections`, or `no_new_tokenization_failures`.
+One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, explicit implicit intersection, dynamic and unclassified array anchors, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, `no_new_implicit_intersections`, `no_array_formula_semantics_changes`, or `no_new_tokenization_failures`.
 
 ## Test beyond toy files
 
@@ -78,4 +81,4 @@ FormulaFence does not calculate Excel or prove a financial model correct. Materi
 
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [FormulaFence 0.11.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.11.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.12.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.12.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
