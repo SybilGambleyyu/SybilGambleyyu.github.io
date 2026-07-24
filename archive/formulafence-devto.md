@@ -40,9 +40,11 @@ protected_cells:
 
 ## Fail closed when the analysis has a blind spot
 
-FormulaFence 0.4.0 resolves ordinary workbook and sheet-local names with static A1 destinations, plus a conservative set of fully qualified Excel-table references: table names, static columns or contiguous column ranges, and `#All`/`#Data`/`#Headers`/`#Totals` regions. Profiles inventory the table definitions behind those references, and a diff emits `FF013` if one changes; `no_table_definition_changes` can make that a hard boundary.
+FormulaFence 0.5.0 resolves ordinary workbook and sheet-local names with static A1 destinations, plus a conservative set of Excel-table references: table names, static columns or contiguous column ranges, and `#All`/`#Data`/`#Headers`/`#Totals` regions. Profiles inventory the table definitions behind those references, and a diff emits `FF013` if one changes; `no_table_definition_changes` can make that a hard boundary.
 
-One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens and dynamic reference functions; a change can be rejected with `no_new_unresolved_references` or `no_new_dynamic_references`. This-row (`@`) and complex table syntax remain coverage notes rather than guessed dependencies.
+It now traces common row-scoped forms without turning a row calculation into a dependency on every row of a table. Inside a table data cell, `[@[Sales Amount]]` and `[Sales Amount]` bind to that row. Qualified forms such as `Sales[@Amount]` and `Sales[[#This Row],[Amount]:[Rate]]` bind to the named table's data row even from an adjacent cell. That follows [Excel's documented structured-reference semantics](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables); header, total, cross-sheet, ambiguous, and complex bracket-escape cases remain coverage notes instead of guessed dependency paths.
+
+One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens and dynamic reference functions; a change can be rejected with `no_new_unresolved_references` or `no_new_dynamic_references`.
 
 ## Test beyond toy files
 
@@ -50,7 +52,7 @@ Unit fixtures are necessary, but an Office-file reader also needs to meet real w
 
 The inspection found an unsupported OOXML extension and recorded it as a structured coverage note instead of leaking a raw dependency warning into CI output. It also identified 36 cells using `INDIRECT`, making the model’s dynamic-reference surface explicit. On a local, non-distributed copy, replacing one exit-waterfall formula with a number traced 330 downstream formula cells; the starter policy rejected both the formula override and the impact limit.
 
-I also checked a public structured-reference workbook: FormulaFence identified its one table and 15 table-reference formulas with no unresolved tokens. Changing one table data cell on a local copy traced 16 downstream formulas, including a table total and an output outside the table.
+I also checked a public structured-reference workbook: FormulaFence identified its one table and 15 table-reference formulas with no unresolved tokens. Changing one table data cell on a local copy traced 16 downstream formulas, including a table total and an output outside the table. For the new row-scoped logic, a controlled workbook changed one input and traced exactly its calculated-row cell, a neighboring qualified row-reference cell, and an external summary—without marking the other two table rows. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) describes the boundary and evidence.
 
 Those results are a compatibility demonstration, not a claim that the source model is correct. The full limits and validation record are in the [FormulaFence repository](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md).
 
@@ -60,4 +62,4 @@ FormulaFence does not calculate Excel or prove a financial model correct. Materi
 
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [FormulaFence 0.4.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.4.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.5.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.5.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
