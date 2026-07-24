@@ -1,9 +1,9 @@
 name: Deploy static site to GitHub Pages
 
-# This manual-only bootstrap is deliberately committed before Pages switches to
-# workflow publishing. The normal push trigger is enabled after the first
-# workflow deployment proves the migration.
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -25,11 +25,11 @@ jobs:
       - name: Check out site
         uses: actions/checkout@v6
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: .
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
