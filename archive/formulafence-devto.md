@@ -31,6 +31,9 @@ rules:
   no_new_parser_warnings: true
   no_new_unresolved_references: true
   no_new_dynamic_references: true
+  no_new_spill_references: true
+  no_new_implicit_intersections: true
+  no_new_tokenization_failures: true
   no_table_definition_changes: true
   no_3d_reference_scope_changes: true
   max_downstream_impact: 100
@@ -53,9 +56,11 @@ Version 0.9.0 follows a named `LAMBDA` only when its whole definition is static 
 
 Version 0.10.0 traces the anchor behind a direct internal spill reference such as `=SUM(A1#)` or its stored OOXML form `=SUM(_xlfn.ANCHORARRAY(A1))`. The anchor edge captures changes to its formula and visible upstream inputs; profiles retain the spill token, and `FF015`/`no_new_spill_references` let CI make the partial boundary explicit. It does not invent a dynamic spill extent or dependency on every possible blocker, so external, 3-D, range, named, implicit-intersection, and malformed spill forms stay visible limits. A spill-bearing formula-defined name remains unresolved at its caller. This follows Excel's [spilled-range operator](https://support.microsoft.com/en-us/excel/guidelines-and-examples-of-array-formulas), while recognizing the OOXML spelling used by [Excel-compatible writers](https://xlsxwriter.readthedocs.io/working_with_formulas.html). A formula the underlying tokenizer cannot inspect is now listed by location and emits `FF016`; `no_new_tokenization_failures` can make that a CI boundary too.
 
+Version 0.11.0 makes the adjacent implicit-intersection boundary visible. Excel’s `@` operator can reduce a range or array to one value, and Excel-compatible files persist the unusual mixed cases as `_xlfn.SINGLE(...)`. When that wrapper contains one direct static A1 cell or range with an unambiguous row/column intersection, FormulaFence adds only the selected cell edge: `=_xlfn.SINGLE(Inputs!B2:B4)` in row 3 depends on `Inputs!B3`, not every cell in the range. It records literal `@A1:A3`, `@` applied to function results, and stored `SINGLE()` forms; a new use emits `FF017`, and `no_new_implicit_intersections` can require review. Function results retain their visible static inputs without being evaluated, and context-dependent formula-defined names remain unresolved. This is distinct from table `[@Column]` syntax. The scope follows Microsoft’s [implicit-intersection guidance](https://support.microsoft.com/en-us/excel/implicit-intersection-operator), its [Formula versus Formula2 documentation](https://learn.microsoft.com/en-us/office/vba/excel/concepts/cells-and-ranges/range-formula-vs-formula2), and [XlsxWriter’s OOXML guidance](https://xlsxwriter.readthedocs.io/working_with_formulas.html).
+
 It now traces common row-scoped forms without turning a row calculation into a dependency on every row of a table. Inside a table data cell, `[@[Sales Amount]]` and `[Sales Amount]` bind to that row. Qualified forms such as `Sales[@Amount]` and `Sales[[#This Row],[Amount]:[Rate]]` bind to the named table's data row even from an adjacent cell. That follows [Excel's documented structured-reference semantics](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables); header, total, cross-sheet, ambiguous, and complex bracket-escape cases remain coverage notes instead of guessed dependency paths.
 
-One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, or `no_new_tokenization_failures`.
+One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, explicit implicit intersection, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, `no_new_implicit_intersections`, or `no_new_tokenization_failures`.
 
 ## Test beyond toy files
 
@@ -69,8 +74,8 @@ Those results are a compatibility demonstration, not a claim that the source mod
 
 ## What it does not claim
 
-FormulaFence does not calculate Excel or prove a financial model correct. Material models still need a qualified owner, recalculation in the approved spreadsheet engine, and independent review. Relative, cyclic, external, and tokenizer-unsupported name definitions, unsupported or ambiguous table syntax, spill extents and blocking cells, non-static named LAMBDAs, arbitrary custom functions, and features such as `INDIRECT` remain coverage limits rather than guessed graph edges.
+FormulaFence does not calculate Excel or prove a financial model correct. Material models still need a qualified owner, recalculation in the approved spreadsheet engine, and independent review. Relative, cyclic, external, and tokenizer-unsupported name definitions, unsupported or ambiguous table syntax, spill extents and blocking cells, non-static named LAMBDAs, arbitrary custom functions, complex implicit-intersection expressions, and features such as `INDIRECT` remain coverage limits rather than guessed graph edges.
 
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [FormulaFence 0.10.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.10.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.11.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.11.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
