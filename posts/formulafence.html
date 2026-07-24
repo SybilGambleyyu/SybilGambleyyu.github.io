@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Why spreadsheet changes deserve a real CI boundary, and how FormulaFence approaches it.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/formulafence.html">
+    <meta property="og:title" content="Spreadsheet changes that can pass CI">
+    <meta property="og:description" content="Why spreadsheet changes deserve a real CI boundary, and how FormulaFence approaches it.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/formulafence.html">
+    <title>Spreadsheet changes that can pass CI — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Field note · July 24, 2026</p>
+      <h1>Spreadsheet changes that can pass CI</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence on GitHub</a></p>
+
+      <p>For important spreadsheets, the painful question is rarely “which file changed?” It is “did someone replace the calculation behind this number, what now depends on it, and did we notice before the model was shared?” Excel is flexible precisely because the model and its logic live together. That flexibility turns ordinary version history into a weak review surface: Git sees a binary file, while a reviewer needs to see a change in intent.</p>
+
+      <p><a href="https://www.xltrail.com/git-xl">Workbook-aware Git diffs</a> and <a href="https://www.microsoft.com/en-us/research/publication/excelint-automatically-finding-spreadsheet-formula-errors/">formula anomaly analysis</a> already address valuable parts of the problem. I wanted the missing merge-boundary layer: a small, local tool that could describe a semantic workbook change, trace its visible consequences, and enforce a rule that a reviewer can read.</p>
+
+      <h2>The merge boundary is where trust gets practical</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> compares two <code>.xlsx</code> or <code>.xlsm</code> workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility and defined-name changes, explicit external references, broken <code>#REF!</code> formulas, calculation-setting changes, and macro payload changes. For each changed cell, it follows statically visible A1-style dependencies and reports downstream formula cells.</p>
+
+      <pre><code>formulafence check approved.xlsx candidate.xlsx \
+  --policy formulafence.yml \
+  --format sarif --output results.sarif</code></pre>
+
+      <p>The policy is intentionally plain YAML. It can protect an output cell, confine routine edits to an input range, ban formula overrides, and cap downstream impact. A policy is not a substitute for judgment. It is a way to make the review expectation visible and repeatable.</p>
+
+      <div class="callout">
+        <strong>One useful property: the tool fails closed on uncertainty.</strong>
+        <p>When the underlying workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds such a warning can be rejected with <code>no_new_parser_warnings</code>.</p>
+      </div>
+
+      <h2>Testing the uncomfortable case</h2>
+
+      <p>A synthetic workbook is necessary for unit tests, but it is not enough for a file reader. I validated the profile path against the public <a href="https://github.com/foresighthq/cap-table-tool">Foresight Cap Table and Exit Waterfall Tool</a>, an 18-sheet workbook containing 6,623 non-empty cells and 4,228 formula cells. The inspection surfaced an unsupported OOXML extension as a structured coverage note rather than allowing a raw dependency warning to pollute CI output.</p>
+
+      <p>On a local, non-distributed copy, changing one exit-waterfall formula to a number produced a formula-to-value finding and traced 330 downstream formula cells. The starter policy rejected both the override and its impact. The details and constraints are recorded in the project’s <a href="https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md">validation notes</a>.</p>
+
+      <h2>What it does not claim</h2>
+
+      <p>FormulaFence does not calculate Excel, prove a financial model correct, or resolve every dynamic reference. Functions such as <code>INDIRECT</code>, named formulas, structured table references, and other Excel features can hide dependencies from static analysis. It calls that out rather than inventing a graph it cannot justify. Material models still need a qualified owner, a recalculation path in the approved spreadsheet engine, and independent review.</p>
+
+      <p>The first release is <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.1.1">available on GitHub</a> under MIT. If your team keeps significant logic in a workbook, I hope it makes the next change easier to understand before it becomes difficult to unwind.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
