@@ -30,7 +30,7 @@
 
       <h2>The merge boundary is where trust gets practical</h2>
 
-      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> compares two <code>.xlsx</code> or <code>.xlsm</code> workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility and defined-name changes, explicit external references, broken <code>#REF!</code> formulas, calculation-setting changes, and macro payload changes. For each changed cell, it follows statically visible A1-style dependencies and reports downstream formula cells with deterministic shortest-path samples.</p>
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> compares two <code>.xlsx</code> or <code>.xlsm</code> workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility and defined-name changes, explicit external references, broken <code>#REF!</code> formulas, calculation-setting changes, and macro payload changes. For each changed cell, it follows statically visible A1-style and ordinary named-range dependencies and reports downstream formula cells with deterministic shortest-path samples.</p>
 
       <pre><code>formulafence check approved.xlsx candidate.xlsx \
   --policy formulafence.yml \
@@ -39,21 +39,23 @@
       <p>The policy is intentionally plain YAML. It can protect an output cell, confine routine edits to an input range, ban formula overrides, and cap downstream impact. A policy is not a substitute for judgment. It is a way to make the review expectation visible and repeatable.</p>
 
       <div class="callout">
-        <strong>One useful property: the tool fails closed on uncertainty.</strong>
+        <strong>One useful property: uncertainty becomes a reviewable event.</strong>
         <p>When the underlying workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds such a warning can be rejected with <code>no_new_parser_warnings</code>.</p>
       </div>
 
+      <p>FormulaFence 0.3.0 resolves ordinary workbook and sheet-local names whose destinations are static A1 ranges, so those names no longer disappear from an impact path. It also makes the remaining blind spots concrete: profiles identify unresolved range tokens and dynamic <code>INDIRECT</code>/<code>OFFSET</code> formulas, while a diff can flag newly introduced instances. Teams that need a strict boundary can enable <code>no_new_unresolved_references</code> and <code>no_new_dynamic_references</code> in policy.</p>
+
       <h2>Testing the uncomfortable case</h2>
 
-      <p>A synthetic workbook is necessary for unit tests, but it is not enough for a file reader. I validated the profile path against the public <a href="https://github.com/foresighthq/cap-table-tool">Foresight Cap Table and Exit Waterfall Tool</a>, an 18-sheet workbook containing 6,623 non-empty cells and 4,228 formula cells. The inspection surfaced an unsupported OOXML extension as a structured coverage note rather than allowing a raw dependency warning to pollute CI output.</p>
+      <p>A synthetic workbook is necessary for unit tests, but it is not enough for a file reader. I validated the profile path against the public <a href="https://github.com/foresighthq/cap-table-tool">Foresight Cap Table and Exit Waterfall Tool</a>, an 18-sheet workbook containing 6,623 non-empty cells and 4,228 formula cells. The inspection surfaced an unsupported OOXML extension as a structured coverage note rather than allowing a raw dependency warning to pollute CI output. It also identified 36 cells using <code>INDIRECT</code>, making a real model’s dynamic-reference surface visible without pretending to calculate it.</p>
 
       <p>On a local, non-distributed copy, changing one exit-waterfall formula to a number produced a formula-to-value finding and traced 330 downstream formula cells. The starter policy rejected both the override and its impact. The details and constraints are recorded in the project’s <a href="https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md">validation notes</a>.</p>
 
       <h2>What it does not claim</h2>
 
-      <p>FormulaFence does not calculate Excel, prove a financial model correct, or resolve every dynamic reference. Functions such as <code>INDIRECT</code>, named formulas, structured table references, and other Excel features can hide dependencies from static analysis. It calls that out rather than inventing a graph it cannot justify. Material models still need a qualified owner, a recalculation path in the approved spreadsheet engine, and independent review.</p>
+      <p>FormulaFence does not calculate Excel, prove a financial model correct, or resolve every dynamic reference. Named formulas, structured table references, and features such as <code>INDIRECT</code> can still hide dependencies from static analysis. It calls that out rather than inventing a graph it cannot justify. Material models still need a qualified owner, a recalculation path in the approved spreadsheet engine, and independent review.</p>
 
-      <p>The current release is <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.2.0">available on GitHub</a> under MIT. If your team keeps significant logic in a workbook, I hope it makes the next change easier to understand before it becomes difficult to unwind.</p>
+      <p>The current release is <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.3.0">FormulaFence 0.3.0 on GitHub</a> under MIT. If your team keeps significant logic in a workbook, I hope it makes the next change easier to understand before it becomes difficult to unwind.</p>
     </main>
     <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
   </body>

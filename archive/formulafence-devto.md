@@ -12,7 +12,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility and defined-name changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
-For every changed cell, it follows statically visible A1-style dependencies and reports downstream formula cells with deterministic shortest-path samples.
+For every changed cell, it follows statically visible A1-style and ordinary named-range dependencies and reports downstream formula cells with deterministic shortest-path samples.
 
 ```bash
 formulafence check approved.xlsx candidate.xlsx \
@@ -29,6 +29,8 @@ rules:
   no_new_external_links: true
   no_new_broken_references: true
   no_new_parser_warnings: true
+  no_new_unresolved_references: true
+  no_new_dynamic_references: true
   max_downstream_impact: 100
 
 protected_cells:
@@ -37,15 +39,15 @@ protected_cells:
 
 ## Fail closed when the analysis has a blind spot
 
-Static analysis has limits. `INDIRECT`, named formulas, structured table references, add-ins, and other Excel features can conceal dependencies. FormulaFence does not invent a graph it cannot justify.
+FormulaFence 0.3.0 resolves ordinary workbook and sheet-local names with static A1 destinations, so those references now participate in impact paths. Static analysis still has limits: `INDIRECT`, `OFFSET`, named formulas, structured table references, add-ins, and other Excel features can conceal dependencies. FormulaFence does not invent a graph it cannot justify.
 
-One practical safeguard is parser coverage. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`.
+One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles now also list unresolved range tokens and dynamic reference functions; a change can be rejected with `no_new_unresolved_references` or `no_new_dynamic_references`.
 
 ## Test beyond toy files
 
 Unit fixtures are necessary, but an Office-file reader also needs to meet real workbooks. I validated FormulaFence against the public [Foresight Cap Table and Exit Waterfall Tool](https://github.com/foresighthq/cap-table-tool): 18 sheets, 6,623 non-empty cells, and 4,228 formula cells.
 
-The inspection found an unsupported OOXML extension and recorded it as a structured coverage note instead of leaking a raw dependency warning into CI output. On a local, non-distributed copy, replacing one exit-waterfall formula with a number traced 330 downstream formula cells; the starter policy rejected both the formula override and the impact limit.
+The inspection found an unsupported OOXML extension and recorded it as a structured coverage note instead of leaking a raw dependency warning into CI output. It also identified 36 cells using `INDIRECT`, making the model’s dynamic-reference surface explicit. On a local, non-distributed copy, replacing one exit-waterfall formula with a number traced 330 downstream formula cells; the starter policy rejected both the formula override and the impact limit.
 
 Those results are a compatibility demonstration, not a claim that the source model is correct. The full limits and validation record are in the [FormulaFence repository](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md).
 
@@ -55,4 +57,4 @@ FormulaFence does not calculate Excel or prove a financial model correct. Materi
 
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [available on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.2.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.3.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.3.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
