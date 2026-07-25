@@ -10,7 +10,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 ## Put the control at the merge boundary
 
-FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, and cell number-format, cell-font, and cell-fill controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
+FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, and cell number-format, cell-font, cell-fill, and effective cell-alignment controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
@@ -50,10 +50,27 @@ described by the Open XML SDK
 Theme relationship and Microsoft’s
 [Theme-indexed formatting guidance](https://learn.microsoft.com/en-us/office/open-xml/spreadsheet/working-with-conditional-formatting).
 
-Install the exact 0.51.0 wheel with:
+FormulaFence 0.52.0 also guards effective cell alignment. An unchanged value,
+warning, or classification can be repositioned, rotated, wrapped, shrunk, or
+indented without an ordinary cell diff. FormulaFence compares raw
+`<alignment>` controls across base and cell XFs,
+`xfId`/`applyAlignment` inheritance, and direct cell, row,
+and column assignments. A material stored effective-control change emits
+`FF054`; `no_cell_alignment_changes` adds the fail-closed
+`FFP054` boundary. Profiles retain structural counts only: alignment
+values, style IDs, and targets stay private. Equivalent defaults,
+Boolean/integer spellings, inert `mergeCell`, inheritance, and
+column-range splitting stay quiet; malformed metadata becomes coverage
+evidence. This is stored-declaration comparison, not width/height,
+merged-layout, overflow, visibility, visual-style composition, or Excel
+rendering. The scope follows the OOXML
+[`alignment` form](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/e4ad6e3e-7702-4dbe-8c44-f5a4c686c440)
+and [style-`xf` inheritance](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/68362a4b-5589-4504-b566-e8154dce1de3).
+
+Install the exact 0.52.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.51.0/formulafence-0.51.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.52.0/formulafence-0.52.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -106,6 +123,11 @@ rules:
   no_worksheet_drawing_shape_changes: true
   no_ignored_error_changes: true
   no_named_sheet_view_changes: true
+  no_number_format_changes: true
+  no_cell_font_changes: true
+  no_cell_fill_changes: true
+  no_workbook_theme_changes: true
+  no_cell_alignment_changes: true
   no_worksheet_embedded_control_changes: true
   no_power_query_changes: true
   no_3d_reference_scope_changes: true
@@ -195,7 +217,7 @@ Version 0.42.0 closes the parallel non-cell display gap: an Excel worksheet can 
 
 It now traces common row-scoped forms without turning a row calculation into a dependency on every row of a table. Inside a table data cell, `[@[Sales Amount]]` and `[Sales Amount]` bind to that row. Qualified forms such as `Sales[@Amount]` and `Sales[[#This Row],[Amount]:[Rate]]` bind to the named table's data row even from an adjacent cell. That follows [Excel's documented structured-reference semantics](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables); header, total, cross-sheet, ambiguous, and complex bracket-escape cases remain coverage notes instead of guessed dependency paths.
 
-One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, explicit implicit intersection, dynamic and unclassified array anchors, observed dynamic output-member relationships, What-If Data Table, Scenario Manager, filter/sort/row and column visibility, ignored-error, Named Sheet View, cell number-format, cell-font, cell-fill, worksheet-cell hyperlink, and worksheet-sparkline control counts, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, `no_new_dynamic_array_output_references`, `no_new_implicit_intersections`, `no_array_formula_semantics_changes`, `no_data_validation_changes`, `no_conditional_formatting_changes`, `no_protection_changes`, `no_external_data_connection_changes`, `no_external_link_package_changes`, `no_xlm_macro_sheet_changes`, `no_ribbon_customization_changes`, `no_office_web_addin_changes`, `no_chart_definition_changes`, `no_pivot_table_definition_changes`, `no_slicer_timeline_cache_changes`, `no_power_pivot_data_model_changes`, `no_what_if_data_table_changes`, `no_scenario_manager_changes`, `no_filter_visibility_changes`, `no_ignored_error_changes`, `no_named_sheet_view_changes`, `no_number_format_changes`, `no_cell_font_changes`, `no_cell_fill_changes`, `no_cell_hyperlink_changes`, `no_worksheet_sparkline_changes`, `no_worksheet_embedded_control_changes`, `no_power_query_changes`, or `no_new_tokenization_failures`.
+One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, explicit implicit intersection, dynamic and unclassified array anchors, observed dynamic output-member relationships, What-If Data Table, Scenario Manager, filter/sort/row and column visibility, ignored-error, Named Sheet View, cell number-format, cell-font, cell-fill, effective cell-alignment, worksheet-cell hyperlink, and worksheet-sparkline control counts, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, `no_new_dynamic_array_output_references`, `no_new_implicit_intersections`, `no_array_formula_semantics_changes`, `no_data_validation_changes`, `no_conditional_formatting_changes`, `no_protection_changes`, `no_external_data_connection_changes`, `no_external_link_package_changes`, `no_xlm_macro_sheet_changes`, `no_ribbon_customization_changes`, `no_office_web_addin_changes`, `no_chart_definition_changes`, `no_pivot_table_definition_changes`, `no_slicer_timeline_cache_changes`, `no_power_pivot_data_model_changes`, `no_what_if_data_table_changes`, `no_scenario_manager_changes`, `no_filter_visibility_changes`, `no_ignored_error_changes`, `no_named_sheet_view_changes`, `no_number_format_changes`, `no_cell_font_changes`, `no_cell_fill_changes`, `no_workbook_theme_changes`, `no_cell_alignment_changes`, `no_cell_hyperlink_changes`, `no_worksheet_sparkline_changes`, `no_worksheet_embedded_control_changes`, `no_power_query_changes`, or `no_new_tokenization_failures`.
 
 Formula-cache profiles also expose only formula/cached/missing/type/malformed counts. A cache-only change yields `FF042`, while `no_formula_cached_result_changes` adds `FFP042` in CI; raw results, error text, digests, and locations stay out of Markdown, JSON, and SARIF.
 
@@ -231,6 +253,17 @@ over-budget metadata becomes visible coverage evidence. It compares stored
 controls only: it does not resolve effective styles, render a workbook,
 calculate contrast, decode images, fetch targets, or infer Excel client
 behavior.
+
+Cell-alignment profiles expose only aggregate default-definition, direct-cell,
+row, effective-cell, column, and malformed-metadata counts. A material stored
+effective control change yields `FF054`, while
+`no_cell_alignment_changes` adds `FFP054`; alignment values,
+style IDs, and locations remain out of Markdown, JSON, and SARIF. FormulaFence
+resolves base/cell XF inheritance and direct cell, row, and column assignments
+before comparison. Equivalent defaults, boolean/integer spelling, inert
+`mergeCell`, inheritance, and column-range splitting stay quiet;
+malformed metadata is visible coverage evidence. It compares stored declarations,
+not rendered layout or visibility.
 
 ## Test beyond toy files
 
@@ -323,6 +356,17 @@ metadata, bounded reads, redaction, and policy enforcement. This validates
 private static stored-control comparison, not effective-style resolution or
 rendering.
 
+For effective cell alignment, I profiled the independently maintained Open XML
+SDK [`Styles.xlsx` fixture](https://github.com/dotnet/Open-XML-SDK/blob/cd2b359ef824737edb93f1c6157c19551aae1e52/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/spreadsheet/Styles.xlsx).
+In a local raw-ZIP candidate, ordinary cells and formulas stayed fixed and only
+`xl/styles.xml` changed. A fresh 0.52.0 wheel emitted exactly
+`FF054`, and the starter policy added `FFP054`, without
+exposing changed alignment values, style IDs, or target cells. The suite covers
+direct, row, column, and default styles; `xfId`/`applyAlignment`;
+equivalent spelling; inert `mergeCell`; malformed metadata; redaction;
+and policy enforcement. This validates stored effective-declaration comparison,
+not rendered layout or visibility.
+
 ## What it does not claim
 
 FormulaFence does not calculate a saved formula result, decide whether it is
@@ -357,4 +401,9 @@ The 0.51 boundary adds stored workbook Theme controls, emitting `FF053` and
 effective styles, render cells/charts/drawings, calculate contrast, decode an
 image, fetch a target, or infer Excel client behavior.
 
-The current release is [FormulaFence 0.51.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.51.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.52 boundary adds effective cell-alignment controls, emitting `FF054`
+and `FFP054` under `no_cell_alignment_changes`; it resolves
+stored alignment inheritance but does not calculate width/height, merged layout,
+overflow, final visibility, visual-control composition, or Excel rendering.
+
+The current release is [FormulaFence 0.52.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.52.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
