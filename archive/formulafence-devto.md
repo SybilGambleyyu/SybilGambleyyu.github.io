@@ -16,6 +16,8 @@ It also compares character-level rich-text run presentation and phonetic-hint co
 
 It also follows non-chart worksheet DrawingML relationships for regular text-box shapes and nested groups, so a reviewer-facing warning cannot be moved, restyled, relinked, or quietly made less visible outside the cell grid without a review event.
 
+It also follows modern Excel threaded-comment and person package relationships, so a review instruction, reply, resolution, mention, or collaborator binding cannot silently change outside the worksheet grid.
+
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
 
 ```bash
@@ -220,6 +222,8 @@ For rich-text runs, I built a controlled shared-string package where a warning's
 
 For Worksheet DrawingML shapes, I generated a controlled XlsxWriter 3.2.9 text-box workbook where all cells and warning text stayed fixed while only the stored text-run colour in `xl/drawings/drawing1.xml` changed from black to white. The public 0.41.0 wheel returned zero changes; the fresh 0.42.0 wheel emitted exactly `FF044`, and the starter policy added `FFP044`. The report was checked not to reveal the text-box text, colours, non-visual name, or relationship ID. The suite also covers regular/group inventory, hyperlink-only changes, relationship and non-visual-ID normalization, malformed XML, budgets, and output redaction. This validates stored regular-shape declaration comparison, not DrawingML rendering, theme/contrast/visibility, text-link calculation, macro execution, target retrieval, media, or other drawing objects.
 
+For modern threaded comments, I built a controlled standard SpreadsheetML pair from a clean workbook, keeping ordinary cells, person records, thread/reply structure, timestamps, and mention bindings fixed while changing only one reply body in the threaded-comment part. The public 0.42.0 wheel returned zero changes; the fresh 0.43.0 wheel emitted exactly <code>FF045</code>, and the starter policy added <code>FFP045</code>. The report was checked not to reveal comment text, a cell reference, a timestamp, an email-like identity, or raw GUIDs. The suite also checks schema-correct mentions, consistent ID rewrites, unsafe relationships, malformed parts, scan budgets, and output redaction. This validates static stored-declaration comparison and privacy boundaries, not collaboration behavior, notification delivery, rendering, account lookup, or cloud state.
+
 ## What it does not claim
 
 FormulaFence does not calculate a saved formula result, decide whether it is
@@ -231,6 +235,8 @@ The 0.41 boundary narrows the stored rich-text part of that list: it compares ch
 
 The 0.42 boundary narrows the worksheet-drawing part of that list: it compares stored regular `xdr:sp` and nested `xdr:grpSp` declarations, but does not render DrawingML, resolve theme/contrast/visibility, calculate a text link, execute a macro assignment, retrieve a target, or inspect pictures, connectors, graphic frames, SmartArt, media, or other non-regular drawing objects.
 
+The 0.43 boundary narrows the modern-comment part of that list: it compares stored threaded-comment/person package declarations privately, but does not render comments, resolve people or permissions, send notifications, retrieve cloud state, decide client visibility, or inspect legacy notes and placeholders.
+
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [FormulaFence 0.42.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.42.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.43.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.43.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
