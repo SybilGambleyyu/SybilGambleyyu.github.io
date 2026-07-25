@@ -32,10 +32,28 @@ FormulaFence 0.49.0 also protects Excel rich-data controls. Rich Value Data can 
 
 FormulaFence 0.50.0 also protects persisted custom workbook data stores. Generic Custom XML and its properties, schema references, and relationships; workbook Custom Data Properties and opaque data; and document custom properties can retain add-in state or review-relevant values outside ordinary cells. FormulaFence reads those raw package parts using Microsoft’s [add-in state guidance](https://learn.microsoft.com/en-us/office/dev/add-ins/develop/persisting-add-in-state-and-settings) and [Custom Data](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/7c53f6f4-fea8-43f7-a4b0-ba6e14d0eb78)/[Custom Data Properties](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/1f4aa666-c966-4ecf-8399-28390399c891) definitions. A material stored-control change emits `FF052`; `no_custom_data_store_changes` makes that a fail-closed `FFP052` boundary. Profiles retain aggregate part, property, schema, and relationship counts only: XML, schemas, property names and values, storage identities, opaque payloads, relationship IDs, and target contents stay private. Custom XML item IDs and Custom Data IDs are compared privately because an add-in can bind state to them; relationship IDs and document-property PIDs are normalized. Power Query’s `DataMashup` stays under its existing Power Query boundary. Missing, malformed, unsafe, unbound, unreadable, oversized, or over-budget metadata becomes coverage evidence. FormulaFence does not execute an add-in, refresh or interpret its data, fetch a target, or infer Excel client behavior.
 
-Install the exact 0.50.0 wheel with:
+FormulaFence 0.51.0 also guards the workbook-level DrawingML Theme. A Theme can
+change the colour, font, or effect schemes used by themed cells, charts, and
+drawing objects without changing a local cell style. FormulaFence reads the raw
+workbook Theme binding, transitional and strict Theme XML, and direct
+Theme-image relationships and bounded payloads before ordinary readers flatten
+that surface. A material stored-control change emits `FF053`;
+`no_workbook_theme_changes` adds the fail-closed `FFP053` boundary.
+Profiles expose aggregate Theme-part, scheme, relationship, image, and
+malformed-metadata counts only: Theme XML, colours, font names, image bytes,
+relationship IDs, and targets remain private. Writer-selected relationship
+IDs/order and equivalent internal target spelling stay quiet. FormulaFence does
+not resolve effective styles, render a workbook, calculate contrast, decode an
+image, fetch a target, or infer Excel client behavior. The stored surface is
+described by the Open XML SDK
+[WorkbookPart](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.packaging.workbookpart?view=openxml-2.20.0)
+Theme relationship and Microsoft’s
+[Theme-indexed formatting guidance](https://learn.microsoft.com/en-us/office/open-xml/spreadsheet/working-with-conditional-formatting).
+
+Install the exact 0.51.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.50.0/formulafence-0.50.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.51.0/formulafence-0.51.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -199,6 +217,21 @@ Rich-data profiles expose only safe part, rich-value, structure, linked-entity-s
 
 Custom-data-store profiles expose only aggregate custom XML, custom XML-property, schema-reference, relationship, custom-data-property, custom-data, and document-custom-property counts. A material stored declaration, opaque payload, or relationship change yields `FF052`, while `no_custom_data_store_changes` adds `FFP052`; XML, schemas, property names and values, storage identities, binary payloads, relationship IDs, and targets remain out of Markdown, JSON, and SARIF. FormulaFence compares Custom XML item IDs and Custom Data IDs privately, while normalizing relationship IDs and document-property PIDs; malformed, unsafe, unbound, unreadable, oversized, or over-budget metadata becomes coverage evidence. It does not execute an add-in, refresh or interpret its state, fetch a target, or infer Excel client behavior.
 
+Workbook Theme profiles expose only aggregate Theme-part, colour-scheme,
+font-scheme, format-scheme, relationship/external-relationship, image, and
+malformed-metadata counts. A material stored control or direct Theme-image
+payload change yields `FF053`, while `no_workbook_theme_changes` adds
+`FFP053`; Theme XML, scheme names, colour values, font names, image
+payloads, relationship IDs, and targets remain out of Markdown, JSON, and
+SARIF. FormulaFence reads raw workbook bindings, transitional and strict Theme
+XML, and direct Theme-image relationships before ordinary readers flatten the
+surface. Writer-selected relationship IDs/order and equivalent internal target
+spelling stay quiet; malformed, unsafe, unbound, unreadable, oversized, or
+over-budget metadata becomes visible coverage evidence. It compares stored
+controls only: it does not resolve effective styles, render a workbook,
+calculate contrast, decode images, fetch targets, or infer Excel client
+behavior.
+
 ## Test beyond toy files
 
 Unit fixtures are necessary, but an Office-file reader also needs to meet real workbooks. I validated FormulaFence against the public [Foresight Cap Table and Exit Waterfall Tool](https://github.com/foresighthq/cap-table-tool): 18 sheets, 6,623 non-empty cells, and 4,228 formula cells.
@@ -275,6 +308,21 @@ For rich data, I profiled the independently maintained [openxlsx-data `richData_
 
 For custom data stores, I profiled the independently maintained Open XML SDK [`NoExtDataE6.xlsx` fixture](https://github.com/dotnet/Open-XML-SDK/blob/cd2b359ef824737edb93f1c6157c19551aae1e52/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/spreadsheet/NoExtDataE6.xlsx): two custom XML items, two property parts, six schema references, two relationships, and two document custom properties, with no coverage warning. In a local raw-ZIP candidate, ordinary cells stayed equal and only `customXml/item2.xml` changed. A fresh 0.50.0 wheel emitted exactly `FF052`, and policy added `FFP052`, without exposing custom XML, schema material, property values, storage IDs, or relationship details. The suite also covers custom binary payloads, identity changes, relation-ID/PID normalization, malformed metadata, bounded reads, Power Query isolation, and output redaction. This validates private static stored-control comparison, not add-in execution, refresh, target retrieval, payload interpretation, or Excel client behavior.
 
+For workbook Themes, I profiled the independently maintained Open XML SDK
+[`Blank.xlsx` fixture](https://github.com/dotnet/Open-XML-SDK/blob/cd2b359ef824737edb93f1c6157c19551aae1e52/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/spreadsheet/Blank.xlsx):
+one workbook-bound Theme with one colour, font, and format scheme and no
+coverage warning. In a local raw-ZIP candidate, ordinary cells and formulas
+stayed fixed and only `xl/theme/theme1.xml` changed. A fresh 0.51.0
+wheel emitted exactly `FF053`, and the starter policy added `FFP053`,
+without exposing either Theme colour, the member name, or a relationship ID.
+The same wheel recognized the Open XML SDK’s strict-OOXML
+[`2D Rotation-O12-XL-OartEffects.xlsx` fixture](https://github.com/dotnet/Open-XML-SDK/blob/cd2b359ef824737edb93f1c6157c19551aae1e52/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O14ISOStrict/Excel/2D%20Rotation-O12-XL-OartEffects.xlsx)
+and emitted the same finding for its Theme-only mutation. The suite separately
+covers direct image payloads, relationship-ID normalization, malformed
+metadata, bounded reads, redaction, and policy enforcement. This validates
+private static stored-control comparison, not effective-style resolution or
+rendering.
+
 ## What it does not claim
 
 FormulaFence does not calculate a saved formula result, decide whether it is
@@ -304,4 +352,9 @@ The 0.49 boundary adds Excel rich-data declarations, emitting `FF051` and `FFP05
 
 The 0.50 boundary adds persisted custom workbook data stores, emitting `FF052` and `FFP052` under `no_custom_data_store_changes`, but it does not execute add-ins, refresh or interpret their state, fetch a target, or infer Excel client behavior.
 
-The current release is [FormulaFence 0.50.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.50.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.51 boundary adds stored workbook Theme controls, emitting `FF053` and
+`FFP053` under `no_workbook_theme_changes`, but it does not resolve
+effective styles, render cells/charts/drawings, calculate contrast, decode an
+image, fetch a target, or infer Excel client behavior.
+
+The current release is [FormulaFence 0.51.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.51.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
