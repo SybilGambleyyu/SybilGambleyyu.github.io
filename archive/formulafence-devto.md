@@ -10,7 +10,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 ## Put the control at the merge boundary
 
-FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, and cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, and worksheet print-layout controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
+FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, and cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
@@ -143,10 +143,25 @@ OOXML [`sheetFormatPr`](https://c-rex.net/samples/ooxml/e1/part4/OOXML_P4_DOCX_s
 and [`col`](https://c-rex.net/samples/ooxml/e1/part4/OOXML_P4_DOCX_col_topic_ID0ELFQ4.html)
 forms plus Microsoft's [`dyDescent` extension documentation](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/f11dfda4-46de-4035-8418-d76b0d3898f1).
 
-Install the exact 0.56.0 wheel with:
+FormulaFence 0.57.0 also guards native worksheet image controls. A floating
+DrawingML `xdr:pic`, direct worksheet `<picture>` background, or VML-backed
+header/footer watermark can alter a report while every ordinary cell remains
+unchanged. FormulaFence follows the relevant worksheet relationships, supports
+transitional and strict DrawingML, and compares private anchor/picture/VML
+declarations, relationship semantics, and bounded direct image-payload hashes.
+A material change emits `FF059`; `no_worksheet_image_changes` adds the
+fail-closed `FFP059` boundary. Profiles expose aggregate structural counts only:
+image bytes, names/descriptions, visual formatting, anchors, relationship IDs/
+targets, and raw XML stay private. Writer-selected non-visual/VML IDs and
+consistent relationship-ID rewrites stay quiet. This is a stored-package
+comparison, not image decoding/rendering, external retrieval, visibility,
+cropping/z-order, or pagination calculation. The scope follows Open XML's
+[`xdr:pic` Picture definition](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.spreadsheet.picture?view=openxml-3.0.1), Microsoft's [worksheet background guidance](https://support.microsoft.com/en-us/excel/add-or-remove-a-sheet-background), and [header/footer watermark guidance](https://support.microsoft.com/en-us/excel/get-started/add-a-watermark-in-excel). A fresh packaged wheel was exercised against independently maintained XlsxWriter picture, background, and watermark examples: replacing only direct media payload bytes emitted `FF059` and `FFP059` without exposing raw media paths in JSON, Markdown, or SARIF. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) has the exact artifacts and hashes.
+
+Install the exact 0.57.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.56.0/formulafence-0.56.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.57.0/formulafence-0.57.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -556,4 +571,6 @@ AutoFit, baseline-adjustment, and automatic-thick-border declarations privately
 but does not calculate final layout, AutoFit, wrapping/merged overflow, or
 automatic pagination.
 
-The current release is [FormulaFence 0.56.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.56.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.57 boundary adds native worksheet pictures, backgrounds, and header/footer watermarks, emitting `FF059` and `FFP059` under `no_worksheet_image_changes`; it compares stored bindings, declarations, and bounded payload hashes privately but does not decode/render media, fetch a target, or calculate final layout or pagination.
+
+The current release is [FormulaFence 0.57.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.57.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
