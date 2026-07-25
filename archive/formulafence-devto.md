@@ -24,6 +24,8 @@ FormulaFence 0.45.1 also protects ordinary worksheet-cell hyperlinks. A familiar
 
 FormulaFence 0.46.0 also protects Office 2010 worksheet sparklines. A compact trend can keep every ordinary cell fixed while its source formula, destination cell, type, axes, markers, hidden-data behavior, line weight, or colour controls change in the `x14:sparklineGroups` extension. FormulaFence compares those stored bindings and controls privately before the ordinary reader drops the extension. It emits `FF048` for a material change; `no_worksheet_sparkline_changes` makes that a fail-closed `FFP048` boundary. Profiles expose aggregate counts only: source/date-axis formulas, output cells, control values, and colours never appear in reports.
 
+FormulaFence 0.47.0 also protects SpreadsheetML XML Maps. An XML map can pair an embedded schema and map-level refresh/export behavior with XML table columns or individual cells, redirecting a field path, file/connection binding, target cell, or append/format/sort/validation setting while ordinary cells and formulas stay fixed. FormulaFence reads raw XML Map, table XML-column-property, and single-cell table parts and their workbook/worksheet relationships before ordinary readers normalize them. It emits `FF049` for a material declaration, binding, or relationship change; `no_xml_mapping_changes` makes that a fail-closed `FFP049` boundary. Profiles expose aggregate counts only: schemas, map names, XPath expressions, table identities, target cells, connection identities, and relationship targets never appear in reports. Equivalent Boolean and unsigned-integer spellings, relationship IDs/order, and equivalent internal target spelling stay quiet. Missing, malformed, unsafe, unbound, unreadable, oversized, or over-budget metadata becomes a visible coverage warning. FormulaFence does not import/export XML, validate XML data or schemas, open bindings, fetch data, calculate refresh results, or infer Excel client behavior.
+
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
 
 ```bash
@@ -68,6 +70,7 @@ rules:
   no_rich_text_run_changes: true
   no_cell_hyperlink_changes: true
   no_worksheet_sparkline_changes: true
+  no_xml_mapping_changes: true
   no_legacy_comment_changes: true
   no_worksheet_drawing_shape_changes: true
   no_ignored_error_changes: true
@@ -171,6 +174,8 @@ Worksheet-cell hyperlink profiles expose only safe worksheet/hyperlink, location
 
 Worksheet-sparkline profiles expose only safe worksheet/group/sparkline, source/date-axis-source, colour-control, and malformed-metadata counts. A material stored declaration change yields `FF048`, while `no_worksheet_sparkline_changes` adds `FFP048`; source formulas, destination cells, group controls, colours, and XML remain out of Markdown, JSON, and SARIF.
 
+SpreadsheetML XML Map profiles expose only safe map/schema/data-binding, file/connection, mapped-table, single-cell, and malformed-metadata counts. A material stored declaration or relationship change yields `FF049`, while `no_xml_mapping_changes` adds `FFP049`; schemas, map names, XPath expressions, table identities, target cells, connection identities, relationship targets, and XML remain out of Markdown, JSON, and SARIF.
+
 Worksheet DrawingML profiles expose only safe regular/group shape, anchor, text-run, macro/text-link/hyperlink, and relationship counts. A material supported-shape declaration change yields `FF044`, while `no_worksheet_drawing_shape_changes` adds `FFP044`; raw text, presentation, anchors, macro/formula material, identifiers, targets, and XML remain out of Markdown, JSON, and SARIF.
 
 The visibility inventory includes zero-sized row and column controls alongside filters, sorts, manually hidden dimensions, and outline state; the existing fail-closed visibility policy covers all of those static declarations.
@@ -243,6 +248,8 @@ For worksheet-cell hyperlinks, I built a controlled workbook pair where the frie
 
 For worksheet sparklines, I built a controlled XlsxWriter 3.2.9 workbook pair with a real Office 2010 line sparkline, marker, axis, custom min/max, date-axis, and colour controls. Ordinary cells stayed fixed and only `xl/worksheets/sheet1.xml` changed: one stored source range moved to another row. The public 0.45.1 wheel reported zero changes; the fresh 0.46.0 wheel emitted exactly `FF048`, and the policy added `FFP048`. The report was checked not to reveal either source, the date-axis source, output cell, or colour. The suite also covers source/style-only changes, normalization, malformed metadata, XML budgets, redaction, and composition with hyperlink reader isolation. This validates private static declaration comparison, not Excel calculation, sparkline rendering, source retrieval, or accessibility assessment.
 
+For XML Maps, I built a controlled OpenPyXL 3.1.5 and raw-ZIP workbook pair with a real map/schema/data binding, XML table-column property, single-cell XML table, and the required workbook/worksheet relationships. Ordinary cells, formulas, and every uncompressed package member except the mapped table field stayed fixed. The public 0.46.0 wheel returned zero changes; the fresh 0.47.0 wheel emitted exactly `FF049`, and the policy added `FFP049`. The report was checked not to reveal the schema, map name, XPath, table identity, target cell, connection identity, or relationship target. The suite also covers mapping and refresh changes, relationship rebinding, equivalent spelling, unsafe/malformed metadata, bounded reads, redaction, and ordinary-table isolation. This validates private static declarations, not XML import/export, schema/data validation, binding access, refresh, or Excel rendering.
+
 ## What it does not claim
 
 FormulaFence does not calculate a saved formula result, decide whether it is
@@ -262,6 +269,8 @@ The 0.45 boundary adds ordinary worksheet-cell hyperlink declarations and their 
 
 The 0.46 boundary adds Office 2010 worksheet-sparkline declarations, emitting `FF048` and `FFP048` under `no_worksheet_sparkline_changes`, but it does not calculate, render, resolve, fetch, or assess the accessibility of a sparkline source.
 
+The 0.47 boundary adds SpreadsheetML XML Map declarations, emitting `FF049` and `FFP049` under `no_xml_mapping_changes`, but it does not import/export XML, validate XML data or schemas, open bindings, fetch data, calculate refresh results, or infer Excel client behavior.
+
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [FormulaFence 0.46.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.46.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.47.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.47.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
