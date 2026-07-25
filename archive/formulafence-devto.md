@@ -28,10 +28,12 @@ FormulaFence 0.47.0 also protects SpreadsheetML XML Maps. An XML map can pair an
 
 FormulaFence 0.48.0 makes the separate package- and VBA-project signature-control surfaces reviewable. It follows the Open Packaging Convention’s [digital-signature origin](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/opc/open-packaging-conventions-overview) to XML signature and certificate relationships, and the VBA project relationship graph to classic, Agile, and V3 signature blobs. This complements—not replaces—Excel’s documented [code-signing trust prompt](https://learn.microsoft.com/en-us/troubleshoot/microsoft-365-apps/excel/digital-signatures-code-signing). A material stored-control change emits `FF050`; `no_digital_signature_changes` adds the fail-closed `FFP050` boundary. Profiles retain only aggregate origin, XML-signature, reference, embedded-certificate, certificate-part, and VBA-signature counts. Signature XML, reference URIs, digests, certificate material, relationship IDs, and binary signature payloads stay private. Equivalent relationship order/IDs, internal target spelling, and XMLDSIG Base64 whitespace stay quiet. Missing, duplicate, malformed, unsafe, unbound, unreadable, oversized, or over-budget data becomes coverage evidence; raw signature parts are bounded at 16 MiB each, 64 MiB total, and 512 parts. This is a provenance-control diff, not cryptographic verification. FormulaFence does not validate XMLDSIG transforms, references, digests, signature values, or signed-content coverage. It does not validate certificate-chain trust, identity, expiry, revocation, or timestamps. It does not establish that a VBA signature covers particular code or identify an authentic signer.
 
-Install the exact 0.48.0 wheel with:
+FormulaFence 0.49.0 also protects Excel rich-data controls. Rich Value Data can keep linked-entity values, provider-backed fields, web-image associations, and worksheet value-metadata bindings outside ordinary cells. FormulaFence reads raw [Rich Value Data](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/896934fd-8df7-43f4-b154-2d39371c270d), [Rich Value Structure](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/d90f6d91-d868-4b94-9d26-ec3b1492cec6), [Rich Value Types](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/5d213b66-3196-4516-b63c-eef80d926f4a), array, supporting property-bag, style, web-image, and rich-value-relationship parts; it also checks package/workbook relationships and `XLRICHVALUE` metadata bindings before normal readers can omit them. A material stored definition, value, binding, or relationship change emits `FF051`; `no_rich_data_changes` makes that a fail-closed `FFP051` boundary. Profiles retain aggregate part, value, structure, array, property-bag, binding, bound-cell, image, relationship, and external-reference counts only. Entity values, provider data, field names, identifiers, URLs, image references, relationship IDs, and bound-cell locations stay private. Equivalent relationship IDs/order and internal target spelling stay quiet. Missing, malformed, unsafe, unreadable, oversized, or over-budget data becomes coverage evidence. FormulaFence does not contact providers, refresh values, calculate formulas, fetch relationship targets, validate target content, or infer Excel client behavior.
+
+Install the exact 0.49.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.48.0/formulafence-0.48.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.49.0/formulafence-0.49.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -79,6 +81,7 @@ rules:
   no_cell_hyperlink_changes: true
   no_worksheet_sparkline_changes: true
   no_xml_mapping_changes: true
+  no_rich_data_changes: true
   no_legacy_comment_changes: true
   no_worksheet_drawing_shape_changes: true
   no_ignored_error_changes: true
@@ -190,6 +193,8 @@ Worksheet DrawingML profiles expose only safe regular/group shape, anchor, text-
 
 The visibility inventory includes zero-sized row and column controls alongside filters, sorts, manually hidden dimensions, and outline state; the existing fail-closed visibility policy covers all of those static declarations.
 
+Rich-data profiles expose only safe part, rich-value, structure, linked-entity-structure, array, supporting-property-bag, metadata-binding, bound-cell, web-image, relationship, external-reference, and malformed-metadata counts. A material stored definition, value, binding, or relationship change yields `FF051`, while `no_rich_data_changes` adds `FFP051`; entity values, provider data, field names, identifiers, URLs, image references, relationship IDs, bound-cell locations, and XML remain out of Markdown, JSON, and SARIF. FormulaFence reads raw rich-data parts and their package/workbook relationships before normal readers normalize them. Equivalent relationship IDs/order and internal target spelling stay quiet; malformed, unsafe, unreadable, oversized, or over-budget metadata becomes visible coverage evidence. It compares stored controls only: it does not contact providers, refresh values, calculate formulas, fetch relationship targets, validate target content, or infer Excel client behavior.
+
 ## Test beyond toy files
 
 Unit fixtures are necessary, but an Office-file reader also needs to meet real workbooks. I validated FormulaFence against the public [Foresight Cap Table and Exit Waterfall Tool](https://github.com/foresighthq/cap-table-tool): 18 sheets, 6,623 non-empty cells, and 4,228 formula cells.
@@ -262,6 +267,8 @@ For XML Maps, I built a controlled OpenPyXL 3.1.5 and raw-ZIP workbook pair with
 
 For digital-signature controls, I built an independent raw-ZIP workbook pair with a package signature origin, XMLDSIG envelope, linked certificate part, and classic, Agile, and V3 VBA signature blobs. Ordinary cells and formulas stayed fixed; only the linked certificate payload changed. The public 0.47.0 wheel returned zero changes; the fresh 0.48.0 wheel emitted exactly `FF050`, and policy added `FFP050`. The report was checked not to reveal a digest, signature value, certificate payload, relationship ID, or reference URI. The suite also covers package/VBA add, remove, and change cases; relationship rebinding; normalization; duplicate members; malformed or unsafe metadata; bounded reads; and profile redaction. This validates private static signature-control comparison, not any cryptographic, certificate, trust, or signer assertion.
 
+For rich data, I profiled the independently maintained [openxlsx-data `richData_datatypes.xlsx` fixture](https://github.com/JanMarvin/openxlsx-data/raw/main/richData_datatypes.xlsx). It exposed one each of the data, structure, type, array, supporting-property-bag, supporting-property-bag-structure, style, and web-image parts; 362 rich values; 10 structures; 6 linked-entity structures; 20 arrays; 4 property bags; 12 value-metadata bindings and bound cells; 6 web images; 12 external web-image relationship references; and no coverage warning. In a local raw-ZIP candidate, I changed only `xl/richData/rdrichvalue.xml`. The public 0.48.0 wheel returned zero changes; the fresh 0.49.0 wheel emitted exactly `FF051`, and the policy added `FFP051`. The report was checked not to reveal an entity value, provider field, URL, image reference, relationship ID, or bound-cell location. The suite also covers value, metadata-binding, and web-image-relationship changes; equivalent relationship spelling; malformed metadata; bounded reads; redaction; and ordinary-workbook isolation. This validates private static stored-control comparison, not provider contact, refresh, target retrieval, content validation, or Excel client behavior.
+
 ## What it does not claim
 
 FormulaFence does not calculate a saved formula result, decide whether it is
@@ -287,4 +294,6 @@ But a review process should at least make it hard to silently replace a formula 
 
 The 0.48 boundary adds package and VBA digital-signature-control declarations, emitting `FF050` and `FFP050` under `no_digital_signature_changes`, but it does not cryptographically validate XMLDSIG references, transforms, digests, signatures, certificate trust/identity/validity, timestamps, signed-content coverage, or VBA-code coverage.
 
-The current release is [FormulaFence 0.48.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.48.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.49 boundary adds Excel rich-data declarations, emitting `FF051` and `FFP051` under `no_rich_data_changes`, but it does not contact a provider, refresh a value, calculate a formula, fetch or validate a relationship target, resolve an entity, or infer Excel client behavior.
+
+The current release is [FormulaFence 0.49.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.49.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
