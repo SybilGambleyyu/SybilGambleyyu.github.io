@@ -14,6 +14,8 @@ FormulaFence compares two workbooks without executing formulas or macros. It det
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
+It also follows non-chart worksheet DrawingML relationships for regular text-box shapes and nested groups, so a reviewer-facing warning cannot be moved, restyled, relinked, or quietly made less visible outside the cell grid without a review event.
+
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
 
 ```bash
@@ -56,6 +58,7 @@ rules:
   no_filter_visibility_changes: true
   no_formula_cached_result_changes: true
   no_rich_text_run_changes: true
+  no_worksheet_drawing_shape_changes: true
   no_ignored_error_changes: true
   no_named_sheet_view_changes: true
   no_worksheet_embedded_control_changes: true
@@ -143,6 +146,8 @@ Version 0.40.0 closes a result-integrity gap that is easy to miss in manual-calc
 
 Version 0.41.0 closes a character-level display gap: SpreadsheetML can hold a cell's text in shared or inline rich-text runs, so the same concatenated text can hide a warning when a run's presentation changes. FormulaFence compares raw `<r>`/`<rPr>` controls and phonetic metadata from both storage forms, emits `FF043` for a material change, and lets `no_rich_text_run_changes` make it a fail-closed `FFP043` boundary. Profiles expose only rich-text cell/run/phonetic counts; text, colours, locations, shared-string indexes, and raw XML remain private. Equivalent property ordering, Boolean spelling, and shared-versus-inline storage do not create a finding; malformed or unsupported metadata becomes a coverage warning. This is static declaration comparison, not Excel rendering, theme resolution, contrast, visibility, font/fill interaction, or phonetic display. The boundary follows Microsoft's [shared-string guidance](https://learn.microsoft.com/en-us/office/open-xml/spreadsheet/working-with-the-shared-string-table) and the Open XML [rich-text run model](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.run?view=openxml-3.0.1).
 
+Version 0.42.0 closes the parallel non-cell display gap: an Excel worksheet can keep a warning in a DrawingML `xdr:sp` text box whose text, anchors, geometry, visual declaration, macro/text link, or click/hover relationship changes independently of any cell. FormulaFence follows the worksheet-to-drawing relationship, compares regular shapes and nested `xdr:grpSp` groups privately, and emits `FF044` for a material control change; `no_worksheet_drawing_shape_changes` makes it a fail-closed `FFP044` boundary. Profiles expose only structural worksheet/drawing/anchor, shape/text/group, text paragraph/run, macro/text-link/hyperlink, relationship, and malformed-control counts. Text, colours, geometry, descriptions, macro names, formulas, relationship IDs, targets, and XML stay private; non-visual IDs, relationship-ID rewrites, and colour-case noise stay quiet. The scope follows the Open XML [`xdr:sp` shape model](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.spreadsheet.shape?view=openxml-3.0.1) and the documented [XlsxWriter text-box surface](https://xlsxwriter.readthedocs.io/working_with_textboxes.html).
+
 It now traces common row-scoped forms without turning a row calculation into a dependency on every row of a table. Inside a table data cell, `[@[Sales Amount]]` and `[Sales Amount]` bind to that row. Qualified forms such as `Sales[@Amount]` and `Sales[[#This Row],[Amount]:[Rate]]` bind to the named table's data row even from an adjacent cell. That follows [Excel's documented structured-reference semantics](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables); header, total, cross-sheet, ambiguous, and complex bracket-escape cases remain coverage notes instead of guessed dependency paths.
 
 One practical safeguard is coverage visibility. When the workbook parser encounters an OOXML extension it cannot fully interpret, FormulaFence records a coverage note. A candidate that adds one can be rejected with `no_new_parser_warnings`. Profiles also list unresolved range tokens, dynamic reference functions, spill references, explicit implicit intersection, dynamic and unclassified array anchors, observed dynamic output-member relationships, What-If Data Table, Scenario Manager, filter/sort/row and column visibility, ignored-error, Named Sheet View, cell number-format, cell-font, and cell-fill control counts, and formulas the tokenizer could not inspect; a change can be rejected with `no_new_unresolved_references`, `no_new_dynamic_references`, `no_new_spill_references`, `no_new_dynamic_array_output_references`, `no_new_implicit_intersections`, `no_array_formula_semantics_changes`, `no_data_validation_changes`, `no_conditional_formatting_changes`, `no_protection_changes`, `no_external_data_connection_changes`, `no_external_link_package_changes`, `no_xlm_macro_sheet_changes`, `no_ribbon_customization_changes`, `no_office_web_addin_changes`, `no_chart_definition_changes`, `no_pivot_table_definition_changes`, `no_slicer_timeline_cache_changes`, `no_power_pivot_data_model_changes`, `no_what_if_data_table_changes`, `no_scenario_manager_changes`, `no_filter_visibility_changes`, `no_ignored_error_changes`, `no_named_sheet_view_changes`, `no_number_format_changes`, `no_cell_font_changes`, `no_cell_fill_changes`, `no_worksheet_embedded_control_changes`, `no_power_query_changes`, or `no_new_tokenization_failures`.
@@ -150,6 +155,8 @@ One practical safeguard is coverage visibility. When the workbook parser encount
 Formula-cache profiles also expose only formula/cached/missing/type/malformed counts. A cache-only change yields `FF042`, while `no_formula_cached_result_changes` adds `FFP042` in CI; raw results, error text, digests, and locations stay out of Markdown, JSON, and SARIF.
 
 Rich-text profiles expose only shared/inline rich-text cell and run counts plus phonetic metadata counts. A material presentation-control change yields `FF043`, while `no_rich_text_run_changes` adds `FFP043` in CI; raw text, colours, locations, indexes, and XML stay out of Markdown, JSON, and SARIF.
+
+Worksheet DrawingML profiles expose only safe regular/group shape, anchor, text-run, macro/text-link/hyperlink, and relationship counts. A material supported-shape declaration change yields `FF044`, while `no_worksheet_drawing_shape_changes` adds `FFP044`; raw text, presentation, anchors, macro/formula material, identifiers, targets, and XML remain out of Markdown, JSON, and SARIF.
 
 The visibility inventory includes zero-sized row and column controls alongside filters, sorts, manually hidden dimensions, and outline state; the existing fail-closed visibility policy covers all of those static declarations.
 
@@ -211,6 +218,8 @@ For stored formula results, I used the same public XlsxWriter 3.2.9 [tutorial2.p
 
 For rich-text runs, I built a controlled shared-string package where a warning's concatenated cell text stayed fixed while its second run changed from opaque black to opaque white. The public 0.40.0 wheel returned zero changes; the fresh 0.41.0 wheel emitted exactly `FF043`, and the starter policy added `FFP043`. The report was checked not to reveal the warning text, colours, shared-string index, or cell coordinate. The suite also checks property-order and Boolean normalization, equivalent shared/inline storage, styled-boundary movement with unchanged text, ordinary text-only edits, malformed metadata, and output redaction. This validates stored presentation-declaration comparison, not Excel rendering, theme resolution, contrast, visibility, or phonetic display.
 
+For Worksheet DrawingML shapes, I generated a controlled XlsxWriter 3.2.9 text-box workbook where all cells and warning text stayed fixed while only the stored text-run colour in `xl/drawings/drawing1.xml` changed from black to white. The public 0.41.0 wheel returned zero changes; the fresh 0.42.0 wheel emitted exactly `FF044`, and the starter policy added `FFP044`. The report was checked not to reveal the text-box text, colours, non-visual name, or relationship ID. The suite also covers regular/group inventory, hyperlink-only changes, relationship and non-visual-ID normalization, malformed XML, budgets, and output redaction. This validates stored regular-shape declaration comparison, not DrawingML rendering, theme/contrast/visibility, text-link calculation, macro execution, target retrieval, media, or other drawing objects.
+
 ## What it does not claim
 
 FormulaFence does not calculate a saved formula result, decide whether it is
@@ -220,6 +229,8 @@ FormulaFence does not calculate Excel or prove a financial model correct. Materi
 
 The 0.41 boundary narrows the stored rich-text part of that list: it compares character-level run presentation and phonetic declarations, but it does not render the workbook, resolve themes, determine contrast or visibility, or decide how Excel will display phonetic text.
 
+The 0.42 boundary narrows the worksheet-drawing part of that list: it compares stored regular `xdr:sp` and nested `xdr:grpSp` declarations, but does not render DrawingML, resolve theme/contrast/visibility, calculate a text link, execute a macro assignment, retrieve a target, or inspect pictures, connectors, graphic frames, SmartArt, media, or other non-regular drawing objects.
+
 But a review process should at least make it hard to silently replace a formula with a number. That is the narrow, useful boundary FormulaFence is built to enforce.
 
-The current release is [FormulaFence 0.41.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.41.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The current release is [FormulaFence 0.42.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.42.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
