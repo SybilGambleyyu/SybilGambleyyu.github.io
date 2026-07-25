@@ -14,7 +14,7 @@ FormulaFence compares two workbooks without executing formulas or macros. It det
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
-It also follows non-chart worksheet DrawingML relationships for regular text-box shapes and nested groups, so a reviewer-facing warning cannot be moved, restyled, relinked, or quietly made less visible outside the cell grid without a review event.
+It also follows non-chart worksheet DrawingML relationships for regular text-box shapes, connectors, and nested groups, so a reviewer-facing warning or process link cannot be moved, restyled, relinked, reattached, or quietly made less visible outside the cell grid without a review event.
 
 It also follows modern Excel threaded-comment and person package relationships, so a review instruction, reply, resolution, mention, or collaborator binding cannot silently change outside the worksheet grid.
 
@@ -158,10 +158,28 @@ comparison, not image decoding/rendering, external retrieval, visibility,
 cropping/z-order, or pagination calculation. The scope follows Open XML's
 [`xdr:pic` Picture definition](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.spreadsheet.picture?view=openxml-3.0.1), Microsoft's [worksheet background guidance](https://support.microsoft.com/en-us/excel/add-or-remove-a-sheet-background), and [header/footer watermark guidance](https://support.microsoft.com/en-us/excel/get-started/add-a-watermark-in-excel). A fresh packaged wheel was exercised against independently maintained XlsxWriter picture, background, and watermark examples: replacing only direct media payload bytes emitted `FF059` and `FFP059` without exposing raw media paths in JSON, Markdown, or SARIF. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) has the exact artifacts and hashes.
 
-Install the exact 0.57.0 wheel with:
+FormulaFence 0.58.0 extends that same `FF044` boundary to native worksheet
+DrawingML connectors (`xdr:cxnSp`). A connector can encode a process or review
+link by its geometry, style, anchor, and `stCxn`/`endCxn` attachments—even while
+every cell is unchanged. FormulaFence supports transitional and strict
+DrawingML, including group-contained connectors, and compares those stored
+declarations and endpoint target semantics privately. Profiles expose only
+connector and attachment counts; names, descriptions, anchors, non-visual IDs,
+and endpoint target IDs stay out of JSON, Markdown, and SARIF. Consistent ID
+rewrites stay quiet; a reattachment, styling, geometry, or anchor change emits
+`FF044`, and the existing `no_worksheet_drawing_shape_changes` policy adds
+`FFP044`. Missing, duplicate, or malformed attachment metadata is explicit
+coverage evidence. This is stored-package comparison, not connector routing or
+rendering, theme/visibility resolution, target retrieval, media parsing, or
+coverage for graphic frames or SmartArt. A fresh wheel also profiled an
+independently maintained Excel-style drawing part with seven free connectors
+and no coverage warning; the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
+has the exact artifact hash and source reference.
+
+Install the exact 0.58.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.57.0/formulafence-0.57.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.58.0/formulafence-0.58.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -325,7 +343,7 @@ SpreadsheetML XML Map profiles expose only safe map/schema/data-binding, file/co
 
 Digital-signature profiles expose only aggregate package-origin, XML-signature, reference, embedded-certificate, certificate-part, VBA-signature, and malformed-metadata counts. A material stored declaration or relationship change yields `FF050`, while `no_digital_signature_changes` adds `FFP050`; signature XML, references, digests, certificate payloads, relationship IDs, and binary signature data remain out of Markdown, JSON, and SARIF.
 
-Worksheet DrawingML profiles expose only safe regular/group shape, anchor, text-run, macro/text-link/hyperlink, and relationship counts. A material supported-shape declaration change yields `FF044`, while `no_worksheet_drawing_shape_changes` adds `FFP044`; raw text, presentation, anchors, macro/formula material, identifiers, targets, and XML remain out of Markdown, JSON, and SARIF.
+Worksheet DrawingML profiles expose only safe regular/connector/group shape, anchor, connector-attachment, text-run, macro/text-link/hyperlink, and relationship counts. A material supported shape or connector declaration change yields `FF044`, while `no_worksheet_drawing_shape_changes` adds `FFP044`; raw text, presentation, anchors, macro/formula material, identifiers, targets, and XML remain out of Markdown, JSON, and SARIF.
 
 The visibility inventory includes zero-sized row and column controls alongside filters, sorts, manually hidden dimensions, and outline state; the existing fail-closed visibility policy covers all of those static declarations.
 
@@ -573,4 +591,6 @@ automatic pagination.
 
 The 0.57 boundary adds native worksheet pictures, backgrounds, and header/footer watermarks, emitting `FF059` and `FFP059` under `no_worksheet_image_changes`; it compares stored bindings, declarations, and bounded payload hashes privately but does not decode/render media, fetch a target, or calculate final layout or pagination.
 
-The current release is [FormulaFence 0.57.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.57.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.58 boundary extends `FF044` / `FFP044` to stored `xdr:cxnSp` connector declarations and endpoint attachments, including strict DrawingML and group-contained connectors; it does not route or render a connector or resolve final visual behavior.
+
+The current release is [FormulaFence 0.58.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.58.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
