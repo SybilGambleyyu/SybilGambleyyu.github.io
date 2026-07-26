@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.80.0 wheel with:
+Install the exact 0.81.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.80.0/formulafence-0.80.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.81.0/formulafence-0.81.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -710,4 +710,6 @@ The 0.79 release closes a different stored-definition gap: selected legacy XLM a
 
 The 0.80 release closes a direct-formula DDE blind spot. Excel’s documented DDE syntax such as <code>='Quote'|'NYSE'!ZAXX</code> can bind an application, topic, and item directly in worksheet formulas, formula-defined names, or named <code>LAMBDA</code>s; it is distinct from OOXML <code>externalLink</code> DDE/OLE metadata. FormulaFence now scans stored syntax conservatively before the ordinary formula tokenizer, propagates private markers from names to their invoking cells, and raises <code>FF074</code> for material link, stored-definition, invocation, or statically visible input changes. <code>no_formula_dde_link_changes</code> adds the fail-closed <code>FFP074</code> boundary. Public profiles expose only aggregate formula-cell, link, and relevant-definition counts; application, topic, item, formulas, names, and cell identities remain in private comparison signatures. The scanner ignores pipes inside ordinary string literals and local quoted sheet names, does not evaluate a formula or resolve, launch, contact, or send commands to a DDE server, and retains raw OOXML external-link DDE/OLE metadata under the separate <code>FF025</code> boundary. The scope follows Microsoft’s [DDE overview](https://learn.microsoft.com/en-us/windows/win32/dataxchg/about-dynamic-data-exchange) and [Excel DDE security-setting guidance](https://learn.microsoft.com/en-us/troubleshoot/microsoft-365-apps/excel/security-settings); clean-wheel validation exercises direct, named, input, policy, and redaction paths.
 
-The current release is [FormulaFence 0.80.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.80.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.81 release makes the merge boundary easier to adopt: FormulaFence now ships as a root composite GitHub Action. A workflow supplies an approved baseline, candidate, and optional policy; the Action writes a local report, adds Markdown evidence to the job summary, uploads the report before re-emitting a policy failure, and exposes deterministic report-path and exit-code outputs. It confines reports, workbooks, and policy files to the checked-out workspace, refuses to overwrite an input, and still never evaluates a formula, runs a macro, comments on a pull request, or sends workbook contents to a FormulaFence service. The [CI guide](https://github.com/SybilGambleyyu/formulafence/blob/v0.81.0/docs/ci.md) has the complete workflow, SARIF, artifact, and pinning details.
+
+The current release is [FormulaFence 0.81.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.81.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
