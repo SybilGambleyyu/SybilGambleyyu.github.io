@@ -10,7 +10,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 ## Put the control at the merge boundary
 
-FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, and cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
+FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort and legacy Custom View alternate display/filter/print controls, and cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
@@ -176,10 +176,32 @@ independently maintained Excel-style drawing part with seven free connectors
 and no coverage warning; the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the exact artifact hash and source reference.
 
-Install the exact 0.58.0 wheel with:
+FormulaFence 0.59.0 guards legacy Excel Custom Views. A workbook-level
+`customWorkbookView` can bind a named alternate display or print mode to
+GUID-linked `customSheetView` declarations across the workbook, hiding rows or
+columns, retaining filters, changing print settings, panes, comments, or object
+visibility without an ordinary cell change. FormulaFence reads raw transitional
+and Strict worksheet, dialog-sheet, and chart-sheet declarations before the
+ordinary reader can discard them. A material change emits `FF060`;
+`no_custom_workbook_view_changes` adds `FFP060`. Profiles expose structural
+counts only: view names, GUIDs, sheet bindings, filter criteria, ranges, print
+settings, pane locations, and XML remain private. Coordinated GUID and sheet-ID
+rewrites stay quiet, while malformed, unsupported, incomplete, or over-budget
+state is explicit coverage evidence. This is stored-declaration comparison, not
+view activation/rendering, filtered-result calculation, print pagination, or
+future-extension interpretation. The scope follows the Open XML
+[`customWorkbookView`](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.customworkbookview?view=openxml-3.0.1)
+and
+[`customSheetView`](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.customsheetview?view=openxml-3.0.1)
+definitions. A clean packaged wheel emitted exactly `FF060` and `FFP060` for a
+private Custom View filter-only change without exposing the filter or view name;
+the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
+has the exact artifact hash.
+
+Install the exact 0.59.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.58.0/formulafence-0.58.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.59.0/formulafence-0.59.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -593,4 +615,9 @@ The 0.57 boundary adds native worksheet pictures, backgrounds, and header/footer
 
 The 0.58 boundary extends `FF044` / `FFP044` to stored `xdr:cxnSp` connector declarations and endpoint attachments, including strict DrawingML and group-contained connectors; it does not route or render a connector or resolve final visual behavior.
 
-The current release is [FormulaFence 0.58.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.58.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.59 boundary adds legacy Custom View declarations, emitting `FF060` and
+`FFP060` under `no_custom_workbook_view_changes`; it compares saved alternate
+display/filter/print state privately but does not activate or render the view,
+calculate its filtered result, or determine final print output.
+
+The current release is [FormulaFence 0.59.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.59.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
