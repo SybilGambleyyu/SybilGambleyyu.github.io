@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.94.0 wheel with:
+Install the exact 0.95.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.94.0/formulafence-0.94.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.95.0/formulafence-0.95.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -744,4 +744,20 @@ The 0.93 release adds candidate-only resolution for static external 3-D A1 spans
 
 The 0.94 release closes the next static link gap: external Excel-table selectors such as `='..\inputs\source.xlsx'!Sales[#Data]` and their validated package-indexed forms can now contribute to the same candidate-only portfolio graph. FormulaFence resolves a selector only when its exact relative source is already inspected and exactly one case-insensitive source table matches; it then follows a static `#All`, `#Data`, `#Headers`, `#Totals`, single-column, or contiguous-column selection to concrete source cells. Finite workbook-scoped alias chains can preserve that terminal form. Row-relative `@`/`#This Row`, source-sheet-qualified, bare, missing, ambiguous, malformed, unsafe, and otherwise non-static forms remain unresolved rather than guessed. It never opens, fetches, refreshes, evaluates, or trusts an external target or cache; raw table selectors and alias identities remain out of portfolio evidence. The release passed 624 tests, an isolated final-wheel CLI check, and a temporary-copy validation against the independently maintained XlsxWriter [table fixture](https://github.com/jmcnamara/XlsxWriter/blob/main/xlsxwriter/test/comparison/xlsx_files/table09.xlsx): one changed source cell produced four `FF079`/`FFP079` impacts without leaking the selector or alias. The scope follows Microsoft’s [structured-reference grammar](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/089fbdef-ed49-4a14-9509-794c95651b17); the [0.94 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.94.0/docs/validation.md) has the reproducibility details.
 
-The current release is [FormulaFence 0.94.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.94.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.95 release extends that same graph through a safely eligible,
+workbook-scoped, non-`LAMBDA` formula-defined name. A definition such as
+`=SUM(ExternalInput)` or
+`=SUM('..\inputs\source.xlsx'!Table1[Column2])` can retain its static external
+input endpoint to calling worksheet formulas, including through another
+eligible formula name. This extracts static input edges rather than calculating
+the name: every external token must already be a static direct or
+package-validated endpoint, while broken, unresolved, tokenizer-failed,
+dynamic, relative, local-3-D, spilled, explicitly intersected, local, and
+`LAMBDA` definitions remain unresolved. FormulaFence still never opens,
+fetches, refreshes, evaluates, or trusts an external target or cache, and raw
+paths, selectors, and bridge identities stay private in portfolio evidence.
+The release passed 624 tests, an isolated final-wheel CLI check, and a
+temporary-copy validation against the independently maintained XlsxWriter
+[table fixture](https://github.com/jmcnamara/XlsxWriter/blob/main/xlsxwriter/test/comparison/xlsx_files/table09.xlsx): one changed source cell reached exactly two formula-name callers with `FF079`/`FFP079` without leaking the names or selector. The [0.95 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.95.0/docs/validation.md) has the reproducibility details.
+
+The current release is [FormulaFence 0.95.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.95.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
