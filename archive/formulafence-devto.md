@@ -10,7 +10,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 ## Put the control at the merge boundary
 
-FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort and legacy Custom View alternate display/filter/print controls, and cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
+FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, legacy Custom View alternate display/filter/print, and Excel Table Style presentation controls, cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
@@ -198,10 +198,30 @@ private Custom View filter-only change without exposing the filter or view name;
 the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the exact artifact hash.
 
-Install the exact 0.59.0 wheel with:
+FormulaFence 0.60.0 makes Excel Table Style controls reviewable. A table can
+keep its cells, formulas, range, and structured references while a
+`tableStyleInfo` binding changes its headers, totals, banding, or emphasized
+columns; a workbook-local custom style can change its differential formats; and
+Table or TableColumn Dxf and named-cell-style bindings can change table-local
+presentation. FormulaFence reads those raw `styles.xml` and table declarations
+before ordinary readers flatten them, resolves Dxf-ID rewrites semantically, and
+emits `FF061`; `no_table_style_control_changes` adds `FFP061`. Profiles expose
+only structural counts: table identities, style names, differential formats,
+colours, and XML remain private. The raw Table Style inventory accepts both
+transitional and Strict SpreadsheetML parts, while malformed, unresolved,
+unsupported, or bounded controls become explicit coverage evidence. This is
+stored-declaration
+comparison, not final Excel rendering, theme resolution, conditional-format
+application, PivotTable-only style regions, or a claim about what a reviewer
+will see on a particular client. A fresh packaged wheel emitted exactly `FF061`
+and `FFP061` for a private Table Style toggle-only change without exposing the
+style name or Dxf colour; the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
+has the external fixtures and clean-install evidence.
+
+Install the exact 0.60.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.59.0/formulafence-0.59.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.60.0/formulafence-0.60.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -552,7 +572,7 @@ dimension declarations, not final Excel layout or pagination.
 FormulaFence does not calculate a saved formula result, decide whether it is
 stale or tampered, or establish its mathematical correctness.
 
-FormulaFence does not calculate Excel or prove a financial model correct. Material models still need a qualified owner, recalculation in the approved spreadsheet engine, and independent review. Relative, cyclic, external, and tokenizer-unsupported name definitions, unsupported or ambiguous table syntax, spill extents and blocking cells, non-static named LAMBDAs, arbitrary custom functions, complex implicit-intersection expressions, XLM execution and runtime dependencies, RibbonX callback execution and image payloads, Office Web Add-in manifest retrieval, runtime behavior, and worksheet-scoped markup, chart series calculation/rendering/input-impact mapping, external-target retrieval, media/package parsing, `chartEx`/nested-chart semantics, PivotTable refresh/calculation/rendering and downstream cell-impact mapping, AutoFilter application, visibility-sensitive formula inference, final rendered row/column layout, AutoFit calculation, wrapped/merged-cell overflow, automatic page geometry, final border rendering/theme or palette resolution/adjacent-cell precedence, alignment, rich-text runs, table styles, and outline-display settings, number-format rendering/validation/locale semantics, cell-font rendering/theme-colour/contrast semantics, cell-fill rendering/theme-colour/contrast semantics, ignored-error warning eligibility/display, error repair, application-level error checking, Named Sheet View activation/rendering, filtered-result calculation, metadata repair, differential-format/extension/rich-sort semantics, Slicer/Timeline filter application and worksheet/drawing view geometry/styles, Power Pivot/Data Model deserialization, DAX evaluation, refresh, report rendering, and model-to-cell impact, What-If Data Table calculation and scenario-output prediction, Scenario Manager application/result calculation/dependency inference, worksheet ActiveX/OLE initialization, embedded-package deserialization, form-control event dispatch, VML/Note rendering and image payloads, and event behavior beyond the static Note/VML declarations, Power Query evaluation and downstream dependencies beyond its formula/control boundary, external-link execution and downstream dependencies, and features such as `INDIRECT` remain coverage limits rather than guessed graph edges.
+FormulaFence does not calculate Excel or prove a financial model correct. Material models still need a qualified owner, recalculation in the approved spreadsheet engine, and independent review. Relative, cyclic, external, and tokenizer-unsupported name definitions, unsupported or ambiguous table syntax, spill extents and blocking cells, non-static named LAMBDAs, arbitrary custom functions, complex implicit-intersection expressions, XLM execution and runtime dependencies, RibbonX callback execution and image payloads, Office Web Add-in manifest retrieval, runtime behavior, and worksheet-scoped markup, chart series calculation/rendering/input-impact mapping, external-target retrieval, media/package parsing, `chartEx`/nested-chart semantics, PivotTable refresh/calculation/rendering and downstream cell-impact mapping, AutoFilter application, visibility-sensitive formula inference, final rendered row/column layout, AutoFit calculation, wrapped/merged-cell overflow, automatic page geometry, final border rendering/theme or palette resolution/adjacent-cell precedence, alignment, rich-text runs, final Table Style rendering and its conditional-format interaction, and outline-display settings, number-format rendering/validation/locale semantics, cell-font rendering/theme-colour/contrast semantics, cell-fill rendering/theme-colour/contrast semantics, ignored-error warning eligibility/display, error repair, application-level error checking, Named Sheet View activation/rendering, filtered-result calculation, metadata repair, differential-format/extension/rich-sort semantics, Slicer/Timeline filter application and worksheet/drawing view geometry/styles, Power Pivot/Data Model deserialization, DAX evaluation, refresh, report rendering, and model-to-cell impact, What-If Data Table calculation and scenario-output prediction, Scenario Manager application/result calculation/dependency inference, worksheet ActiveX/OLE initialization, embedded-package deserialization, form-control event dispatch, VML/Note rendering and image payloads, and event behavior beyond the static Note/VML declarations, Power Query evaluation and downstream dependencies beyond its formula/control boundary, external-link execution and downstream dependencies, and features such as `INDIRECT` remain coverage limits rather than guessed graph edges.
 
 The 0.41 boundary narrows the stored rich-text part of that list: it compares character-level run presentation and phonetic declarations, but it does not render the workbook, resolve themes, determine contrast or visibility, or decide how Excel will display phonetic text.
 
@@ -620,4 +640,10 @@ The 0.59 boundary adds legacy Custom View declarations, emitting `FF060` and
 display/filter/print state privately but does not activate or render the view,
 calculate its filtered result, or determine final print output.
 
-The current release is [FormulaFence 0.59.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.59.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.60 boundary adds stored Excel Table Style declarations, emitting `FF061`
+and `FFP061` under `no_table_style_control_changes`; it compares applied
+bindings, custom definitions, Dxf references, and named cell-style bindings
+privately but does not render a final Table appearance, resolve themes, or apply
+conditional formatting.
+
+The current release is [FormulaFence 0.60.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.60.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
