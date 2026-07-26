@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.81.0 wheel with:
+Install the exact 0.82.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.81.0/formulafence-0.81.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.82.0/formulafence-0.82.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -712,4 +712,6 @@ The 0.80 release closes a direct-formula DDE blind spot. Excel’s documented DD
 
 The 0.81 release makes the merge boundary easier to adopt: FormulaFence now ships as a root composite GitHub Action. A workflow supplies an approved baseline, candidate, and optional policy; the Action writes a local report, adds Markdown evidence to the job summary, uploads the report before re-emitting a policy failure, and exposes deterministic report-path and exit-code outputs. It confines reports, workbooks, and policy files to the checked-out workspace, refuses to overwrite an input, and still never evaluates a formula, runs a macro, comments on a pull request, or sends workbook contents to a FormulaFence service. The [CI guide](https://github.com/SybilGambleyyu/formulafence/blob/v0.81.0/docs/ci.md) has the complete workflow, SARIF, artifact, and pinning details.
 
-The current release is [FormulaFence 0.81.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.81.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.82 release closes an unqualified worksheet-function gap. A bare call can bind to a VBA user-defined function, COM/Automation add-in, XLL, or another registered runtime even though the stored formula cannot identify a provider. FormulaFence keeps a stable native Excel catalogue and treats only unknown bare calls as candidates, while suppressing built-in functions, workbook-defined names, local `LET`/`LAMBDA` bindings, qualified calls, and dedicated legacy XLM spellings. It propagates candidates through formula-defined names, named `LAMBDA`s, recursive groups, and sheet-local definitions; direct, stored-definition, invocation, and statically visible input changes emit `FF075`, while `no_unqualified_runtime_function_changes` adds fail-closed `FFP075`. The dedicated ledger exposes only aggregate counts—never candidates, formulas, arguments, cells, providers, or host details—and FormulaFence never evaluates a formula, loads a provider, or infers that one is installed or runnable. The scope follows Microsoft’s [installed UDF reference](https://support.microsoft.com/en-us/excel/user-defined-functions-that-are-installed-with-add-ins-reference), [custom-function guidance](https://support.microsoft.com/en-us/excel/create-custom-functions-in-excel), and [XLL guidance](https://learn.microsoft.com/en-us/office/client-developer/excel/accessing-xll-code-in-excel); the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.82.0/docs/validation.md) includes a fresh-wheel policy and redaction check.
+
+The current release is [FormulaFence 0.82.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.82.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
