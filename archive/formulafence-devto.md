@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.69.0 wheel with:
+Install the exact 0.70.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.69.0/formulafence-0.69.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.70.0/formulafence-0.70.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -688,4 +688,6 @@ The 0.68 boundary handles a different kind of executable surface: [Python in Exc
 
 The 0.69 boundary covers a related but separate executable surface: Office Add-in custom functions. A workbook can store a namespaced call such as `=CONTOSO.ADD(...)`, while its manifest, JavaScript or TypeScript, and remote runtime live elsewhere. FormulaFence conservatively inventories stored namespaced candidates, excludes known native dotted Excel functions and compatibility spellings, and propagates candidates through formula-defined names and named `LAMBDA`s without treating the stored call as proof that an add-in is installed or runnable. A material candidate change or a statically visible input change emits `FF066`; `no_office_custom_function_changes` adds `FFP066`. The dedicated ledger exposes only aggregate formula-cell, call, and namespace counts; it never loads a manifest or add-in, evaluates the formula, or contacts a runtime. Ordinary formula-defined-name review context remains outside that redacted ledger. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) includes a clean-wheel check against the documented Office custom-function shape.
 
-The current release is [FormulaFence 0.69.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.69.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.70 boundary covers stored worksheet and formula-defined [`REGISTER.ID`](https://support.microsoft.com/en-us/office/register-id-function-f8f0af0f-fd66-4704-a0f2-87b27b175b50) calls. Excel documents this function as registering a DLL or code resource and returning its identifier. FormulaFence recognizes native `REGISTER.ID` calls, propagates them through formula-defined names and named `LAMBDA`s, and raises `FF067` for a direct registration call, named-definition, or statically visible source-input change. `no_worksheet_code_resource_registration_changes` adds the fail-closed `FFP067` boundary. The dedicated ledger exposes only aggregate registration-formula-cell, `REGISTER.ID`-call, and formula-defined-name counts; module paths, procedure names, arguments, identifiers, and cell locations remain private. It never loads a DLL/XLL or other resource, evaluates a formula, or establishes that registration will succeed. This is separate from the XLM macro-sheet [`CALL`](https://support.microsoft.com/en-us/office/call-function-32d58445-e646-4ffd-8d5e-b45077a5e995) surface. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) includes a clean-wheel check of direct, named-definition, and static-input changes.
+
+The current release is [FormulaFence 0.70.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.70.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
