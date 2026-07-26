@@ -10,7 +10,7 @@ That tool is [FormulaFence](https://github.com/SybilGambleyyu/formulafence), an 
 
 ## Put the control at the merge boundary
 
-FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, legacy Custom View alternate display/filter/print, and Excel Table Style presentation controls, cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
+FormulaFence compares two workbooks without executing formulas or macros. It detects formula-to-value substitutions, formula changes, sheet visibility, defined-name, Excel-table, worksheet/table AutoFilter, sort, and row and column visibility controls (including zero-sized dimensions), ignored Excel error-checking, Named Sheet View alternate filter/sort, legacy Custom View alternate display/filter/print, Excel Table Style presentation controls, and legacy shared-workbook revision headers/logs, cell number-format, cell-font, cell-fill, effective cell-alignment, effective cell-border, material worksheet-dimension, worksheet-display, worksheet print-layout, and native worksheet-image controls, data-validation, conditional-formatting, operational protection, external-data refresh-control, external-link-package, Excel 4.0/XLM macro-sheet, Office RibbonX custom-UI, Office Web Add-in task-pane, DrawingML chart definition/cached-series/overlay changes, PivotTable binding/layout/cache changes, Slicer and Timeline cache filter state, embedded Power Pivot/Data Model packages, What-If Data Table and Scenario Manager declarations, modern and legacy-VML worksheet controls/OLE, and Power Query formula/control changes, explicit external references, broken `#REF!` formulas, calculation-setting changes, and macro payload changes.
 
 It also compares character-level rich-text run presentation and phonetic-hint controls held in shared strings or inline strings, without exposing the text or formatting material in a profile or report.
 
@@ -218,10 +218,30 @@ and `FFP061` for a private Table Style toggle-only change without exposing the
 style name or Dxf colour; the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixtures and clean-install evidence.
 
-Install the exact 0.60.0 wheel with:
+FormulaFence 0.61.0 makes legacy shared-workbook revision history reviewable.
+Old shared workbooks can retain revision headers and logs outside the worksheet
+grid: prior values, author identities, timestamps, comments, formatting records,
+conflict-resolution material, and tracking/retention/protection controls.
+FormulaFence follows workbook-to-header and header-to-log relationships and
+compares complete bounded declarations privately. A material history,
+relationship, control, or coverage change emits `FF062`; the
+`no_shared_workbook_revision_changes` policy adds `FFP062`. Profiles retain
+only structural header/log and control counts: historic values, locations,
+authors, timestamps, comments, GUIDs, relationship IDs, and XML stay private.
+Header-only and header-plus-log packages plus Strict SpreadsheetML are
+supported; malformed, unsafe, duplicate, unresolved, unsupported, oversized,
+or bounded material becomes visible coverage evidence. This is stored-audit
+comparison, not revision application, historic-state reconstruction, conflict
+resolution, identity validation, or Excel rendering. A fresh packaged wheel
+emitted exactly `FF062` and `FFP062` for a private historic-log-only change
+without exposing seeded historic values or the author identity; the
+[validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
+has the external fixture and clean-install evidence.
+
+Install the exact 0.61.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.60.0/formulafence-0.60.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.61.0/formulafence-0.61.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -646,4 +666,10 @@ bindings, custom definitions, Dxf references, and named cell-style bindings
 privately but does not render a final Table appearance, resolve themes, or apply
 conditional formatting.
 
-The current release is [FormulaFence 0.60.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.60.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.61 boundary adds legacy shared-workbook revision headers and logs,
+emitting `FF062` and `FFP062` under `no_shared_workbook_revision_changes`; it
+compares historic audit declarations, relationship bindings, and
+tracking/retention/protection controls privately but does not apply revisions,
+reconstruct historic state, resolve conflicts, or render Excel.
+
+The current release is [FormulaFence 0.61.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.61.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
