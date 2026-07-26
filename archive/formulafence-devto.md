@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.86.0 wheel with:
+Install the exact 0.87.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.86.0/formulafence-0.86.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.87.0/formulafence-0.87.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -726,4 +726,8 @@ The 0.86 release follows direct, static external A1 references across a portfoli
 
 This is static reachability evidence, not a recalculation claim. FormulaFence does not open, fetch, evaluate, or follow an external target. The traversal has a global `--max-link-impact` bound (also exposed by the composite Action); if the bound is reached, critical `FF080` evidence marks the portfolio report incomplete and returns exit code 2. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.86.0/docs/validation.md) covers exact-relative resolution, transitive impact, policy and SARIF output, redaction, the cap, a clean-wheel check, and a public external-link fixture that is intentionally not guessed.
 
-The current release is [FormulaFence 0.86.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.86.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.87 release adds the direct workbook-scoped name form that Excel documents for workbook links: a formula such as `=[Inputs.xlsx]InputRange` can contribute to the same candidate-only graph, but only when its exact relative source is already in the portfolio and that source name expands completely to static internal A1 destinations. Safely resolvable global formula-name aliases work too; FormulaFence never evaluates a name or a formula to make this happen.
+
+The boundary remains deliberately strict. Raw external paths and names stay private; package metadata is not treated as an authoritative target. Sheet-scoped, missing, dynamic, relative, cyclic, external, 3-D, malformed, or otherwise non-static source names—and direct structured references—remain unresolved rather than guessed. Changing a name declaration is still the ordinary defined-name review event, not an `FF079` source root. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.87.0/docs/validation.md) covers a static alias, rejected dynamic and unsafe forms, report redaction, a public link-package fixture, and a clean-wheel run.
+
+The current release is [FormulaFence 0.87.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.87.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
