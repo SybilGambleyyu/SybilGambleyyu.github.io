@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.61.0 wheel with:
+Install the exact 0.69.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.68.0/formulafence-0.68.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.69.0/formulafence-0.69.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -686,4 +686,6 @@ The 0.67 boundary closes a different gap: an action can live entirely in a formu
 
 The 0.68 boundary handles a different kind of executable surface: [Python in Excel](https://support.microsoft.com/en-US/Excel/python/introduction-to-python-in-excel) keeps Python source in a workbook package part while a `PY` formula binds it into the grid. FormulaFence recognizes stored `PY` spellings and privately fingerprints the documented [Python part](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/151e4bcd-90a0-4d82-8b98-f16bf273e4ff), its environment and scripts, and the formula binding. A code, environment, package, binding, or statically visible source-cell change emits `FF065`; `no_python_in_excel_changes` adds `FFP065`. The public profile reports only counts. Source code, environment identifiers, script indexes, formula arguments, locations, and raw XML remain private; relationship-ID-only rewrites stay quiet and malformed or unbound metadata becomes a coverage event. The tool does not parse or run Python, evaluate `PY`, resolve a result, or contact Microsoft Cloud. A clean wheel was checked against an independently maintained public Python-part template and controlled code-only and static-input changes; the [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) has the checksums and redaction evidence.
 
-The current release is [FormulaFence 0.68.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.68.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.69 boundary covers a related but separate executable surface: Office Add-in custom functions. A workbook can store a namespaced call such as `=CONTOSO.ADD(...)`, while its manifest, JavaScript or TypeScript, and remote runtime live elsewhere. FormulaFence conservatively inventories stored namespaced candidates, excludes known native dotted Excel functions and compatibility spellings, and propagates candidates through formula-defined names and named `LAMBDA`s without treating the stored call as proof that an add-in is installed or runnable. A material candidate change or a statically visible input change emits `FF066`; `no_office_custom_function_changes` adds `FFP066`. The dedicated ledger exposes only aggregate formula-cell, call, and namespace counts; it never loads a manifest or add-in, evaluates the formula, or contacts a runtime. Ordinary formula-defined-name review context remains outside that redacted ledger. The [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md) includes a clean-wheel check against the documented Office custom-function shape.
+
+The current release is [FormulaFence 0.69.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.69.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
