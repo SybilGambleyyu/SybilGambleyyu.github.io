@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.89.0 wheel with:
+Install the exact 0.90.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.89.0/formulafence-0.89.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.90.0/formulafence-0.90.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -734,4 +734,6 @@ The boundary remains deliberately strict. Raw external source spellings, package
 
 The 0.89 release extends that same package-backed path to direct external A1 references such as `=[1]Data!$B$2:$B$4`, including a direct workbook-scoped consumer alias whose stored definition is exactly `[1]Data!$B$2:$B$4`. The index is still not a filename: FormulaFence resolves it only through the validated declaration order and only to an already-inspected relative candidate. Static cells, ranges, whole rows, and whole columns are eligible; 3-D spans, structured references, formula aliases, sheet-scoped aliases, unsafe paths, and malformed or ambiguous package shapes remain unresolved. It never opens, follows, evaluates, or trusts an external target or cache. The boundary was checked against a temporary copy of an independently maintained OpenPyExcel fixture containing a real `[1]Sheet1!$A$1` alias, and the [0.89 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.89.0/docs/validation.md) includes the public-fixture, redaction, CI, and clean-wheel evidence.
 
-The current release is [FormulaFence 0.89.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.89.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.90 release closes the next static link gap: external sheet-local names such as `=[Inputs.xlsx]Data!LocalInput` and `=[1]Data!LocalInput`. The source sheet is an explicit local-name scope, not a hint to search for a similarly named global or another sheet-local name. FormulaFence follows only a fixed internal destination (including a safely expanded local alias) in an already-inspected candidate workbook; direct and package-indexed workbook-scoped consumer aliases can retain the exact local-name spelling. Dynamic, missing, wrong-scope, 3-D, structured, unsafe, malformed, or ambiguous forms remain unresolved. The checked boundary never opens, fetches, refreshes, evaluates, or trusts a target/cache, and raw source paths, indexes, sheet/name identities, and aliases stay out of portfolio evidence. It was exercised against an independently maintained workbook with a real worksheet-scoped range and a quoted sheet name; the exact packaged wheel emitted `FF079` and `FFP079` while preserving redaction. The [0.90 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.90.0/docs/validation.md) has the reproducibility details.
+
+The current release is [FormulaFence 0.90.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.90.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
