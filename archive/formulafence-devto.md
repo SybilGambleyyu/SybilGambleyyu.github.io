@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.111.0 wheel with:
+Install the exact 0.112.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.111.0/formulafence-0.111.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.112.0/formulafence-0.112.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -815,4 +815,21 @@ a substitute for isolated CI runners. The release passed 719 tests, hosted CI
 and the public Action contract, package checks, and a fresh Python 3.12 wheel
 install. The [0.111 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.111.0/docs/validation.md) has the exact limits and artifact digests.
 
-The current release is [FormulaFence 0.111.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.111.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.112 release closes the next resource boundary after ZIP validation.
+FormulaFence now requires `defusedxml` for raw OOXML parsing, which enables
+`openpyxl`'s defused XML path in the supported install. After the header-only
+archive inventory—and before downstream scanners or the complete workbook
+reader—it caps XML and relationship parts at 64 MiB, aggregate XML material at
+256 MiB, follows bounded workbook sheet relationships, and streams selected
+worksheet XML to reject more than 500,000 populated SpreadsheetML cells without
+retaining them. This deliberately protects the in-memory semantic reader while
+preserving explicit coverage warnings for malformed unrelated extension parts.
+VBA payloads are hashed in a stream, and malformed `openpyxl` `TypeError` or
+`IndexError` failures now return the normal unreadable-workbook exit status
+instead of a traceback. The release passed 727 tests, hosted CI and the public
+Action contract, package checks, and a fresh Python 3.12 wheel install that
+confirmed the defused parser and early entity rejection. The [0.112 validation
+record](https://github.com/SybilGambleyyu/formulafence/blob/v0.112.0/docs/validation.md)
+has the exact limits and evidence.
+
+The current release is [FormulaFence 0.112.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.112.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
