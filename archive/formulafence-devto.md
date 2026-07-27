@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.95.0 wheel with:
+Install the exact 0.101.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.95.0/formulafence-0.95.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.101.0/formulafence-0.101.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -770,4 +770,6 @@ The 0.99 release closes a related sharing leak around formula actions and direct
 
 The 0.100 release adds the matching sharing boundary for Python in Excel. Microsoft documents static source in `PY(python_code, return_type)`, so ordinary JSON review evidence can contain code or an `xl()` reference even though FormulaFence’s `FF065` ledger keeps workbook Python-package source private. `--redact-python-in-excel` now gives `diff`, `check`, and `portfolio` an opt-in, output-only mode that replaces direct stored `PY` material and before/after evidence for a changed PY cell or an exact statically tracked input that reaches one. It leaves findings, policy decisions, and exit codes intact; it does not parse or execute Python, calculate formulas, contact Microsoft Cloud, or claim to scrub arbitrary workbook material. The composite Action exposes the same switch as `redact-python-in-excel: 'true'`. The release passed 647 tests, hosted CI, the public Action contract, and isolated final-wheel checks across JSON, Markdown, SARIF, policy, and portfolio output. The [0.100 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.100.0/docs/validation.md) has the exact scope and artifact hash.
 
-The current release is [FormulaFence 0.100.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.100.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.101 release adds the matching sharing boundary for namespaced Office custom functions. Microsoft documents these JavaScript or TypeScript functions as namespaced Excel formulas, and a call can carry proprietary arguments to an add-in or service. Generic review output can therefore reveal direct function material, an exact statically tracked input that reaches a changed call, or a changed formula-defined-name wrapper. `--redact-office-custom-functions` gives `diff`, `check`, and `portfolio` an opt-in, output-only mode that replaces that material with a stable marker while leaving findings, policy decisions, and exit codes intact. It does not load an add-in or manifest, execute JavaScript, resolve dynamic arguments, calculate formulas, or contact a network service. The composite Action exposes the same switch as `redact-office-custom-functions: 'true'`. The release passed 653 tests, the public Action contract, and isolated final-wheel checks across JSON, Markdown, SARIF, policy, and portfolio output. The scope follows Microsoft’s [Office custom-functions overview](https://learn.microsoft.com/en-us/office/dev/add-ins/excel/custom-functions-overview); the [0.101 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.101.0/docs/validation.md) has the exact scope and artifact hash.
+
+The current release is [FormulaFence 0.101.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.101.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
