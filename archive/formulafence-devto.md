@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.112.0 wheel with:
+Install the exact 0.113.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.112.0/formulafence-0.112.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.113.0/formulafence-0.113.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -832,4 +832,22 @@ confirmed the defused parser and early entity rejection. The [0.112 validation
 record](https://github.com/SybilGambleyyu/formulafence/blob/v0.112.0/docs/validation.md)
 has the exact limits and evidence.
 
-The current release is [FormulaFence 0.112.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.112.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.113 release closes the remaining cardinality gap inside that reader
+boundary. Before FormulaFence starts downstream scanners or `openpyxl`, it
+streams the package manifest, workbook metadata, canonical styles,
+shared-string table, and workbook-selected sheets. Each streamed part is
+limited to 4,000,000 XML elements and 256 nesting levels; the gate also caps
+populated cells and shared-string entries at 500,000 each, `cellXfs` styles at
+Excel's 65,490-style limit, cell text at 32,767 characters, and stored formula
+or defined-name text at 8,192 characters. Shared strings follow the first
+manifest target `openpyxl` would load, then a sole workbook relationship or
+canonical fallback. This specifically stops a small compressed workbook from
+making the reader allocate an unbounded string list while preserving the
+coverage-warning route for malformed unrelated extension XML. The release
+passed 737 tests in 115.64 seconds, hosted CI and the public Action contract,
+package checks, and a clean Python 3.12 wheel install that confirmed the
+defused parser, a normal profile, and a real 500,001-item shared-string input
+error. The [0.113 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.113.0/docs/validation.md)
+has the exact limits and evidence.
+
+The current release is [FormulaFence 0.113.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.113.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
