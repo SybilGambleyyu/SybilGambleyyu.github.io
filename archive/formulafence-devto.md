@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.116.0 wheel with:
+Install the exact 0.117.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.116.0/formulafence-0.116.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.117.0/formulafence-0.117.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -890,4 +890,19 @@ seconds, hosted CI and the public Action contract, package checks, and a clean
 Python 3.12 wheel install. The [0.116 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.116.0/docs/validation.md)
 has the exact limits and artifact evidence.
 
-The current release is [FormulaFence 0.116.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.116.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.117 release closes the remaining repeated-child paths in the workbook
+package and legacy Custom View scanner. SpreadsheetML's [book-view format](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.bookviews?view=openxml-3.0.1)
+permits an unlimited collection, while the reader builds an object for every
+book view, function group, smart-tag type, and web-publish object. FormulaFence
+now caps those direct workbook catalogs, plus raw-scanned custom workbook views,
+at 4,096 entries each; direct custom sheet views are capped at 4,096 in
+aggregate across the selected sheet parts. The counts follow the reader/scanner's
+local-name behavior, so alternate namespaces cannot bypass them. Controlled
+10,000-entry fixtures previously reached 87 MiB and 2.37 seconds; all six now
+fail before downstream work in 0.013–0.022 seconds, while exact-limit fixtures
+remain accepted. The release passed 769 tests in 130.23 seconds, hosted CI and
+the public Action contract, package checks, and a clean Python 3.12 wheel
+install. The [0.117 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.117.0/docs/validation.md)
+has the exact limits and artifact evidence.
+
+The current release is [FormulaFence 0.117.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.117.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
