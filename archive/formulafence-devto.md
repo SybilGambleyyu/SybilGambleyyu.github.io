@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.110.0 wheel with:
+Install the exact 0.111.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.110.0/formulafence-0.110.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.111.0/formulafence-0.111.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -801,4 +801,18 @@ release passed 703 tests, the public Action contract, package checks, and a
 fresh final-wheel install that retained default local evidence while redacted
 HTML preserved `FF072` / `FFP072`. The [0.110 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.110.0/docs/validation.md) has the exact scope and final artifact digests.
 
-The current release is [FormulaFence 0.110.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.110.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.111 release hardens the boundary before semantic review begins. Every
+source workbook now passes a bounded ZIP inventory before FormulaFence reads raw
+OOXML or calls `openpyxl`; it does not extract the package. The gate accepts
+canonical single-disk stored/deflated packages, validates central and local
+headers, and caps source bytes (1 GiB), central-directory metadata (32 MiB),
+parts (4,096), expanded member bytes (512 MiB), aggregate expansion (768 MiB),
+and compression ratio (1,000:1). It rejects duplicate/case-colliding or unsafe
+paths, ZIP Unicode-path aliases, encrypted/special members, malformed ZIP64
+declarations, and overlapping payloads. Valid ZIP64 workbooks remain supported.
+This is a resource and reader-consistency boundary, not a malware classifier or
+a substitute for isolated CI runners. The release passed 719 tests, hosted CI
+and the public Action contract, package checks, and a fresh Python 3.12 wheel
+install. The [0.111 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.111.0/docs/validation.md) has the exact limits and artifact digests.
+
+The current release is [FormulaFence 0.111.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.111.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
