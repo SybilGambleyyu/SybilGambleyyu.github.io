@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.128.0 wheel with:
+Install the exact 0.129.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.128.0/formulafence-0.128.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.129.0/formulafence-0.129.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -927,4 +927,6 @@ The 0.127 release closes the matching Office Web Add-in metadata paths. FormulaF
 
 The 0.128 release closes the shared package-relationship path beneath those specialist scanners. FormulaFence now streams every OOXML `.rels` part before raw metadata or `openpyxl` can materialize it, allowing 4,096 XML elements per part and 16,384 in aggregate. The bound counts roots and opaque nested descendants, not only direct `Relationship` records; malformed optional parts still surface their established coverage warning. A 13,334-byte definition fixture and 13,325-byte task-pane fixture, each with 100,000 empty relationship records, took 1.094 seconds/84.0 MiB and 1.127 seconds/82.0 MiB in the exact 0.127.0 wheel without an unrecognized relationship marker. Version 0.128 returns the stable input error before a scanner starts in about 0.009 seconds at 34.8 MiB. The release passed 898 tests, package checks, and a fresh Python 3.12 wheel install; both fixtures return CLI status 2. The [0.128 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.128.0/docs/validation.md) has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.128.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.128.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.129 release closes the chart XML allocation path. FormulaFence privately canonicalizes legacy chart, ChartEx, chart-host DrawingML, and chart-overlay XML, so it now streams each part before materializing it and allows 32,768 elements per part with a 65,536-element aggregate across the chart package scan. This leaves room for real cached series, whose [Excel data-point capacity is memory-limited](https://support.microsoft.com/en-US/Excel/excel-specifications-and-limits), while turning a larger well-formed tree into explicit coverage evidence. A 12,453-byte package with 100,000 opaque chart children took 0.936 seconds and 84.9 MiB in the exact 0.128.0 wheel; 0.129 records one coverage gap in 0.374 seconds at 46.8 MiB. The release passed 905 tests, package checks, and a fresh Python 3.12 wheel install; the installed diff emits `FF030` and returns status 1 at `--fail-on medium`. The [0.129 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.129.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.129.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.129.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
