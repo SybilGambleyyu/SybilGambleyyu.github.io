@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.109.0 wheel with:
+Install the exact 0.110.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.109.0/formulafence-0.109.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.110.0/formulafence-0.110.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -788,4 +788,17 @@ The 0.108 release adds the matching sharing boundary for selected legacy XLM env
 
 The 0.109 release adds the matching sharing boundary for native <code>CELL</code>, <code>INFO</code>, <code>SHEET</code>, and <code>SHEETS</code> calls. Those ordinary-formula calls can retain a private information code, reference, tab name, static input, or dotted named wrapper in a generic change artifact even though <code>FF072</code> exposes only aggregate counts. <code>--redact-formula-environment-information</code> gives <code>diff</code>, <code>check</code>, and <code>portfolio</code> an opt-in, output-only boundary that replaces direct stored native-call material, exact statically tracked inputs, and conservatively changed formula-defined-name-chain evidence with a stable marker. It preserves findings, policy decisions, and exit codes, including the existing private tab-catalog comparison for stored <code>SHEET</code> and omitted-reference <code>SHEETS()</code> calls. It does not calculate formulas, determine an information type, resolve a dynamic reference, infer a selected cell, simulate workbook/client/workspace state, or reconstruct a runtime value. The composite Action exposes the same switch as <code>redact-formula-environment-information: 'true'</code>. The release passed 701 tests, the public Action contract, and isolated final-wheel checks across JSON, Markdown, SARIF, policy, and portfolio output; the [0.109 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.109.0/docs/validation.md) has the exact scope and artifact digest.
 
-The current release is [FormulaFence 0.109.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.109.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.110 release makes the review artifact itself easier to use: `--format html`
+now gives `diff`, `check`, and `portfolio` a self-contained browser page with
+local text/severity filters and expandable complete evidence. The page contains
+only inline styles and a fixed filtering script; it loads no remote assets or
+sends workbook content anywhere. Every workbook-derived value is HTML-escaped,
+so report evidence cannot become markup or script. The existing output-only
+sharing boundaries apply before HTML rendering and remain explicit in the page.
+The composite Action accepts `format: html`, uploads the page as its configured
+artifact, and links to it from the job summary rather than embedding it. The
+release passed 703 tests, the public Action contract, package checks, and a
+fresh final-wheel install that retained default local evidence while redacted
+HTML preserved `FF072` / `FFP072`. The [0.110 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.110.0/docs/validation.md) has the exact scope and final artifact digests.
+
+The current release is [FormulaFence 0.110.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.110.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
