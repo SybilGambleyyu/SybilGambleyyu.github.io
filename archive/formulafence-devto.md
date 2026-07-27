@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.124.0 wheel with:
+Install the exact 0.125.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.124.0/formulafence-0.124.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.125.0/formulafence-0.125.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -919,4 +919,6 @@ The 0.123 release bounds two compact page-break catalogs. Excel’s [published l
 
 The 0.124 release closes the matching Custom View bypass. FormulaFence’s legacy Custom View scanner separately traverses direct page-break catalogs below a supported `customSheetViews/customSheetView` hierarchy, including Strict SpreadsheetML and opaque alternate-namespace paths; the preflight now shares the same 2,052-record and 4,096-container aggregate budgets with that scanner. A 19,396-byte Custom View package carrying 100,000 row-break records loaded through the exact 0.123.0 wheel in 9.043 seconds at 109.6 MiB, but 0.124 rejects it in 0.012 seconds at 33.3 MiB. A 9,138-byte package with 100,000 empty containers fell from 3.981 seconds and 74.3 MiB to a 0.023-second, 33.9-MiB rejection. The release passed 869 tests in 121.67 seconds, package checks, and a fresh Python 3.12 wheel install. The [0.124 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.124.0/docs/validation.md) has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.124.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.124.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.125 release closes the remaining opaque Custom View subtree path. FormulaFence’s raw scanner creates a recursive private signature for unknown XML below a supported Custom View, so the preflight now limits every descendant below direct views to 4,096 in aggregate, separately from the existing direct-view count. It covers standard, Strict, and alternate-namespace view paths while preserving the published 2,052 row-plus-column page-break allowance. An 8,978-byte package with 100,000 direct opaque children took 4.197 seconds and 111.7 MiB in the exact 0.124.0 wheel; 0.125 rejects it in 0.018 seconds at 33.7 MiB. An 8,798-byte package holding the same entries under one opaque nested child fell from 3.773 seconds and 100.2 MiB to a 0.019-second, 33.7-MiB rejection. The release passed 879 tests in 123.22 seconds, package checks, and a fresh Python 3.12 wheel install. The [0.125 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.125.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.125.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.125.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
