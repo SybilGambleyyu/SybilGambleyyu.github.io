@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.121.0 wheel with:
+Install the exact 0.122.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.121.0/formulafence-0.121.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.122.0/formulafence-0.122.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -913,4 +913,6 @@ The 0.120 release closes compact allocation paths in `styles.xml`. Excel's [publ
 
 The 0.121 release closes a compact formatted-row allocation path. Excel permits a grid with [1,048,576 rows](https://support.microsoft.com/en-US/Excel/excel-specifications-and-limits), but a populated-cell limit does not constrain empty row formatting. When a SpreadsheetML `<row>` carries an unqualified attribute other than `r` or `spans`, `openpyxl` retains it for later `RowDimension` construction. FormulaFence now caps those declarations at 16,384 in aggregate across ordinary worksheet parts before raw scanners or the complete reader run. Coordinate-only rows and namespace-qualified extension attributes remain compatible; unknown unqualified attributes are safely bounded. A 259,597-byte workbook with 100,000 empty height-formatted rows previously took 8.580 seconds and 142 MiB; it now rejects in 0.074 seconds at 36 MiB, while a 10,000-row fixture remains accepted. The release passed 836 tests in 122.58 seconds, hosted CI and the public Action contract, package checks, and an isolated Python 3.12 wheel install. The [0.121 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.121.0/docs/validation.md) has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.121.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.121.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.122 release closes two compact column-catalog paths. Excel’s [published limits](https://support.microsoft.com/en-US/Excel/excel-specifications-and-limits) list 16,384 columns, yet a workbook can repeat valid `<col>` declarations without widening its visible grid. FormulaFence now limits reader-visible `col` records to 16,384 and direct `cols` containers to 4,096 across ordinary worksheet parts before raw scanners or the complete reader run. This constrains both reader allocations and the raw dimension-metadata lists; Strict SpreadsheetML receives the same guard where FormulaFence reads it, while foreign namespaces remain compatible. A 20,680-byte package with 100,000 repeated column declarations previously took 9.028 seconds and 82.8 MiB; it now rejects in 0.074 seconds at 35.8 MiB. A 7,246-byte package with 100,000 empty containers previously took 4.226 seconds and 72.3 MiB; it now rejects in 0.014 seconds at 34.7 MiB. Exact 16,384-declaration and 4,096-container fixtures remain accepted. The release passed 847 tests in 120.57 seconds, hosted CI and the public Action contract, package checks, and an isolated Python 3.12 wheel install. The [0.122 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.122.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.122.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.122.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
