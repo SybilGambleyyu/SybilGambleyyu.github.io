@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.127.0 wheel with:
+Install the exact 0.128.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.127.0/formulafence-0.127.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.128.0/formulafence-0.128.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -925,4 +925,6 @@ The 0.126 release closes the matching RibbonX allocation path. FormulaFence’s 
 
 The 0.127 release closes the matching Office Web Add-in metadata paths. FormulaFence privately canonicalizes task-pane and `webextension` definition XML, so it now streams them before materializing a tree and permits 4,096 elements per part with a 16,384-element aggregate across the task-pane-plus-definition scan. An over-budget part becomes explicit incomplete-coverage evidence rather than a fully built fragment. An 11,021-byte package with 100,000 direct opaque task-pane children took 0.586 seconds and 97.8 MiB in the exact 0.126.0 wheel; 0.127 marks it in 0.135 seconds at 34.1 MiB. An 11,041-byte package with 100,000 opaque definition children fell from 0.579 seconds and 98.1 MiB to 0.135 seconds and 34.1 MiB. The release passed 892 tests in 123.09 seconds, package checks, and a fresh Python 3.12 wheel install; direct and nested variants of both parts produce visible `FF010` coverage findings that can fail CI at the chosen threshold. The [0.127 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.127.0/docs/validation.md) has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.127.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.127.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.128 release closes the shared package-relationship path beneath those specialist scanners. FormulaFence now streams every OOXML `.rels` part before raw metadata or `openpyxl` can materialize it, allowing 4,096 XML elements per part and 16,384 in aggregate. The bound counts roots and opaque nested descendants, not only direct `Relationship` records; malformed optional parts still surface their established coverage warning. A 13,334-byte definition fixture and 13,325-byte task-pane fixture, each with 100,000 empty relationship records, took 1.094 seconds/84.0 MiB and 1.127 seconds/82.0 MiB in the exact 0.127.0 wheel without an unrecognized relationship marker. Version 0.128 returns the stable input error before a scanner starts in about 0.009 seconds at 34.8 MiB. The release passed 898 tests, package checks, and a fresh Python 3.12 wheel install; both fixtures return CLI status 2. The [0.128 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.128.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.128.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.128.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
