@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.132.0 wheel with:
+Install the exact 0.133.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.132.0/formulafence-0.132.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.133.0/formulafence-0.133.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -935,4 +935,6 @@ The 0.131 release closes the matching Slicer and Timeline cache XML allocation p
 
 The 0.132 release closes the matching generic Custom XML allocation path. Microsoft documents Custom XML as arbitrary stored XML, so FormulaFence treats its 32,768-elements-per-part and 65,536-elements-per-scan limits as CI allocation and coverage boundaries rather than workbook-validity limits. It streams generic Custom XML, property, Custom Data-property, custom document-property, and relevant relationship XML before private canonicalization; opaque binary Custom Data remains byte-bounded. A safely classified `DataMashup` handoff also prevents Power Query discovery from reparsing an over-budget generic tree. An 11,493-byte workbook with 100,000 opaque Custom XML children fell from 0.853 seconds / 94.8 MiB in the exact 0.131.0 wheel to 0.186 seconds / 36.0 MiB in 0.132.0. The release passed 929 tests, hosted CI, package checks, and a fresh Python 3.12 wheel install; the installed hostile diff emits `FF010` and `FF052`. The [0.132 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.132.0/docs/validation.md) has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.132.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.132.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.133 release closes the matching workbook Theme XML allocation path. [Microsoft documents](https://learn.microsoft.com/en-us/office/open-xml/presentation/structure-of-a-presentationml-document) a SpreadsheetML Theme as a workbook-bound colour, font, and format control, so FormulaFence treats its 32,768-elements-per-part and 65,536-elements-per-scan limits as CI allocation and coverage boundaries rather than workbook-validity limits. It streams Theme and Theme-relationship XML before private canonicalization; direct Theme-image payloads remain byte-bounded. A 9,591-byte workbook with 100,000 opaque direct Theme XML children fell from 1.090 seconds / 112.2 MiB in the exact 0.132.0 wheel to 0.683 seconds / 41.5 MiB in 0.133.0. The release passed 937 tests, hosted CI, package checks, and a fresh Python 3.12 wheel install; the installed hostile diff emits `FF010` and `FF053`. The [0.133 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.133.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.133.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.133.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
