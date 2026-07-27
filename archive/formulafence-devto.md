@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.115.0 wheel with:
+Install the exact 0.116.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.115.0/formulafence-0.115.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.116.0/formulafence-0.116.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -877,4 +877,17 @@ in 116.02 seconds, hosted CI and the public Action contract, package checks,
 and a clean Python 3.12 wheel install. The [0.115 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.115.0/docs/validation.md)
 has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.115.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.115.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.116 release closes another repetition path in the workbook catalog. An
+external reference or PivotCache selects a workbook relationship, but a
+relationship-count limit alone cannot stop a compact XML part from repeating one
+valid relationship thousands of times. FormulaFence now streams and caps direct
+`<externalReferences>` and `<pivotCaches>` catalog entries at 4,096 each before
+its raw scanners or `openpyxl` reader start. The counters use the reader's
+local-name behavior, so alternate-namespace entries cannot bypass the bound. A
+10,000-declaration pivot fixture previously cost 7.35 seconds; these catalog
+fixtures now fail before reader work. The release passed 751 tests in 131.91
+seconds, hosted CI and the public Action contract, package checks, and a clean
+Python 3.12 wheel install. The [0.116 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.116.0/docs/validation.md)
+has the exact limits and artifact evidence.
+
+The current release is [FormulaFence 0.116.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.116.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
