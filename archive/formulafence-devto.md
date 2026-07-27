@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.114.0 wheel with:
+Install the exact 0.115.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.114.0/formulafence-0.114.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.115.0/formulafence-0.115.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -864,4 +864,17 @@ normal workbook and rejected a 516-declaration repeated-sheet fixture before
 loading it. The [0.114 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.114.0/docs/validation.md)
 has the exact limits and artifact evidence.
 
-The current release is [FormulaFence 0.114.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.114.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.115 release closes the adjacent workbook defined-name allocation path.
+SpreadsheetML permits an unbounded `<definedName>` sequence, and Excel permits
+vastly more names than a CI worker should model blindly. FormulaFence now
+streams and caps direct workbook defined-name declarations at 100,000 before
+raw scanners or `openpyxl` build their complete models. The same local-name
+semantics used by the reader now govern both the name and sheet catalog
+counters, so an alternate-namespace entry cannot bypass the 100,000-name or
+512-sheet boundary. A generated 100,000-name package remained supported; its
+100,001st name failed before reader construction. The release passed 745 tests
+in 116.02 seconds, hosted CI and the public Action contract, package checks,
+and a clean Python 3.12 wheel install. The [0.115 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.115.0/docs/validation.md)
+has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.115.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.115.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
