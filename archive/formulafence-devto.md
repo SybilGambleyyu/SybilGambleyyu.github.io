@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.113.0 wheel with:
+Install the exact 0.114.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.113.0/formulafence-0.113.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.114.0/formulafence-0.114.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -850,4 +850,18 @@ defused parser, a normal profile, and a real 500,001-item shared-string input
 error. The [0.113 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.113.0/docs/validation.md)
 has the exact limits and evidence.
 
-The current release is [FormulaFence 0.113.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.113.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.114 release closes the bootstrap catalog gap before the workbook reader
+starts. The ZIP member limit alone cannot limit package manifest declarations,
+workbook relationships, or duplicate `<sheet>` declarations that repeatedly
+point at one already-safe target. FormulaFence now streams and caps those
+reader-materialized catalogs at 4,096 content-type declarations, 4,096 workbook
+relationships, and 512 workbook sheet declarations. The last limit counts
+declarations rather than unique parts, so a compact package cannot multiply one
+sheet relationship into a large in-memory workbook or repeated raw-sheet scan.
+The release passed 741 tests in 121.54 seconds, hosted CI and the public Action
+contract, package checks, and a clean Python 3.12 wheel install that profiled a
+normal workbook and rejected a 516-declaration repeated-sheet fixture before
+loading it. The [0.114 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.114.0/docs/validation.md)
+has the exact limits and artifact evidence.
+
+The current release is [FormulaFence 0.114.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.114.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
