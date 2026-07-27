@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.117.0 wheel with:
+Install the exact 0.118.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.117.0/formulafence-0.117.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.118.0/formulafence-0.118.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -905,4 +905,6 @@ the public Action contract, package checks, and a clean Python 3.12 wheel
 install. The [0.117 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.117.0/docs/validation.md)
 has the exact limits and artifact evidence.
 
-The current release is [FormulaFence 0.117.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.117.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.118 release closes a compact allocation path before ordinary workbook analysis. SpreadsheetML's [mergeCells interoperability notes](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/8a2a99c9-bfc5-4d44-8d00-3046b75af83c) permit an unbounded `mergeCell` sequence, while `openpyxl` expands every coordinate in a merge range into an in-memory `MergedCell`. FormulaFence now streams direct merge declarations before raw scanners or the complete reader: 4,096 declarations across selected ordinary worksheet parts, 100,000 coordinates for every range and in aggregate, and a 256-character reference bound. The measurement follows direct local-name children and the reader's sheet-qualified range grammar, so namespace decoration or range spelling cannot bypass it. A 4,889-byte package with a 100,000-coordinate range remains accepted; 101,000-coordinate and full-grid `A1:XFD1048576` fixtures reject in 0.002 seconds before grid expansion. The release passed 779 tests in 127.54 seconds, hosted CI and the public Action contract, package checks, and a clean Python 3.12 wheel install. The [0.118 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.118.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.118.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.118.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
