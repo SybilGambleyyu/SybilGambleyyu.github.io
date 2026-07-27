@@ -238,10 +238,10 @@ without exposing seeded historic values or the author identity; the
 [validation record](https://github.com/SybilGambleyyu/formulafence/blob/main/docs/validation.md)
 has the external fixture and clean-install evidence.
 
-Install the exact 0.129.0 wheel with:
+Install the exact 0.130.0 wheel with:
 
 ```bash
-python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.129.0/formulafence-0.129.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.130.0/formulafence-0.130.0-py3-none-any.whl
 ```
 
 For every changed cell, it follows statically visible A1-style, ordinary named-range, safely expandable formula-defined-name and named `LAMBDA`, direct dynamic-array spill anchors, fixed legacy-CSE outputs, currently observed dynamic-array output members, `LET`/inline-`LAMBDA`, supported table, and direct 3-D worksheet dependencies and reports downstream formula cells with deterministic shortest-path samples.
@@ -929,4 +929,6 @@ The 0.128 release closes the shared package-relationship path beneath those spec
 
 The 0.129 release closes the chart XML allocation path. FormulaFence privately canonicalizes legacy chart, ChartEx, chart-host DrawingML, and chart-overlay XML, so it now streams each part before materializing it and allows 32,768 elements per part with a 65,536-element aggregate across the chart package scan. This leaves room for real cached series, whose [Excel data-point capacity is memory-limited](https://support.microsoft.com/en-US/Excel/excel-specifications-and-limits), while turning a larger well-formed tree into explicit coverage evidence. A 12,453-byte package with 100,000 opaque chart children took 0.936 seconds and 84.9 MiB in the exact 0.128.0 wheel; 0.129 records one coverage gap in 0.374 seconds at 46.8 MiB. The release passed 905 tests, package checks, and a fresh Python 3.12 wheel install; the installed diff emits `FF030` and returns status 1 at `--fail-on medium`. The [0.129 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.129.0/docs/validation.md) has the exact boundary and artifact evidence.
 
-The current release is [FormulaFence 0.129.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.129.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.130 release closes the matching PivotTable XML allocation paths. FormulaFence privately canonicalizes PivotTable view and cache-definition XML, then the ordinary workbook reader can otherwise follow those same bindings. It now streams each part before materializing it and allows 32,768 elements per part with a 65,536-element aggregate across the PivotTable package scan. Excel allows [up to 1,048,576 unique items per PivotTable field](https://support.microsoft.com/en-US/Excel/excel-specifications-and-limits), so a larger valid catalog becomes explicit coverage evidence rather than an unbounded CI allocation. After raw inspection, FormulaFence removes only PivotTable cache and view bindings from its temporary reader copy, retaining ordinary cell analysis without reparsing the package. An 11,968-byte workbook with 100,000 opaque view children fell from 1.115 seconds and 88.6 MiB to 0.507 seconds and 41.3 MiB; an 11,766-byte workbook with 100,000 valid cached items fell from 7.137 seconds and 207.2 MiB to 0.583 seconds and 44.9 MiB. The release passed 913 tests, package checks, and a fresh Python 3.12 wheel install; the installed diff emits `FF031` and returns status 1 at `--fail-on medium`. The [0.130 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.130.0/docs/validation.md) has the exact boundary and artifact evidence.
+
+The current release is [FormulaFence 0.130.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.130.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
