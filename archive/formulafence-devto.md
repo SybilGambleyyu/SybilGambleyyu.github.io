@@ -1026,4 +1026,19 @@ seconds / 133.9 MiB with no warning, while 0.147 rejects it in 0.459 seconds /
 wheel/sdist installs. The [0.147 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.147.0/docs/validation.md)
 has the full boundary and artifact evidence.
 
-The current release is [FormulaFence 0.147.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.147.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.148 release closes the adjacent compact-allocation path inside Worksheet
+extension lists. `extLst` is a documented Worksheet child, but it can carry
+arbitrary extension XML; FormulaFence now streams every SpreadsheetML
+extension-list subtree in selected transitional and Strict worksheets before raw
+worksheet scanners or the ordinary reader retain it. Direct or nested extension
+lists allow 32,768 XML elements per worksheet and 65,536 in aggregate, while
+ordinary `sheetData` and other named controls keep their specialist budgets. A
+well-formed overage returns the stable status-2 safety-preflight error before a
+profile is produced. A controlled 18,225-byte workbook carrying 500,000 foreign
+extension children expanded to 6.0 MB; the exact 0.147.0 wheel completed
+successfully in 16.513 seconds / 126.2 MiB, while 0.148 rejects it in 0.478
+seconds / 37.4 MiB. The release passed 1,088 tests, hosted CI, package checks,
+and fresh wheel/sdist installs. The [0.148 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.148.0/docs/validation.md)
+has the full boundary and artifact evidence.
+
+The current release is [FormulaFence 0.148.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.148.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
