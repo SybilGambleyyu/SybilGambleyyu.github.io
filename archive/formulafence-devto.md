@@ -959,4 +959,56 @@ The 0.142 release closes the matching compact-allocation path in selected raw qu
 
 The 0.143 release closes the adjacent compact-allocation path in raw Excel 4.0/XLM Macro Sheet XML. FormulaFence already scanned macro formulas before ordinary workbook loading, but a byte-permitted program tree could still be privately materialized by macro canonicalization, a Custom View path, or the underlying worksheet reader. It now streams each selected macro-sheet part before private parsing: 16 MiB and 32,768 XML elements per part, plus 64 MiB, 512 parts, and 65,536 elements across the macro-sheet scan. A well-formed structural overage becomes visible `FF010`/`FF026` opaque macro evidence with a private streamed content fingerprint, so same-size hostile programs remain diff-visible without exposing commands, values, relationships, or raw XML. After the raw scan, the temporary ordinary reader receives an empty worksheet replacement for selected XLM targets; Custom View and generic-sheet paths exclude those targets too, including an invalid ordinary relationship alias, which remains visible as coverage evidence. A 16,685-byte workbook carrying a 6,000,635-byte macro-sheet XML part with 1,000,000 injected children fell from 7.090 seconds / 528.9 MiB in 0.142.0 to 0.263 seconds / 44.8 MiB in 0.143.0. The release passed 1,051 tests, hosted CI, package checks, and fresh Python 3.12 wheel/sdist installs. The [0.143 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.143.0/docs/validation.md) has the full boundary and artifact hashes.
 
-The current release is [FormulaFence 0.143.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.143.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.144 release closes the matching compact-allocation path in the canonical
+`xl/metadata.xml` catalog used to distinguish legacy CSE formulas from dynamic
+arrays. FormulaFence now bounds that raw metadata reader at 16 MiB and 32,768
+XML elements before materializing it, and streams the direct worksheet
+`c`/`f` bindings used for array classification instead of constructing a second
+worksheet tree. An oversized or structurally over-budget catalog becomes
+explicit incomplete-coverage evidence: observed arrays remain unclassified,
+fixed-CSE and observed-spill aliases are not guessed, and `FF010` plus private
+`FF018` evidence keeps opaque changes reviewable without exposing metadata, XML,
+or workbook values. A 15,291-byte workbook carrying a 6,000,781-byte metadata
+part with 1,000,000 ignored foreign children fell from 1.301 seconds / 134.6
+MiB in 0.143.0 to 0.284 seconds / 47.4 MiB in 0.144.0. The release passed 1,058
+tests, package checks, and fresh wheel/sdist installs. The [0.144 validation
+record](https://github.com/SybilGambleyyu/formulafence/blob/v0.144.0/docs/validation.md)
+has the boundary and artifact evidence.
+
+The 0.145 release closes a shared compact-allocation path in Excel Table
+Definition XML. FormulaFence now streams every canonical `xl/tables/*.xml`
+part—including canonical orphan parts the Table Style scanner inventories—and
+every safe direct internal worksheet `table` relationship target before raw
+filter, Named Sheet View, external-data, XML Mapping, Table Style, or ordinary
+workbook readers can materialize it. Transitional and Strict relationship forms
+plus noncanonical safe targets are covered at 32,768 XML elements per part and
+65,536 in aggregate. A well-formed overage stops at the stable semantic-reader
+preflight instead of producing a partial profile; malformed, missing, and
+non-XML optional targets retain their coverage diagnostics. A 26,997-byte
+workbook carrying an 11,000,385-byte table XML part with 1,000,000 ignored
+foreign children fell from 5.728 seconds / 261.2 MiB in 0.144.0 to a
+0.060-second / 37.5 MiB hard rejection in 0.145.0. The release passed 1,065
+tests, hosted CI, package checks, and fresh wheel/sdist installs. The [0.145
+validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.145.0/docs/validation.md)
+has the full boundary and artifact evidence.
+
+The 0.146 release closes a compact-allocation path in SpreadsheetML shared
+strings used by both FormulaFence’s raw rich-text scanner and the ordinary
+workbook reader. A shared-string table can legitimately contain many simple
+values, so FormulaFence preserves the 500,000-entry allowance while bounding
+the materialized shapes: 32,768 XML elements for one complete `si` item, 65,536
+across complex/rich items, and 32,768 opaque direct `sst`-child elements per
+table / 65,536 in aggregate. The raw scanner now streams one direct item at a
+time and releases irrelevant root children; the preflight covers both the
+manifest-selected ordinary-reader table and any distinct relationship-selected
+raw table, so malformed selection disagreement cannot bypass the boundary. A
+well-formed overage stops with the stable status-2 safety error before a profile
+is produced. A controlled 85,611-byte workbook carrying 500,000 ignored
+shared-string root children expanded to 27.5 MB; the exact 0.145.0 wheel
+completed successfully in 2.928 seconds / 110.2 MiB with no warning, while
+0.146 rejects it in 0.425 seconds / 38.0 MiB. The release passed 1,074 tests,
+hosted CI, package checks, and fresh wheel/sdist installs. The [0.146 validation
+record](https://github.com/SybilGambleyyu/formulafence/blob/v0.146.0/docs/validation.md)
+has the full boundary and artifact evidence.
+
+The current release is [FormulaFence 0.146.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.146.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
