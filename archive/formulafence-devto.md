@@ -1011,4 +1011,19 @@ hosted CI, package checks, and fresh wheel/sdist installs. The [0.146 validation
 record](https://github.com/SybilGambleyyu/formulafence/blob/v0.146.0/docs/validation.md)
 has the full boundary and artifact evidence.
 
-The current release is [FormulaFence 0.146.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.146.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
+The 0.147 release closes the matching compact-allocation path in worksheet-root
+XML. FormulaFence now matches the documented base Worksheet root-child grammar
+in selected transitional and Strict worksheet parts before raw worksheet
+scanners or the ordinary reader retain the tree. A complete direct root subtree
+outside that grammar is limited to 32,768 XML elements per worksheet and 65,536
+in aggregate, while ordinary `sheetData` and named base controls keep their
+existing specialist budgets. A well-formed overage returns the stable status-2
+safety-preflight error before a profile is produced. A controlled 87,143-byte
+workbook carrying 500,000 ignored foreign direct worksheet-root children
+expanded to 28.0 MB; the exact 0.146.0 wheel completed successfully in 18.774
+seconds / 133.9 MiB with no warning, while 0.147 rejects it in 0.459 seconds /
+37.6 MiB. The release passed 1,081 tests, hosted CI, package checks, and fresh
+wheel/sdist installs. The [0.147 validation record](https://github.com/SybilGambleyyu/formulafence/blob/v0.147.0/docs/validation.md)
+has the full boundary and artifact evidence.
+
+The current release is [FormulaFence 0.147.0 on GitHub](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.147.0). The canonical version of this post lives at [sybilgambleyyu.github.io/posts/formulafence.html](https://sybilgambleyyu.github.io/posts/formulafence.html).
