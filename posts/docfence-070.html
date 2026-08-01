@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.7 makes Word attached templates, master-document subdocuments, and frameset sources review-visible without revealing their targets.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-070.html">
+    <meta property="og:title" content="A Word file can assemble itself from outside the package">
+    <meta property="og:description" content="DocFence 0.7 adds bounded evidence and policy gates for external Word document dependencies.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-070.html">
+    <title>A Word file can assemble itself from outside the package — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word file can assemble itself from outside the package</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.7.0">DocFence 0.7.0</a></p>
+
+      <p>An external relationship is not one thing. A hyperlink is usually just a destination for a reader. But Word can also keep an attached template, a master-document subdocument, or a frameset source outside the package. Those are document dependencies: stored references that can shape, supplement, or substitute what a user works with.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.7.0 makes that distinction review-visible without turning a CI report into a path or URL leak. It reports six aggregate counts only: anchors and relationships for attached templates, subdocuments, and frame sources. Targets, relationship IDs, part paths, frame names, and fingerprints stay private.</p>
+
+      <h2>Three standardized paths beyond the package</h2>
+
+      <p>OOXML defines a <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Document_topic_ID0E1IDK.html">Document Template</a> relationship from a Word Settings part. The settings markup contains <code>w:attachedTemplate</code>; the relationship supplies the external location. <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/7713efa6-b1ff-4cbd-9339-5bf9018433ac">Microsoft’s Word implementation notes</a> say it obtains the template path by evaluating that relationship ID.</p>
+
+      <p>A master document has a different contract. Its main document can hold <code>w:subDoc</code> anchors that point to externally located subdocuments. OOXML describes this as a way to work with a document as separately editable pieces—useful for a book organized as chapters, but important to make explicit at a controlled handoff.</p>
+
+      <p>Framesets add a third path. A linked Web Settings part can contain frames whose <code>w:sourceFileName</code> points to external WordprocessingML packages. These formats are uncommon today, but an uncommon, standardized external assembly mechanism is exactly the kind of state that should not disappear into a generic relationship counter.</p>
+
+      <h2>Strict where the format is strict</h2>
+
+      <p>DocFence recognizes the conventional and Strict OOXML relationship forms. It discovers Settings and Web Settings parts from either the main or glossary document, while keeping Word’s conventional <code>word/settings.xml</code> location as a compatibility fallback.</p>
+
+      <p>For each recognized dependency family, the direct anchor must name the expected relationship type with <code>TargetMode="External"</code>. A malformed relationship or anchor fails closed instead of becoming an ambiguous diff. A recognized external relationship is still counted when no current anchor references it: stale state still carries a target worth reviewing.</p>
+
+      <p>This is stored-state evidence, not an Office runtime. DocFence does not retrieve a template, open a subdocument, resolve a frameset, render external content, authenticate to a target, or determine whether a target is benign. That matters especially for templates: <a href="https://attack.mitre.org/techniques/T1221/">MITRE ATT&amp;CK T1221</a> documents template injection as an abuse of document template references.</p>
+
+      <h2>Choose “none” or “no change”</h2>
+
+      <p>A clean-handoff policy can reject all recognized external document dependency state:</p>
+
+      <pre><code>rules:
+  require_no_external_document_dependencies: true</code></pre>
+
+      <p>This emits <code>DFP025</code> whenever one of the six counts is nonzero. For an approved template workflow that intentionally retains a dependency, compare against a controlled baseline instead:</p>
+
+      <pre><code>rules:
+  no_external_document_dependency_changes: true</code></pre>
+
+      <p>This emits <code>DFP026</code> when the private dependency inventory changes. Relationship-ID rewrites alone remain quiet. For a Web Settings part that carries frame dependency state, DocFence fingerprints the full part privately, so an otherwise easy-to-miss source or layout change is still review-visible without printing it.</p>
+
+      <h2>What was tested</h2>
+
+      <p>The release tests conventional and Strict OOXML, settings linked through a glossary document, attached-template, subdocument, and frame-source anchors, residual relationships with no anchor, target changes, relationship-ID renumbering, malformed type and target-mode state, policy findings, JSON/Markdown/SARIF output, and redaction markers.</p>
+
+      <p>I also reconstructed and profiled the unpacked DOCX representation in the open-source <a href="https://github.com/obster-y/XJTU-thesis-Office/tree/master/%E6%A8%A1%E6%9D%BF%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E-docx">XJTU thesis Office template</a>. DocFence reports one attached-template anchor and one attached-template relationship without reproducing its target.</p>
+
+      <p>The wheel and source archive were independently rebuilt twice from the release commit with <code>SOURCE_DATE_EPOCH</code>; both artifact pairs were byte-identical. The public release contains the wheel, source archive, and SHA-256 manifest. I downloaded those assets, verified the checksums, installed the wheel in a fresh environment, and repeated the external-package profile.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.7.0/docfence-0.7.0-py3-none-any.whl
+
+docfence profile template.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The complete contract is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.7.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.7.0/docs/threat-model.md">threat model</a>. DocFence is local, bounded evidence about stored OOXML state—not a network monitor or a rendering verdict. It is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the preceding data-binding boundary, read <a href="/posts/docfence-060.html">Visible Word content can have an invisible source of truth</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
