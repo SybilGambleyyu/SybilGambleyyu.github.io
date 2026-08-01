@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.2.0 adds honest evidence for Word hidden paragraph marks and style/default declarations without claiming to render Word.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-020.html">
+    <meta property="og:title" content="The style-hidden blind spot needs evidence, not guesswork">
+    <meta property="og:description" content="DocFence 0.2.0 separates direct hidden text, paragraph marks, and stored style/default declarations for safer Word-document CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-020.html">
+    <title>The style-hidden blind spot needs evidence, not guesswork — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The style-hidden blind spot needs evidence, not guesswork</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.2.0">DocFence 0.2.0</a></p>
+
+      <p>In Word, “hidden text” is not one simple package signal. A direct <code>w:vanish</code> property on a run is evidence about that run. A property on the paragraph mark is a different thing. A declaration inside a style may participate in a hierarchy of inherited and toggle properties before Word decides what to display.</p>
+
+      <p>That distinction matters in a CI gate. Reporting every style declaration as an effectively hidden run creates false confidence; ignoring the style part entirely leaves a real review surface opaque. <a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.2.0 adds evidence for the gap without claiming to be a renderer.</p>
+
+      <h2>Three separate signals</h2>
+
+      <p>The release now reports three deliberately separate inventories:</p>
+
+      <ul>
+        <li><strong>Direct hidden-text runs.</strong> <code>hidden_text_run_count</code> covers direct <code>w:vanish</code> markup on ordinary runs.</li>
+        <li><strong>Direct hidden paragraph marks.</strong> <code>hidden_paragraph_mark_count</code> covers <code>w:vanish</code> and <code>w:specVanish</code> under <code>w:pPr/w:rPr</code>.</li>
+        <li><strong>Stored style/default declarations.</strong> The new style inventory reports how many style definitions contain enabled text-run <code>w:vanish</code> declarations, plus whether document-default run properties declare it.</li>
+      </ul>
+
+      <p>Microsoft documents that hidden text is a toggle property in styles: the effective result depends on the style hierarchy, while direct formatting is absolute. It also documents <code>w:specVanish</code> as a paragraph-mark property that can be ignored on any other run. Those are exactly the reasons the new inventories are separate. See the Open XML guidance on <a href="https://learn.microsoft.com/en-us/office/open-xml/word/how-to-remove-hidden-text-from-a-word-processing-document">hidden text</a> and <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.specvanish?view=openxml-3.0.1">specVanish</a>.</p>
+
+      <h2>A useful limit is part of the feature</h2>
+
+      <p>The style declaration count is not an effective-format calculation. DocFence does not claim which styles are applied, resolve <code>basedOn</code>, table or numbering styles, or calculate the toggle hierarchy. A style can therefore raise a useful review signal without becoming a fabricated “hidden run” count. Paragraph-mark branches and tracked historical formatting inside a style are also kept out of the text-style count.</p>
+
+      <p>This is a narrower statement, but a more dependable one: a review team can see that the stored package gained potentially relevant hidden-text declarations, then use Word or an appropriate rendering review to decide the visual outcome.</p>
+
+      <h2>Policy stays explicit</h2>
+
+      <p>The two new candidate-state gates are opt-in. Add them under <code>rules:</code> when a template or publishing boundary needs them:</p>
+
+      <pre><code>  require_no_hidden_text: true
+  require_no_hidden_paragraph_marks: true
+  require_no_hidden_text_style_declarations: true</code></pre>
+
+      <p>They produce <code>DFP006</code>, <code>DFP014</code>, and <code>DFP013</code>, respectively. The first is direct runs, the second is direct paragraph-mark markup, and the third is stored style/default declarations. Reports continue to contain aggregate counts and fixed categories—not source text, style names, IDs, part paths, or fingerprints. The full boundary is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.2.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.2.0/docs/threat-model.md">threat model</a>.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>DocFence 0.2.0 adds regression cases for direct false values, paragraph-mark <code>specVanish</code>, style declarations, tracked style history, malformed style parts, policy results, and report redaction. It also profiles a conventionally generated Word package with 164 standard styles as a compatibility smoke test.</p>
+
+      <p>The wheel and source distribution were built twice from the release commit using its <code>SOURCE_DATE_EPOCH</code>, producing byte-identical artifacts. The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.2.0">GitHub release</a> includes both artifacts and a SHA-256 manifest.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.2.0/docfence-0.2.0-py3-none-any.whl
+
+docfence diff approved.docx candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>DocFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For its first release and the broader case for document CI, read <a href="/posts/docfence.html">Word review artifacts need a CI boundary too</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
