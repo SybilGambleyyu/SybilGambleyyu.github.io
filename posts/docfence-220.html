@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.22 makes legacy VML external-image markers review-visible in Word packages without exposing image targets or treating raw VML source attributes as equivalent.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-220.html">
+    <meta property="og:title" content="The legacy Word image link a relationship count cannot explain">
+    <meta property="og:description" content="DocFence 0.22 distinguishes an explicit VML external-image marker from generic external relationships without copying image paths into CI output.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-220.html">
+    <title>The legacy Word image link a relationship count cannot explain — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The legacy Word image link a relationship count cannot explain</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.22.0">DocFence 0.22.0</a></p>
+
+      <p>An external-relationship total tells a reviewer that a Word package stores an external target. It cannot say whether that target belongs to a picture the document actually marks for display, a hyperlink, a template, or an unused relationship. That ambiguity gets sharper in Word’s legacy VML picture markup.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.22 adds a privacy-safe inventory for one precise stored boundary: direct legacy VML <code>v:imagedata</code> markers with an explicit <code>r:id</code> that resolves to an externally stored relationship.</p>
+
+      <h2>An image-data relationship is not just a relationship total</h2>
+
+      <p>The Open XML SDK calls <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.imagedata.relationshipid?view=openxml-3.0.1"><code>v:imagedata/@r:id</code></a> the explicit relationship to image data. The ID is a pointer from a specific VML image-data marker to the story part’s relationship table. ECMA-376’s <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Image_topic_ID0EGXDO.html">Image Part contract</a> supplies the standard image relationship type and permits a stored external target mode.</p>
+
+      <p>That gives review automation a useful, narrow question: does a supported Word story contain a direct legacy image-data marker whose stored relationship is external? It is more informative than counting all external relationships, without pretending that a Word client will retrieve or render anything.</p>
+
+      <h2>Count the explicit external marker; leave the rest separate</h2>
+
+      <p>DocFence scans direct <code>v:imagedata/@r:id</code> markers in body, header, footer, footnote, endnote, comment, and glossary stories. It records only markers backed by a relationship with stored <code>TargetMode=External</code>. A standard image relationship is counted separately from another external relationship type, which remains reviewable as unsupported stored evidence.</p>
+
+      <p>Ordinary embedded VML images with internal relationships are not external-image markers. Nor are an orphaned image relationship, raw VML <code>src</code>, <code>r:pict</code>, <code>r:href</code>, or <code>o:relid</code>. Those are deliberately separate legacy surfaces, not fallback spellings of this one. In particular, Microsoft’s Office compatibility notes mark raw <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/7e506612-7a40-4d4e-95f4-e1f36173fe14">VML image-data <code>src</code></a> as unsupported.</p>
+
+      <p>Public reports contain only aggregate marker/story and relationship-classification counts. Image targets, relationship IDs, source values, VML attributes, story paths, and fingerprints stay private. A same-count external target rewrite remains visible in the inventory’s private signature; relationship-ID renumbering with unchanged semantics and a raw-<code>src</code> rewrite do not create this inventory’s churn.</p>
+
+      <h2>Policies for a clean handoff or a governed baseline</h2>
+
+      <p>For a handoff that must not retain a stored legacy external-image marker:</p>
+
+      <pre><code>rules:
+  require_no_word_vml_external_images: true</code></pre>
+
+      <p>This produces <code>DFP057</code>. A controlled template can instead use:</p>
+
+      <pre><code>rules:
+  no_word_vml_external_image_changes: true</code></pre>
+
+      <p><code>DFP058</code> protects the private marker baseline. The two rules add concrete VML image-data context to a generic external-relationship gate; they do not replace it.</p>
+
+      <h2>Evidence without claiming to render Word</h2>
+
+      <p>The 48-test release suite covers standard and unsupported external relationship classes, excluded embedded images and attributes, duplicate markers, body/header stories, Strict namespaces, orphan exclusion, same-count target changes, raw-<code>src</code> quietness, relationship-ID renumbering, policy/SARIF output, and redaction.</p>
+
+      <p>It also profiles the paired real public Word package from pea-sys’s <a href="https://github.com/pea-sys/shell-experiments/blob/91386d4de9e499a21bbb2e54743eb63a63727bfb/powershell/survey/abspath2relpath-docx/survey/rel/1.docx"><code>abspath2relpath-docx</code> investigation</a>. At that immutable commit, the package stores two direct <code>v:imagedata/@r:id</code> markers backed by external standard image relationships; DocFence reports exactly two external-image markers without emitting their paths or relationship IDs. The downloaded fixture SHA-256 was <code>60708e292cd38cb9bee28886e91b2103b7d2ee43e963fa5e1cac4eccaaa71ed6</code>.</p>
+
+      <p>This is stored-package evidence, not a renderer or a network monitor. DocFence does not choose a Markup Compatibility branch, associate a marker with a visual image, resolve or retrieve an image, update a link, render a picture, or claim that Word will load, reach, or honor a target.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13 for the release commit and tag, including distribution validation. The wheel and source archive were rebuilt independently from the tagged source and matched byte-for-byte; a fresh public download passed checksum and metadata validation, and an isolated installed wheel reproduced the two-marker public-fixture result.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.22.0/docfence-0.22.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.22.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.22.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.22.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.22.0/docs/validation.md">validation notes</a> define the exact behavior and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
