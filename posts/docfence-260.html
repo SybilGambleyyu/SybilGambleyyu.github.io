@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.26 makes direct WordprocessingML embedded-control anchors review-visible without exposing package data or predicting Word behavior.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-260.html">
+    <meta property="og:title" content="The anchors behind Word's embedded controls">
+    <meta property="og:description" content="DocFence 0.26 adds a bounded, privacy-safe review inventory for direct WordprocessingML w:control anchors.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-260.html">
+    <title>The anchors behind Word's embedded controls — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The anchors behind Word's embedded controls</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.26.0">DocFence 0.26.0</a></p>
+
+      <p>“This Word package contains ActiveX parts” and “this document has a direct control anchor” are different review facts. A package-level relationship or payload count can reveal stored persistence material, but it cannot say where a document records the markup that represents an embedded control. Conversely, a direct marker is not proof that a client has a control installed, will load its persistence data, or will permit active content.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.26 adds a narrow, privacy-safe inventory for that direct WordprocessingML surface: <code>w:control</code> only when it is a direct child of <code>w:object</code> or <code>w:pict</code>. It gives document CI a stable review signal for the stored anchor without uploading package material or pretending a parser can forecast Word runtime behavior.</p>
+
+      <h2>Two standardized anchor positions</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.control?view=openxml-3.0.1"><code>w:control</code></a> as Office 2007+ markup with two Word parents: <code>w:object</code> for an embedded control and <code>w:pict</code> for a floating embedded control. The ISO 29500 <a href="https://github.com/dolanmiu/docx/blob/309b972e107b8cc12c65027d5161b7045e404b6c/ooxml-schemas/ISO-IEC29500-4_2016/wml.xsd#L1146-L1199">schema definitions</a> make the shape precise: <code>r:id</code> is optional on <code>CT_Control</code>, while both parent containers permit a control child.</p>
+
+      <p>That direct parent relationship is the important boundary. DocFence records every matching direct child in supported body, header, footer, footnote, endnote, comment, and glossary stories. Duplicates and Markup Compatibility branches remain separate stored evidence. An arbitrary <code>w:control</code> elsewhere does not become an anchor merely because it has the same local name.</p>
+
+      <p>The <a href="https://c-rex.net/samples/ooxml/e1/part4/OOXML_P4_DOCX_control_topic_ID0EYH6O.html">element contract</a> says that a supplied <code>r:id</code> must identify a control relationship. The OOXML <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Embedded_topic_ID0EQDBO.html">Embedded Control Persistence Part contract</a> requires that relationship to have an internal target. The inventory therefore reports a standard control relationship with an internal target, a separately reviewable external standard relationship (stored but nonconforming), an unsupported relationship, or an anchor with no <code>r:id</code>. Those are descriptions of package state, not labels for a usable, safe, or active control.</p>
+
+      <h2>Direct markup is complementary to package evidence</h2>
+
+      <p>The release deliberately leaves generic embedded-control relationship and payload totals intact. It does not fold in arbitrary <code>w:control</code> markup, <code>w:objectLink</code>, <code>w:objectEmbed</code>, VML image or linked-OLE markup, fields, or ActiveX-control-binary relationships. A generic relationship can also be orphaned from a visible document marker; a direct anchor can have no relationship ID. Those are exactly the cases a single total erases.</p>
+
+      <p>The two inventories can look very different on the same real package. In docx4j’s public <a href="https://github.com/plutext/docx4j/blob/74ea74323a33d92769fdbd3e6d5fe730bbfd8ffb/docx4j-core-tests/src/test/resources/LegacyForms.docx">LegacyForms.docx fixture</a>, the installed release reports five direct anchors, all under <code>w:object</code> in the main document and all with internal standard control relationships. The existing broader inventory reports ten recognized control relationships and ten control parts. Neither number is a substitute for the other.</p>
+
+      <h2>Private semantics, concrete gates</h2>
+
+      <p>JSON, Markdown, and SARIF expose aggregate anchor, story, direct-parent, and relationship-classification counts only. Control names and shape identifiers, relationship IDs and targets, XML markup, story paths, and fingerprints remain private. The complete direct marker is privately fingerprinted, so a same-count name, shape, or target rewrite stays review-visible while relationship-ID renumbering with unchanged relationship semantics stays quiet.</p>
+
+      <p>A handoff that must carry no direct embedded-control anchor can state that policy directly:</p>
+
+      <pre><code>rules:
+  require_no_word_embedded_controls: true</code></pre>
+
+      <p>That candidate-state gate emits <code>DFP065</code>. A controlled template that deliberately retains approved anchors can protect its private baseline instead:</p>
+
+      <pre><code>rules:
+  no_word_embedded_control_changes: true</code></pre>
+
+      <p><code>DFP066</code> detects a material private-inventory change. These gates complement the broader embedded-object rule; they do not replace checks for orphaned relationships or stored payloads.</p>
+
+      <h2>Evidence, including what it cannot show</h2>
+
+      <p>The 52-test release suite covers both direct parents, internal and external standard relationships, unsupported and unavailable relationships, optional IDs, duplicates, body/header stories, Transitional and Strict namespaces, orphan and unparented-marker exclusion, target and marker-name rewrites, relationship-ID stability, privacy redaction, and JSON/Markdown/SARIF policy output. Hosted CI passed on Python 3.11 and 3.13 for both the release commit and the tag. The wheel and source archive were independently rebuilt from the tag with a fixed source date and matched byte-for-byte; fresh public downloads passed checksum verification, and an isolated installed wheel profiled the public fixture with the expected aggregate contract.</p>
+
+      <p>The public corpus evidence is intentionally limited. A scan of 141 Word packages in the cited docx4j tree found one positive package: <code>LegacyForms.docx</code>. A separate scan of 503 readable Open XML SDK candidate packages found no direct <code>w:control</code> marker (two of 505 candidates produced read errors). This is evidence for a standards-shaped stored-XML boundary and a useful real fixture—not a claim about how commonly contemporary Word authors create these controls or how clients will interoperate with them.</p>
+
+      <p>DocFence does not resolve, retrieve, instantiate, load, activate, evaluate, render, or execute a control. It does not establish that Word will select a Markup Compatibility branch, associate a marker with a visual object, have a compatible control installed, permit active content, or honor the markup. Use it as a bounded local review signal alongside rendering, security, and domain-specific review.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.26.0/docfence-0.26.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.26.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.26.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.26.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.26.0/docs/validation.md">validation notes</a> define the exact behavior, privacy contract, and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
