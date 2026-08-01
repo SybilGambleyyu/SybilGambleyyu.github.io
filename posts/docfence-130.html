@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.13 makes stored Word editing and write-protection state review-visible without exposing password-verifier material.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-130.html">
+    <meta property="og:title" content="A Word restriction is not encryption">
+    <meta property="og:description" content="DocFence 0.13 adds private, aggregate evidence for stored Word protection state.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-130.html">
+    <title>A Word restriction is not encryption — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word restriction is not encryption</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.13.0">DocFence 0.13.0</a></p>
+
+      <p>A Word template can open as read-only, permit only comments or form fields, recommend read-only mode, or ask before leaving a restriction. Those controls can matter enormously to a publishing, review, or handoff workflow. But they are not the same as encrypting a file, and a package that stores them should not be described as cryptographically secure merely because a password-looking value appears in its settings.</p>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.documentprotection?view=openxml-3.0.1">WordprocessingML document-protection contract</a> is unusually clear about this boundary: editing restrictions are for preventing unintentional changes, do not encrypt the document, and are not intended as a security feature. Its independent <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.writeprotection?view=openxml-3.0.1">write-protection setting</a> carries the same caveat. Yet both remain meaningful stored state—and protection elements can retain password-verifier fields such as hashes and salts.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.13 makes that boundary review-visible without exposing the underlying protection material or overstating what it means.</p>
+
+      <h2>What the package can retain</h2>
+
+      <p>Word stores direct <code>w:documentProtection</code> and <code>w:writeProtection</code> elements in a document Settings part. The first can specify an editing mode such as read-only, comments, tracked changes, or forms, plus formatting and an enforcement attribute. The second can recommend read-only mode or retain write-protection material. The exact client behavior matters, especially when an enforcement attribute is absent, so DocFence reports stored evidence rather than predicting what an editor will do.</p>
+
+      <p>DocFence discovers Settings through Word’s conventional <code>word/settings.xml</code> path and recognized Transitional or Strict settings relationships from the main or glossary document. It checks direct protection leaves, permits at most one of each per Settings part, and rejects malformed recognized shape, attributes, edit modes, or boolean values.</p>
+
+      <h2>Counts in reports; verifier material stays private</h2>
+
+      <p>Profile JSON, Markdown, and SARIF expose only aggregate document-protection element, explicitly-enabled enforcement, formatting-restriction, edit-mode, write-protection, read-only-recommendation, and password-material counts. A password-material count means the element stores at least one hash or salt attribute; it does not say the verifier is complete, valid, or strong.</p>
+
+      <p>DocFence never prints hashes, salts, verifier values, provider or algorithm fields, other protection attributes, Settings-part paths, or fingerprints. The full direct elements are privately fingerprinted, so a same-count verifier rewrite remains review-visible without putting password-verifier material in CI output.</p>
+
+      <h2>Choose a clean handoff or freeze an approved restriction</h2>
+
+      <p>For an external handoff that must carry no stored Word editing or write-protection state:</p>
+
+      <pre><code>rules:
+  require_no_word_protection: true</code></pre>
+
+      <p>This produces <code>DFP039</code>. It fails whenever a recognized protection element is present, including an otherwise empty one. For an approved template that intentionally retains a known restriction:</p>
+
+      <pre><code>rules:
+  no_word_protection_changes: true</code></pre>
+
+      <p><code>DFP040</code> detects a private-inventory change from that baseline. These rules protect package state; they do not turn an editing restriction into an encryption or security claim.</p>
+
+      <h2>What this deliberately does not do</h2>
+
+      <p>DocFence does not validate password construction or strength, derive, test, or recover a password, assess an algorithm, bypass a restriction, decrypt a document, determine effective Office enforcement, or decide whether a document is secure. It also does not expose a protected value in the name of explaining it. A counts-and-private-digest boundary is intentionally much narrower—and much safer for CI artifacts—than a password or cryptographic analysis tool.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.13 suite has 35 tests. It covers same-count hash/verifier rewrites; JSON, Markdown, and SARIF redaction; policy findings; conventional, Transitional, Strict, and glossary-linked Settings discovery; duplicate protection leaves; malformed roots/leaves; unsupported attributes; invalid edit and boolean values; and external Settings relationships. It passed Python 3.11 and 3.13 CI, Ruff, and compilation checks. The wheel and source archive were independently rebuilt from the release commit and matched byte-for-byte.</p>
+
+      <p>An installed wheel profiled two independent Open XML SDK protection assets: one reported a stored write-protection element and read-only recommendation; another reported a document-protection element with explicit enforcement and a formatting restriction. Neither reported password-material attributes. The release smoke also preserved DocFence’s existing public signed-package and ordinary Word-package checks.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.13.0/docfence-0.13.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.13.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The precise semantics and limits are in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.13.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.13.0/docs/threat-model.md">threat model</a>. For the preceding package-trust boundary, read <a href="/posts/docfence-120.html">A Word file can carry a signature without proving trust</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
