@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.14 makes stored Word editable-range permission markup review-visible without exposing editor identities.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-140.html">
+    <meta property="og:title" content="A Word editable range can carry an editor identity">
+    <meta property="og:description" content="DocFence 0.14 adds private, aggregate evidence for stored Word editable-range permission markup.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-140.html">
+    <title>A Word editable range can carry an editor identity — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word editable range can carry an editor identity</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.14.0">DocFence 0.14.0</a></p>
+
+      <p>A Word document can be broadly read-only yet leave selected text, a table column, or another region editable. That exception can be intentionally useful in a review template or controlled form. It can also preserve a named person’s e-mail address, alias, or domain identity inside the OOXML package. A clean-looking document handoff therefore needs to ask two separate questions: does the package retain an editable-range exception, and does a report reveal the identity stored with it?</p>
+
+      <p>Microsoft’s <a href="https://support.microsoft.com/en-us/word/allow-changes-to-parts-of-a-protected-word-document">protected-document guidance</a> describes this workflow directly: a protected document can allow everyone or selected individuals to edit a chosen region, with e-mail addresses recommended when authentication is used. The <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.permstart?view=openxml-3.0.1">Open XML SDK’s <code>w:permStart</code> contract</a> gives the stored representation; its paired <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.permend?view=openxml-3.0.1"><code>w:permEnd</code></a> marker closes the range.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.14 makes that package state review-visible without printing editor identifiers, marker IDs, or exact editable content.</p>
+
+      <h2>What the package can retain</h2>
+
+      <p>A <code>w:permStart</code> marker stores the beginning of an editable range. Its <code>w:ed</code> attribute can hold an individual editor value; <code>w:edGrp</code> can hold a predefined application group such as <code>everyone</code>, <code>editors</code>, or <code>owners</code>. The corresponding <code>w:permEnd</code> shares the range ID. A start marker can also carry <code>w:colFirst</code> or <code>w:colLast</code> for a table-column selection.</p>
+
+      <p>These markers are useful only in the broader behavior of a Word client and its document-protection configuration. They are not a live identity directory, a proof that an editor is authenticated, or evidence that anyone can presently edit the file. Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/25f91d19-68a2-4190-8611-2d804a821d10">implementation notes</a> also record that, when both individual and group attributes are stored, Word gives the individual attribute precedence.</p>
+
+      <h2>Counts in reports; identities stay private</h2>
+
+      <p>DocFence scans supported body, header, footer, footnote, endnote, comment, and glossary stories in Transitional or Strict OOXML. It validates recognized marker leaves, required IDs, standard attributes, known group values, column-selector syntax, custom-XML placement values, and unambiguous IDs within a story.</p>
+
+      <p>Profile JSON, Markdown, and SARIF expose only aggregate start/end, paired/unpaired, individual-editor, predefined-group, table-column-selector, and custom-XML-placement counts. They do not expose the <code>w:ed</code> value, a marker ID, an exact table column, a story path, or a fingerprint. The complete marker shape is privately fingerprinted, so a same-count identity rewrite still appears as a review-relevant inventory change without putting an identity in CI output.</p>
+
+      <p>An unmatched boundary is still counted as stored review state. It is not presented as an effective permission. This matters because a malformed or residual marker can still carry sensitive metadata even when Word does not honor it as an editable region.</p>
+
+      <h2>Choose a clean handoff or freeze an approved baseline</h2>
+
+      <p>For a handoff that must carry no stored editable-range permission markup:</p>
+
+      <pre><code>rules:
+  require_no_word_permission_ranges: true</code></pre>
+
+      <p>This produces <code>DFP041</code> whenever a recognized start or end marker is present, including an unmatched boundary. For a template that intentionally preserves known editable regions:</p>
+
+      <pre><code>rules:
+  no_word_permission_range_changes: true</code></pre>
+
+      <p><code>DFP042</code> compares the private inventory against the approved baseline. It detects a changed editor value or marker shape even when the safe public counts did not change.</p>
+
+      <h2>What this deliberately does not do</h2>
+
+      <p>DocFence does not authenticate a person, resolve a group, calculate the exact editable text or cells, emulate client precedence, determine whether Word will honor a marker, or decide whether a document is secure. It does not turn a stored editable-range exception into an authorization claim. The inventory is a bounded package-review signal for CI and handoff workflows.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.14 suite has 37 tests. It covers aggregate categories, same-count editor-identity changes, JSON/Markdown/SARIF redaction, policy findings, body/header discovery, Strict OOXML, unmatched boundaries, and malformed leaves, IDs, attributes, groups, columns, placement values, and duplicate boundaries. It passed Python 3.11 and 3.13 CI, Ruff, and compilation checks.</p>
+
+      <p>The wheel and source archive were independently rebuilt from the release commit and matched byte-for-byte. A clean installed wheel profiled a standard-shaped range-permission package with paired individual and group markers, plus independent Open XML SDK Strict and ordinary Word fixtures to confirm the zero-state path. The release artifact download was then verified against its SHA-256 manifest.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.14.0/docfence-0.14.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.14.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The exact scope and limits are in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.14.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.14.0/docs/threat-model.md">threat model</a>. For the preceding protection boundary, read <a href="/posts/docfence-130.html">A Word restriction is not encryption</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
