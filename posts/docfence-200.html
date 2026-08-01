@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.20 makes legacy VML shape href markup review-visible in Word packages without exposing targets or mistaking markup for rendered links.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-200.html">
+    <meta property="og:title" content="The Word link your relationship scan cannot see">
+    <meta property="og:description" content="DocFence 0.20 inventories direct legacy VML shape href markup without copying targets into CI or claiming a client will render the link.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-200.html">
+    <title>The Word link your relationship scan cannot see — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The Word link your relationship scan cannot see</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.20.0">DocFence 0.20.0</a></p>
+
+      <p>A relationship scan is useful, but it is not a complete link inventory. A legacy Word package can place a URL directly on a VML shape’s <code>href</code> attribute. That leaves no OOXML hyperlink relationship, no <code>HYPERLINK</code> field, no <code>w:hyperlink</code>, and no DrawingML action for a review gate to find.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.20 adds a privacy-safe inventory for that distinct stored surface: direct legacy VML shape-link markup in supported Word stories.</p>
+
+      <h2>The target can live on the shape itself</h2>
+
+      <p>VML is old, but the data model is unambiguous. Microsoft’s <a href="https://learn.microsoft.com/en-us/windows/win32/vml/href-attribute--shape--vml"><code>HRef</code> shape attribute documentation</a> defines a URL for a shape, and the W3C’s <a href="https://www.w3.org/TR/NOTE-VML">VML note</a> describes it as the URL to jump to when the element is clicked, with <code>target</code> as the frame. In a Word story, this markup can appear under legacy <code>w:pict</code> content rather than a modern DrawingML object.</p>
+
+      <p>That is a storage fact, not a rendering claim. A client can choose compatibility behavior; the shape can be inside a group or template; and a target can be malformed, inert, or inaccessible. For controlled handoffs, however, the direct stored marker is evidence worth preserving.</p>
+
+      <h2>Count the direct marker, not an imagined click</h2>
+
+      <p>DocFence scans a deliberately tight VML vocabulary: <code>arc</code>, <code>curve</code>, <code>image</code>, <code>line</code>, <code>oval</code>, <code>polyline</code>, <code>rect</code>, <code>roundrect</code>, <code>shape</code>, <code>group</code>, and <code>shapetype</code>. It records a direct unqualified <code>href</code> attribute—even an empty one—as stored evidence.</p>
+
+      <p>Public output contains only aggregate element/story counts, concrete-shape/group/shape-template counts, and whether a direct <code>target</code> attribute is present. URLs, frame targets, titles, alternate text, shape IDs, story paths, and fingerprints remain private. A same-count <code>href</code> or attribute rewrite is still visible through the private signature.</p>
+
+      <p>The boundary is intentionally narrow: it does not scan arbitrary VML attributes, calculate a link inherited from a group or shape template, select a Markup Compatibility branch, resolve or follow a URL, validate a target, render a shape, or execute an action.</p>
+
+      <h2>Two review policies</h2>
+
+      <p>For a handoff that must carry no supported direct VML shape links:</p>
+
+      <pre><code>rules:
+  require_no_word_vml_hyperlinks: true</code></pre>
+
+      <p>This produces <code>DFP053</code>. For an approved legacy template that intentionally keeps such markup:</p>
+
+      <pre><code>rules:
+  no_word_vml_hyperlink_changes: true</code></pre>
+
+      <p><code>DFP054</code> protects the private baseline. These rules complement relationship, field-code, direct WordprocessingML, and DrawingML gates because each watches a different stored mechanism.</p>
+
+      <h2>Evidence and limits</h2>
+
+      <p>The 0.20 suite has 46 tests. Its VML case covers every supported element kind across body and header stories, an empty direct <code>href</code>, target-attribute presence, same-count target and <code>href</code> changes, policy/SARIF output, and redaction. It also proves the separation: the test package’s relationship, <code>HYPERLINK</code>-field, <code>w:hyperlink</code>, and DrawingML inventories are all zero while the VML inventory is nonzero.</p>
+
+      <p>I looked for a public authored Word fixture before treating this as an authoring-behavior claim. A scan of the Open XML SDK’s Word assets at its pinned public commit found legacy VML shapes but no direct VML <code>href</code>. So the release uses a controlled, standards-shaped Word-story package for exact parser evidence and describes the result honestly as a stored-XML compatibility boundary—not proof that contemporary Word commonly creates these links.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13 for both the release commit and tag, including distribution validation. The wheel and source archive were rebuilt independently from the tagged source and matched byte-for-byte. Fresh public-release downloads passed the published SHA-256 manifest, package checks, and an isolated-wheel VML probe.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.20.0/docfence-0.20.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.20.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The exact behavior and non-goals are in the tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.20.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.20.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.20.0/docs/validation.md">validation notes</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
