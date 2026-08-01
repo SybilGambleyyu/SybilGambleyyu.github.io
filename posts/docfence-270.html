@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.27 makes stored Word VML embedded-OLE markers review-visible without exposing package data or predicting Word behavior.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-270.html">
+    <meta property="og:title" content="The marker behind Word's embedded OLE objects">
+    <meta property="og:description" content="DocFence 0.27 adds a bounded, privacy-safe review inventory for direct Office VML Type=Embed markers.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-270.html">
+    <title>The marker behind Word's embedded OLE objects — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The marker behind Word's embedded OLE objects</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a></p>
+
+      <p>An embedded-object relationship or payload answers one useful question: what package material is present. It does not by itself say whether a Word story stores the legacy Office VML marker that identifies an embedded OLE object. The converse is also true: a marker is not proof that a client will open, activate, render, or trust an object.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.27 adds a narrow, privacy-safe inventory for that marker: Office VML <code>o:OLEObject</code> with an unqualified <code>Type="Embed"</code>. It gives document CI a stable stored-markup signal without uploading package material or pretending a parser can forecast Word runtime behavior.</p>
+
+      <h2>A direct marker, not a rendering model</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.office.oleobject?view=openxml-3.0.1"><code>o:OLEObject</code></a> as Office VML markup for an embedded OLE object. The ECMA-376 <a href="https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_OLEObject_topic_ID0EXGUXB.html">element definition</a> identifies its optional <code>r:id</code>, <code>Type</code>, program, shape, object, field-code, and update metadata. The element can occur through several parent forms, so DocFence follows the direct stored marker in supported Word stories rather than assigning it one rendered-object position.</p>
+
+      <p>Every matching marker is retained as stored evidence, including duplicates and markers inside Markup Compatibility branches. The boundary is intentionally separate from <code>Type="Link"</code>, WordprocessingML <code>w:objectEmbed</code> and <code>w:objectLink</code>, VML image and shape links, fields, and generic embedded OLE/package/control relationship and payload totals. It neither selects a branch nor associates the marker with a visible shape.</p>
+
+      <h2>Relationship evidence without opening an object</h2>
+
+      <p>When a marker has <code>r:id</code>, DocFence classifies a standard OLE-object relationship by its stored internal or external target mode. Any other resolved type or mode remains visible as unsupported evidence, and an optional-ID marker without <code>r:id</code> has its own class. The OOXML <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Embedded_topic_ID0EA5BO.html">Embedded Object Part contract</a> permits standard OLE-object relationships with either stored target mode.</p>
+
+      <p><code>UpdateMode</code> is deliberately absent from the public embedded-object inventory. The standard describes that setting for the <code>Link</code> form, not as embedded-object behavior. DocFence retains the complete direct marker only in a private fingerprint, so a same-count program, field-code, update-metadata, or target rewrite remains review-visible while relationship-ID renumbering with unchanged semantics stays quiet.</p>
+
+      <h2>Private semantics, concrete gates</h2>
+
+      <p>JSON, Markdown, and SARIF expose aggregate marker/story and relationship-classification counts only. Program, shape, object, relationship, target, update, field-code, XML, story-path, and fingerprint data remains private.</p>
+
+      <p>A handoff that must carry no direct VML embedded-OLE marker can state that policy directly:</p>
+
+      <pre><code>rules:
+  require_no_word_vml_embedded_ole_objects: true</code></pre>
+
+      <p>That candidate-state gate emits <code>DFP067</code>. A controlled template that deliberately retains approved markers can protect its private baseline instead:</p>
+
+      <pre><code>rules:
+  no_word_vml_embedded_ole_object_changes: true</code></pre>
+
+      <p><code>DFP068</code> detects a material private-inventory change. The two gates complement, rather than replace, the generic embedded-object checks for orphaned relationships and payloads.</p>
+
+      <h2>Real package evidence, bounded claims</h2>
+
+      <p>The installed release profiles the Open XML SDK's public <a href="https://github.com/dotnet/Open-XML-SDK/blob/cd2b359ef824737edb93f1c6157c19551aae1e52/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/ole/ole.docx"><code>ole.docx</code> fixture</a> as one direct embedded marker with an internal standard OLE-object relationship and payload. It reports the same aggregate contract for each of five public <a href="https://github.com/plutext/docx4j/tree/74ea74323a33d92769fdbd3e6d5fe730bbfd8ffb/docx4j-core-tests/src/test/resources/OLE">docx4j OLE fixtures</a>.</p>
+
+      <p>The corpus coverage is deliberately stated, not generalized: a pinned scan found direct markers in 22 of 503 readable Open XML SDK package candidates (two of 505 candidates produced read errors) and five of 141 docx4j Word packages. Those public test assets demonstrate real serialized forms and give regression fixtures; they are not a prevalence survey, a payload-safety assessment, or a client-interoperability claim.</p>
+
+      <p>The 53-test release suite covers external/internal/unsupported/missing-ID classes, duplicate and linked-marker separation, body/header stories, Transitional and Strict namespaces, orphan exclusion, unavailable relationships, same-count program/update/target rewrites, relationship-ID stability, privacy redaction, and JSON/Markdown/SARIF policy output. Hosted CI passed on Python 3.11 and 3.13 for both the release commit and tag. Independently rebuilt tagged artifacts matched byte-for-byte; fresh public downloads passed checksum verification, and an isolated installed wheel profiled the public Open XML SDK fixture with the expected aggregate contract.</p>
+
+      <p>DocFence does not select a Markup Compatibility branch, retrieve a target, open or activate an OLE object, decode its payload, render it, or execute it. It does not establish that Word will associate a marker with a visible shape or honor it. Use it as a bounded local review signal alongside rendering, security, and domain-specific review.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.27.0/docfence-0.27.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.27.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.27.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.27.0/docs/validation.md">validation notes</a> define the exact behavior, privacy contract, and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
