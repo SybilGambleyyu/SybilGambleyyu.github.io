@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.21 makes DrawingML linked-picture markers review-visible in Word packages without exposing image targets or claiming that a client will load them.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-210.html">
+    <meta property="og:title" content="The external picture link your Word review misses">
+    <meta property="og:description" content="DocFence 0.21 distinguishes direct DrawingML linked-picture markers from a generic external-relationship count without copying image paths into CI output.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-210.html">
+    <title>The external picture link your Word review misses — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The external picture link your Word review misses</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.21.0">DocFence 0.21.0</a></p>
+
+      <p>An external-relationship total is a useful warning, but it cannot tell a reviewer whether an external target is an image source, a hyperlink, an attached template, or an unused relationship. Word has a direct DrawingML marker for linked pictures: <code>a:blip</code> with <code>r:link</code>. It can be present while every familiar hyperlink inventory is empty.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.21 adds a privacy-safe inventory for that precise stored boundary: direct DrawingML linked-picture markers in supported Word stories.</p>
+
+      <h2>The marker names a picture that is not in the package</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.blip.link?view=openxml-3.0.1"><code>a:blip/@r:link</code></a> as a linked-picture reference for an image that does not reside in the file. That differs from <code>r:embed</code>, the reference for an image stored locally in the package. The relationship ID is only a pointer; the target lives in the story part’s relationships.</p>
+
+      <p>ECMA-376’s <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Image_topic_ID0EGXDO.html">Image Part contract</a> allows a standard image relationship to have an internal or external target mode. A careful review should therefore retain both the direct <code>r:link</code> marker and the stored relationship class, without leaking an image path into a CI artifact.</p>
+
+      <h2>Generic external counts lose the important context</h2>
+
+      <p>A package can have an external image relationship with no direct picture marker at all. It can have a normal embedded picture with <code>r:embed</code> and no linked-picture marker. And it can have several direct <code>r:link</code> markers sharing one relationship. Those are different review facts.</p>
+
+      <p>DocFence scans every direct <code>a:blip/@r:link</code> marker in body, header, footer, footnote, endnote, comment, and glossary stories. It reports only aggregate marker/story counts and whether each resolved backing relationship is a standard image relationship with stored external mode, stored internal mode, or an unsupported relationship. It does not count an orphan image relationship or an <code>r:embed</code>-only image as a linked picture.</p>
+
+      <p>Targets, relationship IDs, surrounding drawing markup, story paths, and fingerprints remain private. The private signature catches same-count target or markup changes while treating an ID-only renumbering with identical semantics as unchanged.</p>
+
+      <h2>Two policies for two handoff modes</h2>
+
+      <p>For a handoff that must not contain a stored linked-picture marker:</p>
+
+      <pre><code>rules:
+  require_no_word_drawing_linked_pictures: true</code></pre>
+
+      <p>This produces <code>DFP055</code>. For an approved template that intentionally retains linked pictures:</p>
+
+      <pre><code>rules:
+  no_word_drawing_linked_picture_changes: true</code></pre>
+
+      <p><code>DFP056</code> protects the private baseline. Together, these rules add context to a generic external-relationship gate rather than replacing it.</p>
+
+      <h2>Evidence without pretending to render Word</h2>
+
+      <p>The release suite has 47 tests. The new regression case covers direct markers backed by external and internal standard image relationships, a resolved unsupported relationship, a dual <code>r:link</code>/<code>r:embed</code> element, an <code>r:embed</code>-only element, body/header stories, Transitional and Strict namespaces, orphan-relationship exclusion, same-count target and markup changes, relationship-ID renumbering, policy/SARIF output, and redaction.</p>
+
+      <p>It is also exercised against a real public Word package from pea-sys’s <a href="https://github.com/pea-sys/shell-experiments/blob/91386d4de9e499a21bbb2e54743eb63a63727bfb/powershell/survey/abspath2relpath-docx/survey/abs/1.docx">linked-picture investigation</a>. At that immutable commit, the package has two direct <code>a:blip/@r:link</code> markers and two external standard image relationships; DocFence reports exactly those two markers without emitting their paths or relationship IDs. The downloaded fixture SHA-256 was <code>8554932d5de0f1c81dbdcbf7b480c17f9008abca18c66a7f03b2e881cfe5147b</code>.</p>
+
+      <p>This is a stored-package control, not a Word renderer or network monitor. DocFence does not choose a Markup Compatibility branch, associate a marker with a visual object, resolve or retrieve an image, update a link, render a picture, or claim that a Word client will load, reach, or honor a target.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13 for the release commit and tag, including distribution validation. The wheel and source archive were rebuilt independently from the tagged source and matched byte-for-byte; an isolated installed wheel reproduced the two-marker public-fixture result.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.21.0/docfence-0.21.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.21.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The exact behavior and non-goals are in the tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.21.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.21.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.21.0/docs/validation.md">validation notes</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
