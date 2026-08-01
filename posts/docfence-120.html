@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.12 makes Word package digital-signature material review-visible without exposing signer, certificate, or signature data.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-120.html">
+    <meta property="og:title" content="A Word file can carry a signature without proving trust">
+    <meta property="og:description" content="DocFence 0.12 adds private, aggregate evidence for OPC package digital-signature material.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-120.html">
+    <title>A Word file can carry a signature without proving trust — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word file can carry a signature without proving trust</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.12.0">DocFence 0.12.0</a></p>
+
+      <p>A signed Word file is not a yes-or-no security fact. An Office Open XML package can carry an OPC signature origin, XML Signature parts, optional certificate parts, and inline certificate data—yet whether a signature is valid or trustworthy depends on cryptographic validation, certificate and policy evaluation, and the consuming application. A review gate first needs a narrower, reliable question: did the package’s stored signature material change?</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.12 makes that package state review-visible without treating a signature as a trust verdict. It emits bounded aggregate evidence that can drive a handoff or baseline policy, while retaining the actual signature material only in a local comparison digest.</p>
+
+      <h2>What a Word package can retain</h2>
+
+      <p>The <a href="https://learn.microsoft.com/en-us/previous-versions/windows/desktop/opc/open-packaging-conventions-overview">Open Packaging Conventions</a> define package signatures as package components: an origin points to XML Signature parts, which may reference certificate parts and contain inline X.509 material. The same specification makes the package consumer responsible for deciding what a signer or certificate means. That separation matters: a package can contain recognizable signature material without a locally valid, trusted, current, or sufficiently covering signature.</p>
+
+      <p>It also matters because structurally valid-looking Office signatures have had real implementation and workflow security consequences. Public <a href="https://www.usenix.org/conference/usenixsecurity23/presentation/rohlmann">research on OOXML signature security</a> is a useful reminder that “signed” is not a substitute for understanding the exact validation and trust model. DocFence therefore never turns presence into a passing security claim.</p>
+
+      <h2>Counts in reports; signature material stays private</h2>
+
+      <p>Profile JSON, Markdown, and SARIF expose only origin, XML-signature, and certificate-part counts, plus SignedInfo reference, manifest-reference, relationship-reference, inline-X.509-certificate, and signature-property counts. They do not print signature values, signer or certificate material, algorithms, signing times, comments, provider data, reference URIs, relationship IDs, package paths, or fingerprints.</p>
+
+      <p>The full recognized inventory is privately fingerprinted so a same-count mutation to signature XML or certificate bytes still changes a protected baseline. Re-signing a package deliberately changes stored signature material; DocFence does not normalize that away. The point is an explicit and reviewable package-state boundary, not a claim that two re-signed files are equivalent.</p>
+
+      <h2>Choose a clean handoff or freeze the expected material</h2>
+
+      <p>For an external handoff that must carry no stored package-signature material:</p>
+
+      <pre><code>rules:
+  require_no_package_digital_signatures: true</code></pre>
+
+      <p>This produces <code>DFP037</code>. It fails for any nonzero signature inventory count, including an otherwise empty recognized signature origin. For a controlled workflow where an approved package is expected to retain its signature material:</p>
+
+      <pre><code>rules:
+  no_package_digital_signature_changes: true</code></pre>
+
+      <p><code>DFP038</code> detects a private-inventory change from the approved baseline. Neither rule validates a signature or declares an author trustworthy.</p>
+
+      <h2>Strict discovery, intentionally limited scope</h2>
+
+      <p>DocFence recognizes an origin through the conventional path, exact OPC content type, or the standard root origin relationship. It then constrains recognized signature and certificate relationships to expected sources, internal stored targets, and exact content types; it accepts correctly declared content-type defaults as well as overrides. It allows only one origin and root origin relationship, checks bounded XMLDSIG structure, and fails closed on malformed recognized topology or shape.</p>
+
+      <p>This is stored-package evidence, not cryptographic verification. DocFence does not validate a signature or referenced digest; build a certificate chain; check revocation, timestamps, signer identity, coverage, policy, or algorithm suitability; or reproduce Microsoft Office’s trust decision. It also does not claim that a document was ever signed, or is presently safe, merely because a signature part is stored inside it.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.12 suite has 33 tests covering same-count signature and certificate mutations, redaction across all report formats, policies and SARIF findings, conventional, relationship, and content-type discovery, malformed XMLDSIG structure, external and missing targets, wrong content types, duplicate/non-root origins, and relationship-ID semantics. It passed Python 3.11 and 3.13 CI, Ruff, and compilation checks. The wheel and source archive were independently rebuilt from the release commit and matched byte-for-byte.</p>
+
+      <p>An installed wheel profiled a <a href="https://github.com/RUB-NDS/OOXML_Signature_Security/blob/main/PoC_OOXML_Signature_Attacks/Microsoft_Office/Windows/5-1_CIA/01_document_signed_by_trusted_entity.docx">public signed-package fixture</a> without disclosing its signature data: it reported one origin, one XML Signature, three SignedInfo references, eight manifest references, six relationship references, one inline X.509 certificate, and two signature properties. Stable ordinary Open XML SDK Word document and template fixtures both reported zero signature counts.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.12.0/docfence-0.12.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.12.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The precise semantics and limits are in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.12.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.12.0/docs/threat-model.md">threat model</a>. For the preceding information-governance boundary, read <a href="/posts/docfence-110.html">A sensitivity label can retain your tenant’s metadata</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
