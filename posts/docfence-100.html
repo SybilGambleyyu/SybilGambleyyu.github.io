@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.10 makes stored Word document tasks and task-pane Office web-extension state review-visible without exposing task or add-in data.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-100.html">
+    <meta property="og:title" content="A Word document can carry a task graph—and an add-in">
+    <meta property="og:description" content="DocFence 0.10 adds private, aggregate evidence for Word document tasks and task-pane Office web extensions.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-100.html">
+    <title>A Word document can carry a task graph—and an add-in — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word document can carry a task graph—and an add-in</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.10.0">DocFence 0.10.0</a></p>
+
+      <p>A clean paragraph count and a clean comment count do not necessarily mean a Word file is free of workflow state. A modern comment can become an assigned task; a document can retain task history, users, titles, dates, progress, and comment anchors in a separate OOXML part. It can also retain configuration for an embedded Office task pane and the content controls associated with it.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.10 makes both surfaces review-visible as bounded, private evidence. It reports aggregate counts useful to a CI gate, while the task and add-in material itself remains inside local SHA-256 comparison signatures.</p>
+
+      <h2>Two kinds of state outside the document text</h2>
+
+      <p>Microsoft’s <a href="https://support.microsoft.com/en-us/word/using-modern-comments-in-word">modern-comments guidance</a> describes assigning a comment as a task. The corresponding <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-otaskxml/652d0608-31b8-4e90-a83a-98d6957b7fed">document-task OOXML contract</a> stores tasks, histories, attribution, assignments, schedules, progress, priority, deletion, and undo events. That is useful workflow data, but it is a separate handoff surface from comment text.</p>
+
+      <p>Office add-ins have a separate package representation. Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-owexml/29f59f30-b835-461a-bd8a-ca400a7bc717">web-extension OOXML contract</a> defines stored extension references, properties, bindings, and task panes. Word’s own <a href="https://learn.microsoft.com/en-us/javascript/api/word/word.removedocinfotype?view=word-js-preview">removable-document-information model</a> lists both document tasks and task-pane web extensions. A file can therefore carry a review/workflow boundary that is neither visible prose nor an external link.</p>
+
+      <h2>Counts for a gate, private signatures for the actual comparison</h2>
+
+      <p>DocFence profiles a document-task part as aggregate task, history-event, user-reference, comment-anchor, and event-category counts. It never prints task IDs, event IDs, user IDs or names, titles, schedule dates, priority, progress, or comment IDs. A same-count rewrite still changes the private inventory, so a baseline gate can notice it without turning CI output into a copy of task data.</p>
+
+      <p>The task-pane inventory reports only aggregate task-pane, visible/locked-pane, web-extension-part, store-reference, property, binding, enabled auto-show-property, and Word content-control marker counts. Extension IDs, stores, property names and values, binding references, pane layout values, marker values, relationship IDs, and package paths are withheld. Relationship-ID renumbering alone remains quiet because DocFence compares the normalized relationship semantics instead of the transient ID.</p>
+
+      <h2>Two precise policy choices</h2>
+
+      <p>For a publishing or clean-handoff boundary, reject either class of retained state outright:</p>
+
+      <pre><code>rules:
+  require_no_document_tasks: true
+  require_no_taskpane_web_extensions: true</code></pre>
+
+      <p>These produce <code>DFP031</code> and <code>DFP033</code>. For a controlled template that intentionally contains approved workflow or add-in configuration, freeze the baseline instead:</p>
+
+      <pre><code>rules:
+  no_document_task_changes: true
+  no_taskpane_web_extension_changes: true</code></pre>
+
+      <p><code>DFP032</code> and <code>DFP034</code> then block a later private-inventory mutation, even when public counts match. The normal content, comments, external relationships, and other DocFence inventories remain independent, so a team can choose the narrow rule it actually means.</p>
+
+      <h2>Strict package evidence, not Office automation</h2>
+
+      <p>DocFence finds recognized parts through standard content types, relationship types, and conventional Word paths. It validates document-task, task-pane, and web-extension roots; a direct task-pane reference must resolve through the expected internal relationship or parsing fails closed. It accepts both the established <code>webextension</code> task-pane spelling and <code>webextensionref</code>. For a Word content control, an enabled <code>w15:webExtensionCreated</code> marker takes precedence over <code>w15:webExtensionLinked</code>.</p>
+
+      <p>This is intentionally stored-state evidence, not an add-in sandbox or a task client. DocFence does not install, load, execute, authenticate to, fetch, validate, or judge an add-in. It does not assign, complete, synchronize, or notify on a task. An enabled <code>Office.AutoShowTaskpaneWithDocument</code> property is counted as stored configuration only; it is not a claim that a particular Word client will open a pane. Microsoft’s <a href="https://learn.microsoft.com/en-us/office/dev/add-ins/develop/automatically-open-a-task-pane-with-a-document">auto-open guidance</a> is useful context for why that distinction matters.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.10 regression suite covers semantic same-count mutations, JSON/Markdown/SARIF redaction, policy findings, noncanonical and unlinked conventional discovery, extensionless paths, both task-pane reference spellings, marker precedence, malformed roots and references, external recognized relationships, and relationship-ID churn. The final wheel was installed outside its source tree and profiled against a package carrying both inventories. The wheel and source archive were rebuilt from the release commit and matched byte-for-byte.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.10.0/docfence-0.10.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.10.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The precise rule semantics and limits are in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.10.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.10.0/docs/threat-model.md">threat model</a>. For the preceding review-metadata boundary, read <a href="/posts/docfence-090.html">A Word comment can retain a hidden review graph</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
