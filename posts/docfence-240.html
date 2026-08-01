@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.24 makes legacy Word VML linked-OLE markers review-visible without exposing sources or assuming a Word client will update them.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-240.html">
+    <meta property="og:title" content="The linked Word object hiding in a legacy VML shape">
+    <meta property="og:description" content="DocFence 0.24 inventories direct VML OLEObject Type=Link markers as private, aggregate stored evidence for document CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-240.html">
+    <title>The linked Word object hiding in a legacy VML shape — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The linked Word object hiding in a legacy VML shape</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.24.0">DocFence 0.24.0</a></p>
+
+      <p>A Word document can carry a linked spreadsheet, chart, or other OLE object as a shape-backed piece of legacy XML rather than as an ordinary field. A generic embedded-object count can say that a package has OLE material, but it cannot tell a reviewer whether the stored marker is a static embed or a source-backed link with an update mode.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.24 adds a narrow, privacy-safe inventory for that direct legacy surface: <code>o:OLEObject Type="Link"</code> in a supported Word story. It is stored-package evidence for CI review, not a Word renderer, OLE client, source resolver, or network monitor.</p>
+
+      <h2>Linked and embedded are different review questions</h2>
+
+      <p>Microsoft’s <a href="https://support.microsoft.com/en-US/Word/linked-objects-and-embedded-objects">linked-versus-embedded-object guidance</a> draws a practical line: linked data stays in a source file and can change when that source changes, while an embed is a static copy inside the Word file. Both may appear near the same kind of visual placeholder, so a relationship total alone is too coarse for a controlled handoff.</p>
+
+      <p>The OOXML model makes the direct distinction available in markup. The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.office.oleobject?view=openxml-3.0.1"><code>o:OLEObject</code></a>; the ECMA-376 <a href="https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_OLEObject_topic_ID0EXGUXB.html">element definition</a> describes its <code>Type</code>, optional <code>r:id</code>, and <code>UpdateMode</code> attributes. Public Word XML fragments show the stored form in ordinary work: an <a href="https://stackoverflow.com/questions/60565712/insert-ole-object-into-ms-word-document-and-keep-the-underlying-format-wmf-intac">Excel-linked object</a> has <code>Type="Link"</code> and <code>UpdateMode="Always"</code>; another public <a href="https://forum.aspose.com/t/cannot-found-includepicture-field-type-via-doc-range-fields/277035">Word shape example</a> uses <code>UpdateMode="OnCall"</code> and is explicitly not represented as a conventional <code>LINK</code> field.</p>
+
+      <h2>Count the direct marker; preserve the awkward cases</h2>
+
+      <p>DocFence scans direct <code>o:OLEObject</code> elements whose unqualified <code>Type</code> is <code>Link</code> across body, header, footer, footnote, endnote, comment, and glossary stories. Duplicates and Markup Compatibility branches remain separate stored markers. The scanner does not select a client branch, associate a marker with a rendered shape, or deduplicate a visual object.</p>
+
+      <p>When a marker has <code>r:id</code>, the inventory recognizes the standard OLE-object relationship and reports its stored target mode as external or internal. The <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Embedded_topic_ID0EA5BO.html">Embedded Object Part contract</a> permits both modes. Any other resolved relationship type or mode remains visible as <em>unsupported</em> evidence instead of being relabeled a normal OLE object. A direct marker without <code>r:id</code> is also retained in its own class because the schema permits that attribute to be absent.</p>
+
+      <p>The release separately aggregates stored <code>UpdateMode="Always"</code> markers. Every other or absent update value is counted as nonautomatic-or-unspecified. That is deliberately descriptive, not predictive: it says what the package records, not that Word will open a source, refresh data, or honor the flag.</p>
+
+      <p><code>Type="Embed"</code>, WordprocessingML <code>w:objectLink</code>, VML image data, VML shape links, DrawingML linked pictures, and broad embedded OLE/package/control payload totals remain separate surfaces. A lone OLE relationship does not create a linked-OLE marker count.</p>
+
+      <h2>Private semantics, concrete policy gates</h2>
+
+      <p>Reports expose only aggregate marker/story, update-mode, and relationship-classification counts. Link sources, monikers, program IDs, shape and object IDs, relationship targets and IDs, field codes, VML markup, and story paths never appear in JSON, Markdown, or SARIF.</p>
+
+      <p>The private signature retains the full direct marker while normalizing a relationship ID to its stored relationship semantics. That makes same-count source, program, field-code, update-mode, or target rewrites review-visible without churning the inventory when only an ID is renumbered.</p>
+
+      <p>For a handoff that must carry no direct linked-OLE marker:</p>
+
+      <pre><code>rules:
+  require_no_word_vml_linked_ole_objects: true</code></pre>
+
+      <p>This produces <code>DFP061</code>. A controlled template that intentionally retains approved markers can instead protect its private baseline:</p>
+
+      <pre><code>rules:
+  no_word_vml_linked_ole_object_changes: true</code></pre>
+
+      <p><code>DFP062</code> detects a material marker-inventory change. These gates add narrow markup context to the existing embedded-object and relationship review; they do not replace either.</p>
+
+      <h2>Evidence, and the boundary it does not cross</h2>
+
+      <p>The 50-test release suite covers standard external and internal OLE-object relationships, an unsupported relationship, a marker without <code>r:id</code>, automatic and nonautomatic/unspecified update modes, duplicates, body/header stories, Transitional and Strict namespaces, orphan exclusion, unavailable relationships, source and target rewrites, relationship-ID stability, privacy redaction, and JSON/Markdown/SARIF policy output. It also verifies that <code>Type="Embed"</code> and <code>w:objectLink</code> remain outside this specialized inventory.</p>
+
+      <p>Release validation combines that controlled package with the public real XML fragments above. They are marker evidence rather than downloadable whole-package fixtures, so the release does not overclaim a public end-to-end Word-package smoke test for every form. Hosted CI passed on Python 3.11 and 3.13 for the release commit and tag. The wheel and source archive were independently rebuilt from the tagged source with a fixed source date and matched byte-for-byte; fresh public downloads passed checksum and metadata verification, and an isolated installed wheel reproduced the linked-OLE counts without exposing its target, program ID, or field text.</p>
+
+      <p>DocFence does not resolve, retrieve, open, update, activate, evaluate, render, or execute an OLE object. It does not establish that Word will honor a marker, that a source is reachable or safe, or that a visible shape is actually associated with it. Use it as a bounded local review signal alongside an appropriate rendering and domain review process.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.24.0/docfence-0.24.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.24.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.24.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.24.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.24.0/docs/validation.md">validation notes</a> define the exact behavior and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
