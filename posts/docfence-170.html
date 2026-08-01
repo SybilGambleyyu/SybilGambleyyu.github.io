@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.17 inventories stored Word HYPERLINK field codes without exposing or following destinations.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-170.html">
+    <meta property="og:title" content="A Word link can exist outside its relationship graph">
+    <meta property="og:description" content="DocFence 0.17 makes direct Word HYPERLINK field references review-visible without copying destinations into CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-170.html">
+    <title>A Word link can exist outside its relationship graph — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word link can exist outside its relationship graph</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.17.0">DocFence 0.17.0</a></p>
+
+      <p>Most Word-link review starts with package relationships. That is useful, but incomplete. Word can also store a <code>HYPERLINK</code> field code whose destination sits directly in the field instruction. There may be no corresponding relationship target to inspect.</p>
+
+      <p>That gap matters in CI and controlled handoffs. A document can gain a direct web, file, or bookmark destination without adding the package record a relationship-only check expects. The right evidence is that the field code exists and changed—not the destination copied into a build log.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.17 adds a separate, privacy-safe inventory for those stored field references.</p>
+
+      <h2>A field code is not a relationship</h2>
+
+      <p>Microsoft’s current <a href="https://learn.microsoft.com/en-us/office/dev/add-ins/word/fields-guidance">Word field guidance</a> describes a Hyperlink field as a link to a location in the document or an external location. The OOXML <a href="https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_HYPERLINKHYPERLINK_topic_ID0EFYG1.html">field definition</a> makes the boundary concrete: the primary field argument identifies a bookmark or URL, while <code>\l</code> identifies a location in the current file.</p>
+
+      <p>That means a literal first argument is not enough to call a field external. It could be a URL, a file location, or a bookmark. DocFence deliberately does not guess. Its public inventory separates only three lexical cases: a literal leading destination, a literal <code>\l</code> internal-location-only target, and a dynamic or unparseable field code.</p>
+
+      <p>The report never prints the destination, bookmark, ScreenTip, frame target, field instruction, or story path. It also does not resolve, retrieve, follow, evaluate, or render a link.</p>
+
+      <h2>Read stored code, not displayed results</h2>
+
+      <p>Word can encode a field as a compact <code>w:fldSimple</code> instruction or as a complex begin/instruction/separate/end sequence. Complex instructions can be split across runs, retained in tracked-deletion markup, or contain nested fields. A displayed result can be stale and is not a safe substitute for the stored code.</p>
+
+      <p>DocFence therefore scans only complete simple instructions and complete complex pre-separator instructions across supported Word stories. Current and deleted field-code variants remain separately review-visible. Loose instruction text, post-separator result text, and unclosed complex fields do not create an inventory count.</p>
+
+      <h2>Two policy choices</h2>
+
+      <p>For a handoff that must contain no stored <code>HYPERLINK</code> field references:</p>
+
+      <pre><code>rules:
+  require_no_word_hyperlink_fields: true</code></pre>
+
+      <p>This produces <code>DFP047</code>. For a governed template that intentionally retains the fields:</p>
+
+      <pre><code>rules:
+  no_word_hyperlink_field_changes: true</code></pre>
+
+      <p><code>DFP048</code> protects the private inventory against a later mutation. These rules complement relationship and external-source-field policies rather than redefining them: each covers a different stored representation.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.17 suite has 43 tests. It covers simple and split complex fields, quoted and plain arguments, <code>\l</code> internal locations, trailing switches, nested/dynamic and compound expressions, current/deleted variants, headers, Strict Word XML, same-count destination changes, policy/SARIF output, and redaction.</p>
+
+      <p>For an independent smoke test, the released wheel profiles the public <a href="https://github.com/jgm/pandoc/files/13645632/doc.docx"><code>doc.docx</code> attachment</a> from <a href="https://github.com/jgm/pandoc/issues/9246">Pandoc issue #9246</a>. It contains a complete complex <code>HYPERLINK \l</code> field in a real Word document. DocFence reports one literal internal-location-only reference without emitting its bookmark or result text.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13, including distribution validation. The wheel and source archive were independently rebuilt from the release commit and matched byte-for-byte; fresh GitHub release downloads passed the published SHA-256 manifest and package checks.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.17.0/docfence-0.17.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.17.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. Read the precise boundary in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.17.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.17.0/docs/threat-model.md">threat model</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
