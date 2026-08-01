@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.19 inventories DrawingML hyperlink-action markers in Word without exposing targets or pretending they are rendered links.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-190.html">
+    <meta property="og:title" content="One Word image link can be two stored markers">
+    <meta property="og:description" content="DocFence 0.19 makes Word DrawingML click, hover, and mouse-over action markup review-visible without copying targets into CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-190.html">
+    <title>One Word image link can be two stored markers — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>One Word image link can be two stored markers</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.19.0">DocFence 0.19.0</a></p>
+
+      <p>“This image has a hyperlink” sounds like one fact. In a Word OOXML package, it can be more than one stored action marker. That distinction matters when a document is reviewed in CI: a package relationship is not enough evidence, and a visible-link count is not the same thing as the markup stored in the file.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.19 adds a privacy-safe inventory for that missing layer: direct DrawingML <code>a:hlinkClick</code>, <code>a:hlinkHover</code>, and <code>a:hlinkMouseOver</code> markers inside supported Word stories.</p>
+
+      <h2>A real image has two click markers</h2>
+
+      <p>LibreOffice’s public <a href="https://github.com/LibreOffice/core/blob/100f43ab871bedda6b427645cbfc2c8083da98b5/sw/qa/extras/ooxmlexport/data/tdf78657_picture_hyperlink.docx"><code>tdf78657_picture_hyperlink.docx</code> regression fixture</a> is identified by its commit as a Microsoft Word 2016 test file. Its one image hyperlink relationship is referenced by two stored <code>a:hlinkClick</code> elements: one on WordprocessingDrawing’s <code>wp:docPr</code>, and another on the picture’s non-visual properties.</p>
+
+      <p>That does <em>not</em> mean a user sees two links. It means the package contains two action markers. A review tool should preserve that stored evidence rather than silently deduplicating it into a rendered-link guess. One marker can be changed or removed while the other remains; that package-level change is precisely what a controlled review needs to see.</p>
+
+      <h2>Count the stored action, keep its material private</h2>
+
+      <p>The DrawingML inventory reports only aggregate marker and story counts, click/hover/mouse-over kinds, external/internal/unsupported relationship classes, missing-<code>r:id</code> markers, and the presence of <code>action</code> and <code>invalidUrl</code> attributes. A package relationship does not count unless a direct marker references it.</p>
+
+      <p>Targets, invalid URLs, action strings, tooltips, frame names, history settings, relationship IDs, story paths, and fingerprints stay private. The private signature catches a same-count target or attribute rewrite, while a relationship-ID renumbering with identical resolved semantics stays quiet.</p>
+
+      <p>The OOXML <a href="https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_hlinkClick_topic_ID0ENF2KB.html"><code>a:hlinkClick</code> definition</a> documents the relationship target and action-related attributes; its <a href="https://c-rex.net/samples/ooxml/e1/part4/OOXML_P4_DOCX_hlinkHover_topic_ID0EF62IB.html">hover counterpart</a> and the Open XML SDK’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.hyperlinkonmouseover?view=openxml-3.0.1">mouse-over contract</a> complete the family. DocFence records direct stored elements in supported Word stories, but does not select a Markup Compatibility branch, resolve a target, associate markers with a rendered object, validate a URL, or execute an action.</p>
+
+      <h2>Two policy choices</h2>
+
+      <p>For a handoff that must carry no stored DrawingML action markup:</p>
+
+      <pre><code>rules:
+  require_no_word_drawing_hyperlinks: true</code></pre>
+
+      <p>This produces <code>DFP051</code>. For a governed template that intentionally retains image or shape actions:</p>
+
+      <pre><code>rules:
+  no_word_drawing_hyperlink_changes: true</code></pre>
+
+      <p><code>DFP052</code> protects the private marker baseline. These rules complement the generic relationship gate, direct <code>w:hyperlink</code> markup gate, and <code>HYPERLINK</code> field gate because each represents different stored evidence.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.19 suite has 45 tests. It covers click, hover, and mouse-over marker kinds; external and internal hyperlink relationships; a resolved type mismatch; a missing relationship ID; action and invalid-URL attribute presence; body/header stories; Transitional and Strict namespaces; orphaned-relationship exclusion; same-count target/action mutations; relationship-ID renumbering; policy/SARIF output; and redaction.</p>
+
+      <p>The released wheel profiles the public Word 2016 image fixture and reports two click markers and two external relationship-backed marker references without emitting its target. Hosted CI passed on Python 3.11 and 3.13, including distribution validation. The wheel and source archive were independently rebuilt from the tagged commit and matched byte-for-byte; fresh GitHub release downloads passed the published SHA-256 manifest, package checks, and an isolated-wheel fixture smoke test.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.19.0/docfence-0.19.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.19.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. Read the exact contract in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.19.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.19.0/docs/threat-model.md">threat model</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
