@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.5 makes Word mail-merge configuration, external source relationships, and recipient-data state review-visible without exposing connection details.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-050.html">
+    <meta property="og:title" content="Mail merge is a document dependency, not just a template setting">
+    <meta property="og:description" content="DocFence 0.5 adds bounded evidence and policy gates for stored Word mail-merge state.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-050.html">
+    <title>Mail merge is a document dependency, not just a template setting — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>Mail merge is a document dependency, not just a template setting</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.5.0">DocFence 0.5.0</a></p>
+
+      <p>A Word template can look like an ordinary document while retaining enough mail-merge state to point at a data source, retain a query or connection configuration, and preserve recipient-selection data. That is not a harmless implementation detail at a controlled handoff. Microsoft documents the prompt shown when a linked mail-merge document would run a SQL query, and says accepting it lets code run on the computer.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.5.0 turns that stored state into bounded, local evidence. It makes mail-merge configuration, external data/header-source relationships, and internal recipient-data parts review-visible without printing source paths, connection strings, queries, table names, field mappings, relationship IDs, or recipient data into JSON, Markdown, or SARIF.</p>
+
+      <h2>What the package can retain</h2>
+
+      <p>Mail-merge settings live in Word’s <code>word/settings.xml</code> part. A <code>w:mailMerge</code> configuration can point to an external <code>mailMergeSource</code>, an external header source, and Office Data Source Object (<code>w:odso</code>) details such as connection information, a table name, a query, and mapped fields. The Open XML SDK describes <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.datasourceobject?view=openxml-3.0.1">ODSO settings</a> as carrying both connection information and record-selection/mapping state.</p>
+
+      <p>Recipient inclusion/exclusion information may be stored separately as an internal recipient-data part. Its presence does not tell us who a recipient is, nor does it prove Word will access anything when the document opens. It is still a material review surface: it binds a template to a source workflow and can retain information a clean handoff should not carry forward.</p>
+
+      <p>DocFence counts five things publicly: mail-merge configurations; external data-source relationships; external header-source relationships; internal recipient-data relationships; and recipient-data parts. The private comparison signature includes the relevant stored configuration, normalized relationship semantics, and recipient-data bytes. Values and targets never leave the process.</p>
+
+      <h2>Fail closed on the contract, not on a guess</h2>
+
+      <p>When a direct <code>w:dataSource</code>, <code>w:headerSource</code>, ODSO <code>w:src</code>, or ODSO <code>w:recipientData</code> reference appears, DocFence verifies that it names the expected relationship kind and target mode. Data and header sources must be external; recipient-data targets must be internal stored parts. A malformed recognized reference stops analysis rather than becoming a vague package change.</p>
+
+      <p>The inventory also retains recognized source or recipient relationships that are no longer referenced by a current <code>w:mailMerge</code> element. That is intentional. A stale external target is still stored state worth reviewing, even when a particular Office version may ignore it.</p>
+
+      <h2>Choose “none” or “no change”</h2>
+
+      <p>A clean-handoff policy can prohibit all stored mail-merge state in the candidate:</p>
+
+      <pre><code>rules:
+  require_no_mail_merge: true</code></pre>
+
+      <p>This emits <code>DFP021</code>. A controlled template may legitimately retain an approved merge configuration, however. In that workflow, preserve the baseline and reject a later mutation:</p>
+
+      <pre><code>rules:
+  no_mail_merge_changes: true</code></pre>
+
+      <p>This emits <code>DFP022</code> when the private inventory changes. Relationship IDs are normalized, so an ID renumbering alone stays quiet. A changed query, source target, mapping, or recipient-data payload does not.</p>
+
+      <h2>Evidence without source disclosure</h2>
+
+      <p>The release tests conventional and Strict OOXML relationships, both documented recipient-data relationship spellings, query-only changes, recipient-data changes, residual source relationships, malformed relationship types and target modes, missing internal recipient targets, policy findings, and relationship-ID stability. Unique markers placed in queries, source/header targets, connection settings, mappings, and recipient data are checked not to appear in public output.</p>
+
+      <p>The wheel and source distribution were independently built twice from the release commit with <code>SOURCE_DATE_EPOCH</code>; both artifact pairs were byte-identical. The release includes the wheel, source archive, and SHA-256 manifest. I downloaded those public assets, verified their checksums, installed the wheel into a fresh environment, and confirmed both the public aggregate inventory and zero findings for a pure relationship-ID rewrite.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.5.0/docfence-0.5.0-py3-none-any.whl
+
+docfence profile template.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The full contract is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.5.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.5.0/docs/threat-model.md">threat model</a>. The Microsoft explanation of the <a href="https://support.microsoft.com/en-us/word/you-receive-the-opening-this-will-run-the-following-sql-command-message-when-you-open-a-word-mail-me">mail-merge SQL prompt</a> is useful background, but DocFence is not a query runner or a malware verdict. It is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the preceding metadata boundary, read <a href="/posts/docfence-040.html">Document metadata is a review boundary, not a generic package change</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
