@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.23 makes legacy Word VML image-data hyperlink markers review-visible without exposing targets or assuming how a Word client will handle them.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-230.html">
+    <meta property="og:title" content="The Word picture hyperlink hiding in legacy VML">
+    <meta property="og:description" content="DocFence 0.23 inventories direct VML image-data r:href markers as private, aggregate stored evidence for document CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-230.html">
+    <title>The Word picture hyperlink hiding in legacy VML — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The Word picture hyperlink hiding in legacy VML</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.23.0">DocFence 0.23.0</a></p>
+
+      <p>A Word package can contain a picture-shaped piece of legacy VML with two different relationship attributes. Treating every relationship near that picture as an image link—or every external relationship as a hyperlink—makes document review noisier and less trustworthy.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.23 adds a narrow, privacy-safe inventory for the second surface: a direct legacy <code>v:imagedata/@r:href</code> marker in a supported Word story. It is stored-package evidence for CI review, not a renderer, link resolver, or network monitor.</p>
+
+      <h2>One VML element, separate relationship roles</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.imagedata?view=openxml-3.0.1"><code>v:imagedata</code></a> and names its <code>r:id</code> property the explicit relationship to image data, while its <code>r:href</code> property is the explicit relationship to a hyperlink target. Those are distinct stored attributes. They should not be collapsed into a generic external-relationship total, a VML shape <code>href</code>, a <code>w:hyperlink</code> element, a <code>HYPERLINK</code> field, or a DrawingML link.</p>
+
+      <p>Real legacy XML carries the form: a public <a href="https://stackoverflow.com/questions/52124509/read-images-from-docx-file-with-python-docx">Word XML fragment</a> shows <code>v:imagedata r:id="…" r:href="…"</code> inside a VML shape. That is enough to justify a direct markup boundary, but not enough to predict client behavior.</p>
+
+      <h2>Classify what is stored; do not make the relationship look tidier than it is</h2>
+
+      <p>DocFence records every direct <code>v:imagedata/@r:href</code> marker in body, header, footer, footnote, endnote, comment, and glossary stories. Duplicate markers and markers in Markup Compatibility branches remain separate stored markers; DocFence does not select a branch or decide which picture, if any, a client renders.</p>
+
+      <p>When a marker resolves to a standard hyperlink relationship, DocFence classifies the stored target mode as external or internal. Every other resolved relationship type or mode is preserved as <em>unsupported</em> evidence rather than silently relabeled a conventional hyperlink. That distinction matters: a public <a href="https://forum.aspose.com/t/corrupted-targetmode-attribute-value-in-relationship-tag/22502">document-processing report</a> shows an <code>r:href</code> marker tied to an external standard image relationship. It demonstrates why review tooling must preserve the odd case without claiming a Word client will follow it.</p>
+
+      <p>The inventory deliberately excludes the image-data <code>r:id</code>, <code>r:pict</code>, raw <code>src</code>, and <code>o:relid</code> attributes. Those are separate legacy surfaces, not fallback spellings for the hyperlink marker. An unused relationship also produces no marker count.</p>
+
+      <h2>Private semantics, useful gates</h2>
+
+      <p>Reports expose only aggregate marker/story counts plus external, internal, and unsupported relationship-classification counts. Targets, relationship IDs, VML markup, story paths, and fingerprints remain private. The internal signature tracks only reviewed <code>r:href</code> relationship semantics: a same-count target rewrite is review-visible, while unchanged-semantics relationship-ID renumbering and changes to excluded image-data attributes are quiet for this inventory.</p>
+
+      <p>For a handoff that must contain no stored marker:</p>
+
+      <pre><code>rules:
+  require_no_word_vml_image_hyperlinks: true</code></pre>
+
+      <p>This produces <code>DFP059</code>. A controlled document that intentionally carries approved markers can instead protect its private baseline:</p>
+
+      <pre><code>rules:
+  no_word_vml_image_hyperlink_changes: true</code></pre>
+
+      <p><code>DFP060</code> detects a changed marker inventory. These rules add precise markup context to a broader relationship review; they do not replace it.</p>
+
+      <h2>Evidence, and the boundary it does not cross</h2>
+
+      <p>The 49-test release suite covers standard external/internal hyperlink relationships, an unsupported external image relationship, duplicate markers, body/header stories, Transitional and Strict namespaces, unavailable relationship failure, orphaned relationship exclusion, excluded attributes, same-count target changes, relationship-ID renumbering, privacy redaction, and JSON/Markdown/SARIF policy output.</p>
+
+      <p>Release validation combines that controlled package with the public real XML fragment above. The fragment is not presented as a downloadable whole-document fixture, so the release does not overclaim an end-to-end public-package smoke test for this exact marker. Hosted CI passed on Python 3.11 and 3.13 for the release commit and tag. The wheel and source archive were independently rebuilt from the tagged source and matched byte-for-byte; fresh public downloads passed checksum and metadata verification, and an isolated installed wheel reproduced the controlled marker counts.</p>
+
+      <p>DocFence does not resolve, retrieve, follow, validate, evaluate, render, or execute a target. It does not establish that a client will honor a marker, that a relationship is safe or reachable, or that a visual picture is actually associated with it. Use it as a bounded, local review signal alongside an appropriate rendering and domain review process.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.23.0/docfence-0.23.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.23.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.23.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.23.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.23.0/docs/validation.md">validation notes</a> define the exact behavior and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
