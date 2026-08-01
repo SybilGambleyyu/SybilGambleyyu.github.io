@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FormulaFence 0.218.0 adds a privacy-safe CI finding for a verified saved Excel dynamic-array spill outcome.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/formulafence-ff116.html">
+    <meta property="og:title" content="When a saved Excel spill error looks like #VALUE!">
+    <meta property="og:description" content="FormulaFence 0.218.0 adds FF116, a bounded safeguard for saved dynamic-array spill outcomes.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/formulafence-ff116.html">
+    <title>When a saved Excel spill error looks like #VALUE! — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>When a saved Excel spill error looks like <code>#VALUE!</code></h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.218.0">FormulaFence 0.218.0</a></p>
+
+      <p>Dynamic-array formulas are useful precisely because one formula can fill a changing result range. They also create a review problem: the workbook may retain Excel's last saved outcome, while its next calculation can be different. <a href="https://support.microsoft.com/en-us/office/dynamic-array-formulas-and-spilled-array-behavior-205c6b06-03ba-4b05-a35f-5c69b7c6ed13">Microsoft's dynamic-array guidance</a> describes the spill behavior; its <a href="https://support.microsoft.com/en-us/office/-spill-error-out-of-memory-50e613d0-498a-4cd8-96ee-0846af48f411">spill-error guidance</a> shows why a stored spill outcome merits review, not a claim about the current workbook state.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> 0.218.0 adds <code>FF116</code>: a high-severity finding for a saved dynamic-array spill outcome whose full SpreadsheetML marker is present. The subtlety is important: compatible writers can store this outcome as a typed saved value error rather than as a literal <code>#SPILL!</code> string. Matching the string alone would be both unreliable and much too broad.</p>
+
+      <h2>A deliberately complete marker</h2>
+
+      <p><code>FF116</code> fires only when one formula cell has all of the following: a typed saved error, array-formula state, dynamic-array cell metadata, a value-metadata binding, and the canonical package relationship and content-type declarations that make that metadata meaningful. Microsoft's <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/3dd44d53-847b-402f-a8c7-41a85024caf7">SpreadsheetML metadata specification</a> defines the package-level machinery; FormulaFence requires the parts to agree instead of treating a lone cell attribute or error value as proof.</p>
+
+      <p>That boundary gives a reviewer useful evidence without pretending to know more. The rule does not evaluate formulas, resolve the obstruction, infer the spill range, preserve the error value, or predict what recalculation will do. It reports only a location and <code>saved_formula_result</code> as the evidence scope. A complete <code>FF116</code> finding also suppresses the generic saved-value-error finding at that same location, so a single saved outcome does not become duplicate CI noise.</p>
+
+      <h2>Evidence without workbook disclosure</h2>
+
+      <p>FormulaFence keeps formula text, cached values, sheet names, external links, metadata indices, and workbook inputs out of JSON, Markdown, and SARIF findings. That matters for spreadsheet review artifacts: a check should support a reviewer without becoming another channel that reproduces sensitive workbook content.</p>
+
+      <p>A privacy-preserving replay over 5,458 accessible workbook artifacts found 63 complete markers across three workbooks. The replay was aggregate-only: no source paths, formulas, cached values, or workbook identities were emitted. Each complete marker produced <code>FF116</code>, with no duplicate generic saved-value finding and no spurious rich-data warning. The <a href="https://github.com/SybilGambleyyu/formulafence/blob/v0.218.0/docs/validation.md">validation record</a> documents the exact boundary, corpus method, and limitations.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.218.0/formulafence-0.218.0-py3-none-any.whl</code></pre>
+
+      <p>The release passed 1,551 tests, hosted CI's test and action-contract jobs, package metadata checks, reproducible wheel and source-distribution builds, and clean-install CLI checks. FormulaFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/formulafence">GitHub</a>. For the broader spreadsheet CI approach, see <a href="/posts/formulafence.html">Spreadsheet changes that can pass CI</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
