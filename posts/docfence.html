@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.1.0 brings local, privacy-safe DOCX change assurance to CI and controlled document handoffs.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence.html">
+    <meta property="og:title" content="Word review artifacts need a CI boundary too">
+    <meta property="og:description" content="DocFence compares stored DOCX/DOCM review surfaces without uploading or exposing document material.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence.html">
+    <title>Word review artifacts need a CI boundary too — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>Word review artifacts need a CI boundary too</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.1.0">DocFence 0.1.0</a></p>
+
+      <p>Word already has useful interactive review workflows: legal blackline comparison and Document Inspector. But a controlled handoff or CI workflow has a different question: did this package gain unresolved revisions, comments, hidden runs, external relationships, macros, custom XML, or another opaque payload change—and can we answer that without turning a build artifact into a copy of the document?</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.1.0 is a local-first CLI for that boundary. It compares `.docx` and `.docm` packages without opening Word, executing macros, evaluating fields, following links, rendering a document, or uploading source material.</p>
+
+      <h2>More than a text diff</h2>
+
+      <p>The visible body is only one stored story. DocFence inventories the body, headers, footers, footnotes, endnotes, comments, and glossary parts; it also tracks revision markup, direct hidden-text runs, field codes, content controls, Track Changes, external relationships, custom XML, and macros. A generic opaque-payload signal covers mutations in parts the specialized inventories do not explain, such as styles, media, embeddings, metadata, and the package manifest.</p>
+
+      <p>The output intentionally contains counts and fixed change categories rather than paragraphs, comments, reviewer names, URLs, relationship targets, field instructions, custom XML values, macro bytes, part paths, or fingerprints. That makes JSON, Markdown, and SARIF practical for CI artifacts while keeping source material inside the team’s environment.</p>
+
+      <h2>Policies that are small enough to review</h2>
+
+      <p>A policy is a strict, short YAML file. It distinguishes a comparison boundary from a candidate-state boundary: a team can block a newly introduced external relationship while separately requiring that the candidate contain no comments or unresolved revisions at all.</p>
+
+      <pre><code>version: 1
+rules:
+  no_external_relationship_changes: true
+  no_macro_payload_changes: true
+  no_custom_xml_changes: true
+  require_no_unresolved_revisions: true
+  require_no_comments: true
+  require_no_hidden_text: true</code></pre>
+
+      <p><code>docfence check</code> exits nonzero when that policy finds a violation; it emits SARIF without locations, so a code-scanning integration does not need to receive a sensitive paragraph or package path. The <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.1.0/docs/policy.md">policy reference</a> documents the full rule set and strict format.</p>
+
+      <h2>A bounded claim, not a rendering verdict</h2>
+
+      <p>DocFence compares stored OOXML, not Word’s rendered result. It does not resolve styles or markup-compatibility choices, so direct stored hidden text is counted while style-inherited hiddenness is outside this first release. It is likewise not a legal-review substitute or a macro-safety scanner. The parser rejects unsafe ZIP/XML structures and records its limits and non-goals in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.1.0/docs/threat-model.md">threat model</a>.</p>
+
+      <p>That distinction matters. Microsoft’s <a href="https://support.microsoft.com/en-us/office/compare-document-differences-using-the-legal-blackline-option-dbfc7351-4022-43a2-a0c4-54d1898702a0">legal blackline workflow</a> and <a href="https://support.microsoft.com/en-us/office/collab-files/remove-hidden-data-and-personal-information-by-inspecting-documents-presentations-or-workbooks">Document Inspector guidance</a> remain valuable human-review tools. DocFence adds a reproducible package-state checkpoint around them.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.1.0/docfence-0.1.0-py3-none-any.whl
+
+docfence diff approved.docx candidate.docx --format markdown
+docfence init docfence.yml
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>DocFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the spreadsheet counterpart, see <a href="/posts/formulafence.html">Spreadsheet changes that can pass CI</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
