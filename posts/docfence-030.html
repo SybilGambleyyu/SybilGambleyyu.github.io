@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.3 makes embedded Word payloads and alternative-format imports review-visible without opening, importing, or exposing their contents.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-030.html">
+    <meta property="og:title" content="Imported document content is a review boundary, not a blank spot">
+    <meta property="og:description" content="DocFence 0.3 adds bounded evidence and policy gates for embedded payloads and OOXML alternative-format imports.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-030.html">
+    <title>Imported document content is a review boundary, not a blank spot — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>Imported document content is a review boundary, not a blank spot</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.3.0">DocFence 0.3.0</a></p>
+
+      <p>A Word file can carry material that is neither ordinary paragraph text nor a visible comment: embedded OLE objects, packaged documents, ActiveX controls, and alternative-format imports. A normal text diff can quietly step around those boundaries. For a controlled handoff or CI gate, “we did not inspect it” is not a useful result.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.3.0 makes those surfaces explicit without turning a review tool into an Office runtime. It records bounded, privacy-safe evidence that the package contains embedded or imported content, and gives a policy author a choice: prohibit it outright, or permit a known baseline and fail a later mutation.</p>
+
+      <h2>Two package surfaces, deliberately separate</h2>
+
+      <p>The first surface is embedded-object state. DocFence recognizes standard OLE, package, control, and ActiveX control-binary relationship types, along with the conventional <code>word/embeddings/</code> and <code>word/activeX/</code> payload folders. Its public report contains aggregate relationship and part counts. Relationship targets, part paths, payload bytes, and fingerprints stay private.</p>
+
+      <p>The second is OOXML alternative-format import. A Word <code>w:altChunk</code> anchor tells Word where imported content belongs. That is not just an opaque side file: the anchor is stored document structure, and it is supposed to refer to an internal <code>aFChunk</code> relationship. DocFence inventories both the relationship/payload layer and direct anchors. When it encounters an anchor, it requires a matching internal standard relationship whose target resolves safely to a stored package member; malformed references fail closed.</p>
+
+      <p>That strictness is narrow on purpose. DocFence does not fetch an external target, decode a payload, import HTML, open an embedded file, execute a control, or claim to know what Word would render. Microsoft’s Document Inspector treats <a href="https://support.microsoft.com/en-us/excel/embedded-files-or-objects-found">embedded files and objects</a> as a reviewable hidden-data surface, while the Open XML SDK documents the relationship contract for <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.altchunk?view=openxml-3.0.1"><code>w:altChunk</code></a>. The useful boundary is evidence about stored state, not a fabricated safety verdict.</p>
+
+      <h2>Policy can mean “none” or “no change”</h2>
+
+      <p>A publishing or clean-handoff boundary can prohibit either category in the candidate:</p>
+
+      <pre><code>rules:
+  require_no_embedded_objects: true
+  require_no_alternative_format_imports: true</code></pre>
+
+      <p>Those gates emit <code>DFP015</code> and <code>DFP016</code>. A controlled template may legitimately contain an approved payload already. For that case, the new comparison gates preserve the baseline and reject later changes:</p>
+
+      <pre><code>rules:
+  no_embedded_object_payload_changes: true
+  no_alternative_format_import_changes: true</code></pre>
+
+      <p>They emit <code>DFP017</code> and <code>DFP018</code>. Relationship IDs are normalized before comparison, so an ID renumbering by itself stays quiet. An added second <code>w:altChunk</code> anchor is still visible even if it reuses an unchanged import relationship.</p>
+
+      <h2>Evidence without content leakage</h2>
+
+      <p>The release tests a conventional ActiveX relationship chain, OLE/package payload changes, alternative-format payload changes, malformed anchors, duplicate anchors, policy findings, and relationship-ID stability. Unique markers are placed in visible text and every added payload surface, then the JSON, Markdown, and SARIF output is checked to ensure none of them reappear.</p>
+
+      <p>The wheel and source distribution were independently built twice from the release commit using its <code>SOURCE_DATE_EPOCH</code>; both artifact pairs were byte-identical. The published release includes the wheel, source archive, and SHA-256 manifest, and the downloaded wheel was installed into a fresh environment for a final smoke test.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.3.0/docfence-0.3.0-py3-none-any.whl
+
+docfence diff approved.docx candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The complete contract is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.3.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.3.0/docs/threat-model.md">threat model</a>. DocFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the earlier hidden-text boundary, read <a href="/posts/docfence-020.html">The style-hidden blind spot needs evidence, not guesswork</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
