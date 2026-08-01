@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.11 makes Word sensitivity-label metadata review-visible without exposing label, tenant, or marking data.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-110.html">
+    <meta property="og:title" content="A sensitivity label can retain your tenant’s metadata">
+    <meta property="og:description" content="DocFence 0.11 adds private, aggregate evidence for Office sensitivity-label metadata.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-110.html">
+    <title>A sensitivity label can retain your tenant’s metadata — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A sensitivity label can retain your tenant’s metadata</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.11.0">DocFence 0.11.0</a></p>
+
+      <p>Removing a visible header or changing a file name does not necessarily remove the governance state a Word package carries. Office can retain sensitivity-label metadata that identifies label and tenant context, records state and method, and may name header, footer, or watermark markings. That is important during an external handoff, but a CI report must not become another way to disclose it.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.11 makes this stored package evidence review-visible as bounded, private inventory. It emits only aggregate counts useful to a gate. The actual label metadata remains inside a local SHA-256 comparison signature.</p>
+
+      <h2>Two compatible ways Office can retain label state</h2>
+
+      <p>Modern Office packages can hold an Office 2021 <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c0599e21-b77f-475e-99e0-bd647f60bcbb">Sensitivity Label Information part</a>. Its <code>labelList</code> records label identity, enabled or removed state, method, tenant site ID, and optional details. Microsoft also specifies how that part relates to the older property model in its <a href="https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-offcrypto/13939de6-c833-44ab-b213-e0088bf02341">LabelInfo/custom-property precedence</a> rules.</p>
+
+      <p>Older and compatibility paths can retain MIP metadata in custom document properties such as <code>MSIP_Label_&lt;GUID&gt;_&lt;attribute&gt;</code>, including custom or versioned attributes described in Microsoft’s <a href="https://learn.microsoft.com/en-us/information-protection/develop/concept-mip-metadata">MIP metadata guidance</a>. DocFence also recognizes the legacy <code>Sensitivity</code> property and Word’s documented header, footer, and watermark content-marking property names from the <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/85388ac6-fb55-4017-828c-2680e3ab22ba">sensitivity-label property contract</a>.</p>
+
+      <h2>Counts in reports, private comparisons underneath</h2>
+
+      <p>Public profile, Markdown, and SARIF output contain only aggregate LabelInfo part, label, enabled-label, removed-label, extension, legacy MIP-label, legacy MIP-property, legacy Sensitivity-property, and Word content-marking-property counts. They do not print label or tenant IDs, label names, methods, dates, action IDs, extension payloads, custom property names or values, marking text, or part paths.</p>
+
+      <p>Those fields still matter to a baseline comparison. DocFence fingerprints the full recognized inventory privately, so changing a label name, extension payload, or legacy property can fail a protected baseline even when every public count stays the same. Relationship-ID renumbering by itself remains quiet.</p>
+
+      <h2>Choose a clean handoff or a protected baseline</h2>
+
+      <p>For a publishing or external-handoff boundary, reject stored label metadata outright:</p>
+
+      <pre><code>rules:
+  require_no_sensitivity_label_metadata: true</code></pre>
+
+      <p>This produces <code>DFP035</code>. It fails if any sensitivity-label count is nonzero, including an empty recognized <code>LabelInfo</code> part. A template that intentionally carries an approved label needs a different promise:</p>
+
+      <pre><code>rules:
+  no_sensitivity_label_metadata_changes: true</code></pre>
+
+      <p><code>DFP036</code> protects that baseline from a later private-inventory mutation. The rule does not turn a label into a security verdict; it establishes an explicit package-state boundary that review can enforce.</p>
+
+      <h2>Strict package evidence, not label enforcement</h2>
+
+      <p>DocFence recognizes a modern part through the standard classification-label relationship, the Office SDK content type, or conventional <code>docMetadata/LabelInfo</code> paths. A recognized classification-label relationship must originate at the package root, be internal, and resolve to a stored member. At most one LabelInfo part is accepted. The <code>labelList</code> root, direct label records, required state, tenant-site GUID, and extension-list structure are validated; malformed recognized state fails closed. Recognized legacy properties are found even when a custom-property part uses a noncanonical relationship target.</p>
+
+      <p>This is stored-package evidence only. DocFence does not decrypt an IRM-protected file, read LabelInfo from encrypted storage, resolve tenant policy or an effective label, calculate permissions, apply or remove a label, render a header, footer, or watermark, or prove that a label is enforced. Microsoft’s <a href="https://learn.microsoft.com/en-us/purview/sensitivity-labels-office-apps">Office sensitivity-label documentation</a> is useful context for why package metadata and client behavior must remain separate claims.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.11 regression suite has 31 tests. It covers same-count LabelInfo name, extension, and legacy-property mutations; JSON, Markdown, and SARIF redaction; policy findings; standard relationship, content-type, and conventional unlinked discovery; malformed roots, attributes, and tenant-site IDs; unavailable, external, and non-root relationships; multiple parts; a noncanonical custom-property part; and relationship-ID churn. The suite ran in Python 3.11 and 3.13 CI. The final wheel was installed outside its source tree, profiled against a labeled fixture, and rebuilt alongside the source archive from the release commit; the two independent builds matched byte-for-byte. Stable unlabelled Open XML SDK Word document and template fixtures reported zero counts.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.11.0/docfence-0.11.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.11.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The precise rule semantics and limits are in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.11.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.11.0/docs/threat-model.md">threat model</a>. For the preceding workflow-state boundary, read <a href="/posts/docfence-100.html">A Word document can carry a task graph—and an add-in</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
