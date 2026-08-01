@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FormulaFence 0.217.0 adds a privacy-safe CI finding for a saved Excel null-intersection formula error.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/formulafence-ff115.html">
+    <meta property="og:title" content="A saved Excel formula error is not a live calculation verdict">
+    <meta property="og:description" content="FormulaFence 0.217.0 adds FF115, a bounded safeguard for saved null-intersection formula errors.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/formulafence-ff115.html">
+    <title>A saved Excel formula error is not a live calculation verdict — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A saved Excel formula error is not a live calculation verdict</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.217.0">FormulaFence 0.217.0</a></p>
+
+      <p>Stored formula results are useful review evidence, but they are easy to overstate. A workbook can carry the last result Excel saved without showing what a future recalculation will do. <a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> 0.217.0 adds <code>FF115</code>: a high-severity finding for a formula whose exact saved result is Excel’s null-intersection error.</p>
+
+      <p>Microsoft describes this error as a formula error associated with an invalid range-intersection operator or areas that do not intersect. The relevant <a href="https://support.microsoft.com/en-us/excel/detect-formula-errors-in-excel">Excel formula-error guidance</a> and <a href="https://support.microsoft.com/en-au/office/correct-a-null-error-11a15515-5df3-4a82-899e-e4c0070ea9c4">null-error guidance</a> make it a useful review signal: it is not a general-purpose marker for missing data.</p>
+
+      <h2>A bounded result-state check</h2>
+
+      <p><code>FF115</code> reads only an exact stored error classification. It does not calculate formulas, resolve references, preserve formula text or cached values in output, diagnose why Excel produced the error, or claim that the error is current. The finding says precisely what the evidence supports: a saved formula result needs review.</p>
+
+      <p>The rule deliberately leaves missing, malformed, and other saved error kinds quiet. In particular, it does not turn saved <code>#N/A</code> results into this alert: Microsoft documents <code>NA()</code> as a deliberate way to produce chart gaps. That distinction keeps a serious result-state signal from becoming blanket error-code noise.</p>
+
+      <h2>Useful evidence without workbook disclosure</h2>
+
+      <p>The finding reports a location and the fact that the evidence is a saved formula result. Formula text, cached values, sheet names, external links, and calculation inputs remain out of JSON, Markdown, and SARIF output. This makes the rule suitable for CI artifacts that need to support review without becoming another route for workbook data to spread.</p>
+
+      <p>A privacy-preserving replay across 5,933 public workbook artifacts found two candidate workbooks. FormulaFence loaded and linted both candidates end to end, producing exactly two <code>FF115</code> findings and no competing rule at either reported location. The release also passed 1,545 tests, hosted CI, package lint and compilation, fresh wheel and source-distribution installs, and installation of the downloaded public-release wheel. The <a href="https://github.com/SybilGambleyyu/formulafence/blob/v0.217.0/docs/validation.md">validation record</a> explains the aggregate-only methodology and rule boundary.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.217.0/formulafence-0.217.0-py3-none-any.whl</code></pre>
+
+      <p>FormulaFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/formulafence">GitHub</a>. For the broader spreadsheet CI approach, see <a href="/posts/formulafence.html">Spreadsheet changes that can pass CI</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
