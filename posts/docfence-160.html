@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.16 inventories stored Word DOCVARIABLE references without exposing field arguments or document-variable names.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-160.html">
+    <meta property="og:title" content="A hidden Word variable is only half the story">
+    <meta property="og:description" content="DocFence 0.16 makes stored DOCVARIABLE field references review-visible without copying hidden names or values into CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-160.html">
+    <title>A hidden Word variable is only half the story — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A hidden Word variable is only half the story</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.16.0">DocFence 0.16.0</a></p>
+
+      <p>Last release, <a href="/posts/docfence-150.html">DocFence made Word’s hidden document-variable store review-visible</a>. That answers whether a package retains automation state. It does not answer the next, equally practical question: is the document carrying a stored field that can turn one of those hidden values into visible text?</p>
+
+      <p>Word’s <a href="https://learn.microsoft.com/en-us/office/vba/api/word.variable">Variable object documentation</a> describes document variables as persisted document or template state, normally invisible until an appropriate <code>DOCVARIABLE</code> field is inserted. The field is the bridge between a hidden key/value store and a document result. A meaningful CI or handoff review needs evidence of that bridge, too—but not a leaked field argument or variable name in its build log.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.16 adds that evidence as a separate, privacy-safe inventory.</p>
+
+      <h2>Field presence is not field evaluation</h2>
+
+      <p>A <code>DOCVARIABLE</code> field can be stored as a compact <code>w:fldSimple</code> instruction or as a complex begin/instruction/separate/end sequence. Complex field instructions may be split across runs, retained in tracked-deletion markup, or nested inside another field expression. A result visible in Word is also not a reliable source of truth: it can be stale, and a field can consult an attached template that is not inside the package.</p>
+
+      <p>DocFence therefore reads only complete stored field-code instructions. It never opens Word, updates a field, runs a macro, resolves an attached template, or uses a result to infer a variable value. It records complete simple and complex instructions across the body, headers, footers, notes, comments, and glossary; current and deleted field-code variants remain separate stored evidence.</p>
+
+      <h2>The default formatting switch matters</h2>
+
+      <p>A naïve parser would look for one bare word after <code>DOCVARIABLE</code>. Real files are less tidy. Microsoft’s <a href="https://support.microsoft.com/en-gb/office/format-field-results-baa61f5a-5636-4f11-ab4f-6c36ae43508c">field-formatting guidance</a> says Word adds <code>\* MERGEFORMAT</code> by default when a field is inserted through its dialog. That switch controls presentation; it does not replace the leading variable argument.</p>
+
+      <p>DocFence conservatively recognizes a leading plain token or complete quoted argument even when it has trailing Word switch material. Nested or compound expressions remain nonliteral instead of being interpreted. This small distinction is what lets a normal Word-authored field be counted correctly without turning DocFence into a Word field evaluator.</p>
+
+      <h2>What the report can say safely</h2>
+
+      <p>Profile JSON, Markdown, comparison reports, and SARIF now expose only aggregate counts: references, stories containing references, conservative literal/nonliteral references, and literal references that exactly match a validated <code>w:docVar</code> in the same main or glossary package document scope.</p>
+
+      <p>That exact association is deliberately narrower than a claim about runtime behavior. A same-scope match does not prove Word will display a value. No match does not make a field broken: the value may live in an attached template. Field instructions, literal arguments, variable names, values, Settings-part paths, story paths, and fingerprints never enter the report.</p>
+
+      <h2>Two policy choices for the field boundary</h2>
+
+      <p>For a handoff that should contain no stored document-variable field references:</p>
+
+      <pre><code>rules:
+  require_no_word_document_variable_fields: true</code></pre>
+
+      <p>This produces <code>DFP045</code> for every complete stored <code>DOCVARIABLE</code> reference. For a governed template that intentionally includes the field codes:</p>
+
+      <pre><code>rules:
+  no_word_document_variable_field_changes: true</code></pre>
+
+      <p><code>DFP046</code> protects the private field-reference inventory against a later mutation. These rules complement—not replace—the storage rules from 0.15: use <code>require_no_word_document_variables</code> or <code>no_word_document_variable_changes</code> when the stored <code>w:docVars</code> state itself is the boundary.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.16 suite has 41 tests. It covers simple and complete complex encodings, quoted arguments, Word’s default formatting switch, nested and compound expressions, current/deleted revision variants, headers, Strict Word XML, main-versus-glossary scope, same-count changes, policy/SARIF output, and redaction.</p>
+
+      <p>For an independent smoke test, the released wheel profiled LibreOffice’s public <a href="https://github.com/LibreOffice/core/blob/2553d132a7e95170568cb99920a7264fe5c8081d/sw/qa/extras/ooxmlexport/data/tdf150542.docx"><code>tdf150542.docx</code> regression fixture</a>. It reports one stored <code>DOCVARIABLE</code> reference with one literal same-scope association alongside a three-variable Settings store, while preserving the names and values as private material. The artifact uses the common <code>\* MERGEFORMAT</code> pattern.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13, including distribution validation. The wheel and source archive were independently rebuilt from the release commit and matched byte-for-byte; fresh GitHub release downloads then passed the published SHA-256 manifest and package checks.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.16.0/docfence-0.16.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.16.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. Read the exact behavior and limits in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.16.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.16.0/docs/threat-model.md">threat model</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
