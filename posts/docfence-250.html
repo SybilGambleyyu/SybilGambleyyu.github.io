@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.25 makes direct WordprocessingML objectLink markup review-visible without exposing package data or predicting Word behavior.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-250.html">
+    <meta property="og:title" content="Word's other linked-object marker">
+    <meta property="og:description" content="DocFence 0.25 adds a bounded, privacy-safe review inventory for direct WordprocessingML w:objectLink markup.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-250.html">
+    <title>Word's other linked-object marker — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>Word's other linked-object marker</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.25.0">DocFence 0.25.0</a></p>
+
+      <p>Not every Word linked-object review question lives in legacy VML. WordprocessingML also has <code>w:objectLink</code>: a compact leaf inside <code>w:object</code> that carries properties for a linked object. It can sit next to familiar OLE/package relationships, but it is not the same evidence as a legacy <code>o:OLEObject Type="Link"</code> marker, an embed, a field, or a generic relationship count.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.25 adds a narrow, privacy-safe inventory for that direct WordprocessingML surface. The aim is simple: make a stored marker review-visible in document CI without spilling targets or metadata into reports, and without pretending a parser can predict what a Word client will retrieve, refresh, render, or activate.</p>
+
+      <h2>Similar package context, different markup</h2>
+
+      <p>The Open XML SDK describes <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.objectlink?view=openxml-3.0.1"><code>w:objectLink</code></a> as an Office 2007+ leaf whose parent is <code>w:object</code>. Its remarks describe visual properties, the associated server application, and refresh mode of a linked object. That direct parent relationship is important: a loose element name or an OLE relationship elsewhere in a package is not enough to answer the same review question.</p>
+
+      <p>The ISO 29500 <a href="https://github.com/dolanmiu/docx/blob/309b972e107b8cc12c65027d5161b7045e404b6c/ooxml-schemas/ISO-IEC29500-4_2016/wml.xsd#L1188-L1228">schema definition</a> is precise. <code>CT_ObjectLink</code> extends the embedded-object properties, requires <code>r:id</code> and <code>w:updateMode</code>, and enumerates the stored modes <code>always</code> and <code>onCall</code>. A standard OLE-object relationship may target data internally or externally under the OOXML <a href="https://c-rex.net/samples/ooxml/e1/Part1/OOXML_P1_Fundamentals_Embedded_topic_ID0EA5BO.html">Embedded Object Part contract</a>.</p>
+
+      <h2>Count only the direct marker</h2>
+
+      <p>DocFence records each direct <code>w:objectLink</code> child of <code>w:object</code> in body, header, footer, footnote, endnote, comment, and glossary stories. Duplicates and Markup Compatibility branches remain distinct stored evidence. A marker outside that direct parent shape does not enter this inventory. Neither do <code>w:objectEmbed</code>, legacy Office VML linked OLE markup, VML image or shape links, DrawingML linked pictures, fields, or broad embedded-object totals.</p>
+
+      <p>For a direct marker with <code>r:id</code>, the inventory classifies the resolved relationship as a standard OLE-object relationship with stored external or internal target mode, or as unsupported. A direct marker without <code>r:id</code> remains visible in a separate class. That last case is malformed relative to the schema, but discarding it would hide unusual stored package state from the reviewer.</p>
+
+      <h2>Let awkward data stay awkward</h2>
+
+      <p>The public counts separate exact stored <code>w:updateMode="always"</code> and <code>w:updateMode="onCall"</code> values from an unsupported-or-missing mode class. This matters because the Microsoft documentation's illustrative markup displays <code>updateMode="user"</code>, while the schema enumerates only the two standard tokens. DocFence does not reinterpret that discrepancy as an automatic update, a valid runtime mode, or a client outcome. It keeps an absent or unexpected stored mode reviewable without silently normalizing it into a reassuring category.</p>
+
+      <p>Reports expose only marker/story, mode, and relationship-classification counts. Program and shape identifiers, relationship IDs and targets, field codes, locking metadata, XML markup, story paths, and fingerprints remain private. The private signature retains the full direct marker while normalizing a relationship ID to its stored relationship semantics: a same-count program, field-code, locking, mode, or target rewrite remains review-visible, while an ID-only renumbering with unchanged semantics stays quiet.</p>
+
+      <h2>Concrete gates for a handoff</h2>
+
+      <p>A handoff that must not carry this direct markup can say so explicitly:</p>
+
+      <pre><code>rules:
+  require_no_word_object_links: true</code></pre>
+
+      <p>That emits <code>DFP063</code>. A controlled document that deliberately retains an approved marker can instead guard its private baseline:</p>
+
+      <pre><code>rules:
+  no_word_object_link_changes: true</code></pre>
+
+      <p><code>DFP064</code> detects a material inventory change. These rules complement the existing relationship and embedded-object gates; they do not replace them.</p>
+
+      <h2>Evidence, including the coverage limit</h2>
+
+      <p>The 51-test release suite covers direct-parent scoping, standard external and internal OLE relationships, unsupported and missing relationships, exact standard modes plus unsupported/missing modes, duplicates, body/header stories, Transitional and Strict namespaces, orphan and unparented-marker exclusion, unavailable relationships, same-count field/target rewrites, relationship-ID stability, privacy redaction, and JSON/Markdown/SARIF policy output.</p>
+
+      <p>There is an important limit to report plainly. A scan of the Open XML SDK's public test assets found no direct <code>w:objectLink</code> marker in 503 readable package files (two of 505 candidate files produced read errors). A separate scan of all 141 Word packages in the public <a href="https://github.com/plutext/docx4j/tree/VERSION_17_0_3">docx4j VERSION_17_0_3 tree</a> also found none, including five legacy OLE samples. That is not a nonexistence claim. It is why this release calls the work a standards-shaped stored-XML compatibility boundary, not evidence of widespread contemporary Word authoring or runtime interoperability.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13 for both the release commit and tag. The wheel and source archive were independently rebuilt from the tagged source with a fixed source date and matched byte-for-byte. Fresh public release downloads passed checksum verification, and an isolated installed wheel reproduced the public automatic and on-call counts without exposing program, field, or target strings.</p>
+
+      <p>DocFence does not resolve, retrieve, open, update, activate, evaluate, render, or execute an OLE object. It does not establish that Word will honor a marker, that a target is reachable or safe, or that a visible object is associated with it. Use it as a bounded local review signal alongside appropriate rendering and domain review.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.25.0/docfence-0.25.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.25.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.25.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.25.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.25.0/docs/validation.md">validation notes</a> define the exact behavior and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
