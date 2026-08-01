@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.9 makes modern Word comment metadata review-visible without exposing people, identifiers, or reactions.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-090.html">
+    <meta property="og:title" content="A Word comment can retain a hidden review graph">
+    <meta property="og:description" content="DocFence 0.9 inventories modern Word comment metadata as private, aggregate evidence.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-090.html">
+    <title>A Word comment can retain a hidden review graph — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word comment can retain a hidden review graph</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.9.0">DocFence 0.9.0</a></p>
+
+      <p>A visible comment count is not the whole review surface in a current Word file. Modern comments can retain people records, thread and resolution state, durable comment identifiers, and reactions in separate OOXML package parts. That is useful product behavior, but it leaves a serious handoff question: does a document carry review metadata that an ordinary comment scan does not describe?</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.9.0 adds a bounded answer. It inventories the modern-comment <code>people</code>, <code>commentsExtended</code>, <code>commentsIds</code>, and <code>commentsExtensible</code> parts and reports aggregate counts only. Names, contact providers, user IDs, paragraph and durable IDs, dates, thread associations, reaction details, paths, XML, and fingerprints stay private inside the local comparison.</p>
+
+      <h2>Separate package parts, separate review evidence</h2>
+
+      <p>Microsoft’s <a href="https://support.microsoft.com/en-us/word/using-modern-comments-in-word">modern-comments overview</a> describes an active conversation model with replies and resolved comments. The corresponding OOXML contracts define a <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/f461e6b7-7a35-4bc4-8153-b60f5d925539">people part</a>, a <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/31f689cd-4192-4c2d-8d2f-202b1f8f20e9">thread/extension part</a>, a <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/22977b5a-5bb5-4f27-b7a1-c6d216c2bb94">comment-ID part</a>, and an <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/62c16828-8131-4d1f-99f8-afd7560a1c78">extensible-comment part</a>. Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oreactxml/24d7d1f3-568d-4df9-89ef-42867776d742">reaction extension example</a> shows why this is not just a count of comment text: review metadata can include user and time information.</p>
+
+      <p>DocFence finds those parts through their standard content types, relationship types, or conventional Word paths. It validates each recognized root and rejects a recognized metadata relationship that is external or does not resolve to a stored part. It supports both the established Office 15 <code>2010/11</code> people/thread vocabulary and the current <code>2012</code> vocabulary, because real template packages still contain the former.</p>
+
+      <h2>Counts in reports, identities in the private signature</h2>
+
+      <p>A profile can say that a candidate has two person records, six thread-extension records, one resolved comment, or three reaction users. It cannot say who they are, which comment they belong to, or where they live in the ZIP package. The private comparison signature deliberately retains the sensitive material so that changing an identifier or reaction with the same public counts still produces a review-visible change. Renumbering an OOXML relationship ID alone stays quiet.</p>
+
+      <p>This is a narrow stored-state inventory, not a cloud client or a Word emulator. DocFence does not render a comment, resolve a person, synchronize an account, decide whether a notification will fire, interpret an unknown extension payload, or alter comment state. A nonzero count is evidence that metadata is stored in the package—not proof that it is visible or live in a particular Word client.</p>
+
+      <h2>Choose a clean handoff or a protected baseline</h2>
+
+      <p>For a release that must not retain modern-comment review state, add this policy:</p>
+
+      <pre><code>rules:
+  require_no_modern_comment_metadata: true</code></pre>
+
+      <p><code>DFP029</code> fails when any of the public modern-comment counts is nonzero. For a controlled template that intentionally retains approved review state, preserve a baseline and use:</p>
+
+      <pre><code>rules:
+  no_modern_comment_metadata_changes: true</code></pre>
+
+      <p><code>DFP030</code> then fails when the private inventory changes, even if aggregate counts happen to match. The ordinary comments-story count remains separate, so teams can express the precise review rule they mean.</p>
+
+      <h2>Templates deserve the same boundary</h2>
+
+      <p>The same release adds bounded scanning for <code>.dotx</code> and <code>.dotm</code> Word templates alongside <code>.docx</code> and <code>.docm</code>. Templates are often where a review workflow begins and where residual metadata survives longest; treating them as first-class inputs makes a handoff policy usable before a document is instantiated.</p>
+
+      <p>The release regression suite covers all four metadata parts, content-type, relationship, and unlinked conventional-path discovery, legacy and current vocabularies, malformed roots, rejected external relationships, templates, same-count metadata and identifier rewrites, policy findings, SARIF, and report redaction. The final wheel was installed outside its source tree and profiled against an Office 15 Open XML SDK template and an independent modern-comment template. The wheel and source archive were rebuilt twice from the release commit and matched byte-for-byte; the <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.9.0">release</a> contains both artifacts and a SHA-256 manifest.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.9.0/docfence-0.9.0-py3-none-any.whl
+
+docfence profile review-template.dotx --format markdown
+docfence check approved.dotx candidate.dotx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The complete scope is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.9.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.9.0/docs/threat-model.md">threat model</a>. DocFence is local, bounded evidence about stored OOXML state—not a rendering verdict or a telemetry product. It is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the preceding field-instruction boundary, read <a href="/posts/docfence-080.html">A Word field can quietly consult the outside world</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
