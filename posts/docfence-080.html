@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.8 makes externally sourced Word field instructions review-visible without exposing their instructions or targets.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-080.html">
+    <meta property="og:title" content="A Word field can quietly consult the outside world">
+    <meta property="og:description" content="DocFence 0.8 adds bounded evidence and policy gates for selected external-source Word fields.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-080.html">
+    <title>A Word field can quietly consult the outside world — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word field can quietly consult the outside world</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.8.0">DocFence 0.8.0</a></p>
+
+      <p>A field result can look like ordinary document text while its stored instruction says something materially different: query a database, include another document, pull a picture, retain an OLE link, refer to a document used by an index, or exchange data with another application. A single generic field count cannot distinguish a harmless date from a document that retains one of those outside-facing instructions.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.8.0 adds a deliberately bounded answer. It inventories selected Word field families that can name or consult outside material, then reports only aggregate category counts. The field instruction, source path, database connection, query, application name, item reference, bookmark, and private fingerprint never enter JSON, Markdown, or SARIF.</p>
+
+      <h2>Eight field families, not one vague signal</h2>
+
+      <p>The new inventory recognizes <code>DATABASE</code> and legacy <code>DATA</code>; <code>DDE</code> and <code>DDEAUTO</code>; <code>INCLUDE</code> and <code>INCLUDETEXT</code>; <code>INCLUDEPICTURE</code> and legacy <code>IMPORT</code>; <code>LINK</code>; and <code>RD</code>. That boundary follows Word’s documented <a href="https://support.microsoft.com/en-us/word/field-codes-database-field">database</a>, <a href="https://support.microsoft.com/en-us/word/field-codes-includetext-field">included-document</a>, <a href="https://support.microsoft.com/en-us/word/field-codes-includepicture-field">linked-picture</a>, <a href="https://support.microsoft.com/en-us/word/field-codes-link-field">OLE-link</a>, and <a href="https://support.microsoft.com/en-us/word/field-codes-rd-referenced-document-field">referenced-document</a> fields, together with the legacy aliases and DDE forms preserved in Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/28a8d2c2-6107-409d-8f6a-e345ab6d4179">field-type catalog</a>.</p>
+
+      <p>These names are a review category, not a claim that every instruction will successfully update. A <code>DATABASE</code> field can retain a query and connection details; an <code>INCLUDETEXT</code> field can retain another document reference; a <code>LINK</code> field can retain a linked object source. Those are valuable stored-state signals even when a source is missing, offline, denied, or never updated by a user’s Word configuration.</p>
+
+      <h2>Read the package, never the source</h2>
+
+      <p>OOXML stores a simple field directly in <code>w:fldSimple/@w:instr</code>. A <a href="https://ooxml.info/docs/17/17.16/17.16.2/">complex field</a> is a begin/separate/end sequence whose pre-separator instruction can be split across multiple <code>w:instrText</code> runs and can itself contain nested fields. DocFence reconstructs that local instruction state, recognizes only the first field keyword, hashes the complete instruction privately, and immediately discards the source-bearing value from its public model.</p>
+
+      <p>Tracked revisions make this easy to get wrong. Word can retain a deleted field code in <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.deletedfieldcode?view=openxml-3.0.1"><code>w:delInstrText</code></a> beside the current <code>w:instrText</code> code. Concatenating them would create an invented instruction and can hide the very history a reviewer needs. DocFence assembles current and deleted variants separately; a changed field can therefore contribute evidence for both stored versions without revealing either one. The same treatment covers moved-from and moved-to field-code ranges.</p>
+
+      <p>This is intentionally not a Word runtime. DocFence does not parse an argument grammar, run a query, start a DDE conversation, open an OLE object, locate an included file, retrieve content, or decide whether Word will update a field. It also does not claim to cover every expression that can display a URL. The contract is stored, named field-family evidence—nothing more and nothing less.</p>
+
+      <h2>Choose “none” or “no change”</h2>
+
+      <p>For a clean handoff, reject all recognized external-source field instructions:</p>
+
+      <pre><code>rules:
+  require_no_external_fields: true</code></pre>
+
+      <p>This emits <code>DFP027</code> whenever any of the eight public counts is nonzero. A controlled template may intentionally retain an approved field. In that case, compare the private inventory with a controlled baseline instead:</p>
+
+      <pre><code>rules:
+  no_external_field_changes: true</code></pre>
+
+      <p>This emits <code>DFP028</code> when a category, story part, or private instruction fingerprint changes. Splitting an unchanged complex instruction across different runs stays quiet; changing a stored source does not. The ordinary field-code count remains available, and external relationships remain a separate review surface.</p>
+
+      <h2>What was tested</h2>
+
+      <p>The release adds regression coverage for all eight categories, simple and complex encodings, split runs, nested fields, resultless fields, Strict namespaces, header stories, changed targets, non-field instruction text, post-separator text, unclosed fields, policy findings, SARIF, and redaction. It also covers revision replacements with shared field-code text, deleted field code, and moved field-code ranges.</p>
+
+      <p>I profiled Apache POI’s independent <a href="https://github.com/apache/poi/blob/trunk/test-data/document/FieldCodes.docx">FieldCodes.docx</a> and <a href="https://github.com/apache/poi/blob/trunk/test-data/document/FldSimple.docx">FldSimple.docx</a> fixtures with the final wheel. They exercise real complex and simple Word field encodings and correctly produce no external-source-field count for their non-external fields.</p>
+
+      <p>The wheel and source archive were independently rebuilt twice from the release commit with <code>SOURCE_DATE_EPOCH</code>; both artifact pairs were byte-identical. The public release contains the wheel, source archive, and SHA-256 manifest. I downloaded those assets, verified the checksums, installed the published wheel into a fresh environment, and reran the fixture profile.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.8.0/docfence-0.8.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The complete contract is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.8.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.8.0/docs/threat-model.md">threat model</a>. DocFence is local, bounded evidence about stored OOXML state—not a network monitor, an Office automation host, or a rendering verdict. It is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the preceding external-document-dependency boundary, read <a href="/posts/docfence-070.html">A Word file can assemble itself from outside the package</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
