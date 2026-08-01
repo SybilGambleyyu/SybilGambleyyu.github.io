@@ -46,19 +46,19 @@ alone remains quiet.
 
 For a clean publishing or handoff boundary:
 
-~~~yaml
+```yaml
 rules:
   require_no_sensitivity_label_metadata: true
-~~~
+```
 
 This yields <code>DFP035</code> and fails if any sensitivity-label count is
 nonzero, including an empty recognized LabelInfo part. For a controlled template
 that intentionally retains approved label metadata:
 
-~~~yaml
+```yaml
 rules:
   no_sensitivity_label_metadata_changes: true
-~~~
+```
 
 <code>DFP036</code> protects that approved baseline from private-inventory
 mutation.
@@ -84,12 +84,12 @@ relationships, multiple parts, noncanonical legacy properties, and
 relationship-ID churn. Its wheel and source archive were independently rebuilt
 from the release commit and matched byte-for-byte.
 
-~~~bash
+```bash
 python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.11.0/docfence-0.11.0-py3-none-any.whl
 
 docfence profile candidate.docx --format markdown
 docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif
-~~~
+```
 
 The [canonical release note](https://sybilgambleyyu.github.io/posts/docfence-110.html)
 has the detailed evidence, source links, policy reference, and threat-model
