@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.6 makes Word content-control XML data bindings and their referenced custom XML state review-visible without exposing document data.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-060.html">
+    <meta property="og:title" content="Visible Word content can have an invisible source of truth">
+    <meta property="og:description" content="DocFence 0.6 adds bounded evidence and policy gates for Word content-control XML data bindings.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-060.html">
+    <title>Visible Word content can have an invisible source of truth — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>Visible Word content can have an invisible source of truth</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.6.0">DocFence 0.6.0</a></p>
+
+      <p>A content control can look like ordinary Word text while retaining an XML mapping that tells Word where the value belongs—or where it should come from. That distinction matters at a controlled handoff. A reviewer may approve the visible words while missing the document’s stored data/view connection.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.6.0 makes that connection review-visible without turning a CI report into a document-data leak. It inventories standard content-control XML mappings, their storage-ID state, associated custom XML parts when the package establishes the association, and identifiers that cannot be matched. It does not print XPath expressions, namespace-prefix mappings, storage IDs, part names, or XML values.</p>
+
+      <h2>A content control is not always its own source of truth</h2>
+
+      <p>The Open XML SDK describes <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.databinding?view=openxml-3.0.1"><code>w:dataBinding</code></a> as the information that maps a structured document tag to an XML element in a custom XML data part. When Word finds the mapped element, the stored value can replace the content control’s current run content. Word’s <a href="https://learn.microsoft.com/en-us/office/vba/api/word.xmlmapping">XMLMapping model</a> makes the same boundary explicit: it links content-control text to XML data in the document data store.</p>
+
+      <p>That is useful for templates and generated documents. It is also a separate review surface. A handoff may need to establish that no such mappings remain, or to establish that an approved mapping and its bound data did not change.</p>
+
+      <h2>Evidence without pretending to be Word</h2>
+
+      <p>DocFence recognizes direct <code>w:sdtPr/w:dataBinding</code> declarations in the document stories it already reviews. For a nonempty <code>w:storeItemID</code>, it associates the mapping with a custom XML data part only through the package’s internal <code>customXmlProps</code> relationship and its <code>ds:datastoreItem</code> identifier. It accepts conventional and Strict forms, plus the established Word-compatible properties vocabulary found in real packages.</p>
+
+      <p>The public inventory contains only five counts: mappings; mappings with a storage ID; mappings without one; referenced custom XML data parts; and unmatched storage IDs. A nonempty ID that cannot be associated remains explicit review evidence rather than a guessed target. A mapping without an ID is also counted, but DocFence does not evaluate its XPath and does not guess which custom XML part Word could select.</p>
+
+      <p>Recognized properties relationships used for a binding must be internal and point to a valid storage-properties root. If that contract is malformed, analysis fails closed. The tool never evaluates XPath, updates a content control, renders the document, interprets the XML payload, or decides whether a mapping is expected or safe.</p>
+
+      <h2>Choose “none” or “no change”</h2>
+
+      <p>A clean-handoff policy can prohibit stored mappings entirely:</p>
+
+      <pre><code>rules:
+  require_no_data_bindings: true</code></pre>
+
+      <p>This emits <code>DFP023</code> whenever the candidate has a recognized mapping declaration. For an approved template that intentionally uses data bindings, preserve the baseline and reject a later mutation instead:</p>
+
+      <pre><code>rules:
+  no_data_binding_changes: true</code></pre>
+
+      <p>This emits <code>DFP024</code> if the private inventory changes. For an identified storage ID, the comparison includes the paired custom XML data and properties payloads privately, so a bound-data mutation is visible without revealing it. If every custom XML mutation must block a handoff, combine this gate with <code>no_custom_xml_changes</code>.</p>
+
+      <h2>What was tested</h2>
+
+      <p>The release tests conventional and Strict OOXML, Word’s established properties-root spelling, mappings without a storage ID, unmatched IDs, multiple controls that point to one data part, mapped-data mutations, relationship-ID renumbering, malformed properties roots and target modes, policy findings, Markdown/JSON/SARIF output, and redaction markers.</p>
+
+      <p>I also profiled an independent <a href="https://loadfix.github.io/ooxml-reference-corpus/case/docx__custom-xml-part.html">OOXML Reference Corpus data-binding package</a>. It reports one content control, one mapping, one referenced custom XML part, and no unmatched ID—without reproducing the package’s document or XML material.</p>
+
+      <p>The wheel and source archive were independently rebuilt twice from the release commit with <code>SOURCE_DATE_EPOCH</code>; both artifact pairs were byte-identical. The public release contains the wheel, source archive, and SHA-256 manifest. I downloaded those assets, verified the checksums, installed the wheel in a fresh environment, and repeated the external-package profile.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.6.0/docfence-0.6.0-py3-none-any.whl
+
+docfence profile template.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The full boundary is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.6.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.6.0/docs/threat-model.md">threat model</a>. DocFence is not a template engine or a rendering verdict; it is local, bounded evidence about stored OOXML state. It is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the preceding mail-merge boundary, read <a href="/posts/docfence-050.html">Mail merge is a document dependency, not just a template setting</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
