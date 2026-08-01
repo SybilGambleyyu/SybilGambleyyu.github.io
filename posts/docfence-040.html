@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.4 makes core, extended, and custom Word document properties review-visible without exposing metadata values.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-040.html">
+    <meta property="og:title" content="Document metadata is a review boundary, not a generic package change">
+    <meta property="og:description" content="DocFence 0.4 adds bounded evidence and policy gates for core, extended, and custom document properties.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-040.html">
+    <title>Document metadata is a review boundary, not a generic package change — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>Document metadata is a review boundary, not a generic package change</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.4.0">DocFence 0.4.0</a></p>
+
+      <p>A Word review can account carefully for visible paragraphs, comments, tracked changes, and embedded files while treating document properties as a generic package mutation. That is the wrong boundary for a controlled handoff. Core, extended, and custom properties can carry authoring and workflow metadata; Microsoft’s <a href="https://support.microsoft.com/en-us/office/collab-files/remove-hidden-data-and-personal-information-by-inspecting-documents-presentations-or-workbooks">Document Inspector</a> puts document properties and personal information in its own review category.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.4.0 turns that category into bounded, local evidence. It makes changes to Word’s core, extended, and custom property parts review-visible without printing property names, values, paths, relationship targets, or fingerprints into JSON, Markdown, or SARIF.</p>
+
+      <h2>Three property families, intentionally separated</h2>
+
+      <p>Word conventionally stores these property families in <code>docProps/core.xml</code>, <code>docProps/app.xml</code>, and <code>docProps/custom.xml</code>. Core properties can include fields such as creator and title; extended properties may describe application, template, or document statistics; custom properties are user-defined definitions. The Office property interface also distinguishes built-in and custom properties, including information Office maintains automatically. See Microsoft’s <a href="https://support.microsoft.com/en-us/office/view-or-change-the-properties-for-an-office-file-21d604c2-481e-4379-8e54-1dd4622c6b75">property guide</a> for the user-facing model.</p>
+
+      <p>DocFence recognizes the corresponding package relationships and conventional stored paths, then validates the property XML root before counting. It supports Transitional OOXML and the canonical Strict relationship and root variants. Its public profile reports only aggregate counts: property-part counts, populated core and extended property counts, and custom-property definition counts. A custom-property definition remains counted even when its value is empty.</p>
+
+      <p>That distinction is useful. A change to a core timestamp, an application/version field, a template reference, or a custom definition is no longer lost among opaque parts. It is still not treated as proof that a document is unsafe, personal, confidential, intentional, or malicious. The tool reports stored-state evidence; a reviewer owns the decision.</p>
+
+      <h2>Choose an empty-candidate gate or a controlled-baseline gate</h2>
+
+      <p>A clean-handoff policy can prohibit custom property definitions in a candidate:</p>
+
+      <pre><code>rules:
+  require_no_custom_document_properties: true</code></pre>
+
+      <p>This emits <code>DFP020</code> and reports only the custom part and definition counts. Some teams instead need to retain known built-in or custom properties in an approved template but reject drift afterwards. For that, use a comparison gate:</p>
+
+      <pre><code>rules:
+  no_document_property_changes: true</code></pre>
+
+      <p>This emits <code>DFP019</code> when the private property inventory changes and shows before/after aggregate counts. It is deliberately sensitive: ordinary resaves can update automatically maintained metadata. The right workflow is a controlled baseline, not an assumption that every metadata change is suspicious.</p>
+
+      <h2>Evidence without a metadata spill</h2>
+
+      <p>The property inventory’s comparison signature stays private. The release tests conventional relationship-backed packages, canonical physical property paths without relationships, Strict OOXML variants, malformed roots, value-only changes, custom definitions, policy findings, relationship-ID renumbering, and output redaction. Unique markers placed in names and values are checked not to appear in public output.</p>
+
+      <p>The wheel and source distribution were independently built twice from the release commit with its <code>SOURCE_DATE_EPOCH</code>; each artifact pair was byte-identical. The GitHub release includes the wheel, source archive, and SHA-256 manifest. I then downloaded those public assets, verified their checksums, installed the wheel into a new environment, and ran a self-diff smoke test.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.4.0/docfence-0.4.0-py3-none-any.whl
+
+docfence profile document.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The complete contract is in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.4.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.4.0/docs/threat-model.md">threat model</a>. DocFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/docfence">GitHub</a>. For the related imported-content boundary, read <a href="/posts/docfence-030.html">Imported document content is a review boundary, not a blank spot</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
