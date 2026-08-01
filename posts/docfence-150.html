@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.15 makes hidden Word document-variable state review-visible without exposing variable names or values.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-150.html">
+    <meta property="og:title" content="A Word file can remember a value you cannot see">
+    <meta property="og:description" content="DocFence 0.15 adds private, aggregate evidence for stored Word document variables.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-150.html">
+    <title>A Word file can remember a value you cannot see — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A Word file can remember a value you cannot see</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.15.0">DocFence 0.15.0</a></p>
+
+      <p>A Word document can look clean, contain no comment or visible field result, and still retain arbitrary name/value state in its Settings part. That state is useful for templates and automation, but a handoff reviewer has a reasonable question: did the file keep a hidden value that should not cross this boundary?</p>
+
+      <p>Word’s <a href="https://learn.microsoft.com/en-us/office/vba/api/word.variable">Variable object documentation</a> is unusually direct: document variables are stored with a document or template to preserve macro settings between sessions, and they are invisible unless an appropriate <code>DOCVARIABLE</code> field is inserted. The <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.documentvariable?view=openxml-3.0.1">Open XML SDK’s <code>w:docVar</code> contract</a> describes the package representation as persisted arbitrary customer data in name/value pairs.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.15 makes that stored state review-visible without copying a variable name or value into CI output.</p>
+
+      <h2>The hidden store is in Settings</h2>
+
+      <p>A direct <code>w:docVars</code> container in a Word Settings part can hold one or more <code>w:docVar</code> leaves. Each leaf has a stored <code>w:name</code> and <code>w:val</code>. The visible document body need not reveal either string. A matching <code>DOCVARIABLE</code> field can later display a value, and a macro can read or update it, but those are separate client behaviors—not proof that a stored value is harmless or unused.</p>
+
+      <p>This is distinct from custom document properties and custom XML. The ISO/IEC 29500 material surfaced by the SDK calls document variables a legacy-compatible mechanism, yet legacy-compatible state still matters in a governed template or document handoff. A clean review needs to see that the store exists without turning the report into a copy of it.</p>
+
+      <h2>Counts in reports; names and values stay private</h2>
+
+      <p>DocFence discovers Settings through the conventional <code>word/settings.xml</code> path and through Transitional or Strict relationships from main and glossary documents. It recognizes direct <code>w:docVars</code> containers and direct <code>w:docVar</code> leaves, validates their Word-namespace shape, required attributes, SDK length limits, and the one-container-per-Settings-part cardinality.</p>
+
+      <p>Profile JSON, Markdown, and SARIF expose only aggregate container, variable, and empty-value counts. They do not emit a variable name, value, Settings-part path, or fingerprint. The entire recognized container remains inside a private digest, so a same-count rewrite of a name or value still becomes a review-relevant inventory change without disclosing either string.</p>
+
+      <p>The OOXML schema permits an empty stored value, although ordinary Word automation does not set one. DocFence counts it rather than guessing at author intent or silently discarding it.</p>
+
+      <h2>Choose a clean handoff or freeze an approved baseline</h2>
+
+      <p>For a handoff that must carry no stored document-variable state:</p>
+
+      <pre><code>rules:
+  require_no_word_document_variables: true</code></pre>
+
+      <p>This produces <code>DFP043</code> whenever a recognized <code>w:docVars</code> container is present, including an empty container. For a template that intentionally retains known variables:</p>
+
+      <pre><code>rules:
+  no_word_document_variable_changes: true</code></pre>
+
+      <p><code>DFP044</code> compares the private inventory against the approved baseline. It detects a changed name or value even when the safe public counts are unchanged.</p>
+
+      <h2>What this deliberately does not do</h2>
+
+      <p>DocFence does not evaluate <code>DOCVARIABLE</code> fields, run macros, resolve a variable name, determine whether a Word client will display a value, or decide what a value means. It does not claim that a stored variable will be used, that a template is attached, or that a document is safe. The inventory is bounded evidence about persisted package state for CI and handoff workflows.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.15 suite has 39 tests. It covers aggregate categories, same-count name/value changes, JSON/Markdown/SARIF redaction, policy findings, conventional/Strict/glossary-linked Settings discovery, empty values, UTF-16 boundary handling, and malformed containers, leaves, attributes, lengths, text, and relationships. Hosted CI passed on Python 3.11 and 3.13.</p>
+
+      <p>The wheel and source archive were independently rebuilt from the release commit and matched byte-for-byte. A fresh virtual environment installed the wheel from <code>site-packages</code>, profiled a standard-shaped document-variable package without exposing sentinel values, and preserved the zero-state result on a public Open XML SDK Word fixture. Fresh release downloads then passed the published SHA-256 manifest and package checks.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.15.0/docfence-0.15.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.15.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. The exact scope and limits are in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.15.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.15.0/docs/threat-model.md">threat model</a>. For the preceding editable-range boundary, read <a href="/posts/docfence-140.html">A Word editable range can carry an editor identity</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
