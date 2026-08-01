@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FormulaFence 0.219.0 adds a bounded, profile-only XLSB inventory path with explicit formula-token coverage.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/formulafence-xlsb-profile.html">
+    <meta property="og:title" content="A safer way to inventory Excel Binary Workbooks">
+    <meta property="og:description" content="FormulaFence 0.219.0 adds an XLSB profile boundary, not a misleading claim of complete binary-workbook inspection.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/formulafence-xlsb-profile.html">
+    <title>A safer way to inventory Excel Binary Workbooks — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A safer way to inventory Excel Binary Workbooks</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.219.0">FormulaFence 0.219.0</a></p>
+
+      <p>Excel Binary Workbook files (<code>.xlsb</code>) are useful for large models, but a familiar filename does not make them a small variation of <code>.xlsx</code>. Formula syntax is stored as BIFF12 reverse-polish tokens, while workbook state lives in binary records behind a ZIP package. A tool that silently turns an unfamiliar token into plausible-looking formula text can produce the most dangerous kind of review result: one that looks complete without being complete.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> 0.219.0 introduces a deliberately narrow answer: <code>formulafence profile workbook.xlsb</code>. It is an inventory path, not general XLSB parity. <code>lint</code>, <code>diff</code>, <code>check</code>, and <code>portfolio</code> still reject <code>.xlsb</code>, and the underlying public analysis APIs reject the narrowed snapshot as well.</p>
+
+      <h2>Start with a reader boundary</h2>
+
+      <p>The reader applies the same fail-closed ZIP preflight as FormulaFence's ordinary workbook path, then reads only the workbook catalog, its relationship part, optional shared strings, and selected worksheet binary parts. It validates BIFF12 record framing, bounds record counts and retained cells, restricts relationship XML to a small documented grammar, and limits binary and decoded-formula memory. It never evaluates a formula, macro, or external target.</p>
+
+      <p>Microsoft's <a href="https://learn.microsoft.com/en-us/openspecs/office_file_formats/MS-XLSB/acc8aa92-1f02-4167-99f5-84f9f676b95a">XLSB format overview</a> and <a href="https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xlsb/220abf5e-f561-4333-9fe0-7ac590ed4ad5">formula grammar</a> define many more record and token forms than a trustworthy first reader should pretend to understand. FormulaFence reconstructs only a verified subset—ordinary references and areas, literals, operators, selected functions, names, and verified internal 3-D forms. An encountered construct outside that set becomes an explicit formula-text coverage gap; it is never rendered as a guess.</p>
+
+      <h2>Make the limits visible in the artifact</h2>
+
+      <p>An XLSB profile starts with <code>xlsb_core_profile</code> scope, the only supported workflow, and a formula-token coverage flag. Markdown explicitly says that counts outside that scope are unassessed. That avoids treating a zero in a normal profile field as evidence that the binary workbook lacks controls, formatting, arrays, calculation settings, external relationships, rich data, or saved-result state.</p>
+
+      <p>The public artifact is data-minimising: it withholds cell values, formula text, defined-name labels, and definition bodies. The reader uses the latter only transiently when an indexed token requires it, then retains aggregate counts and coverage evidence. This lets teams inventory a binary workbook without making the resulting review file a second copy of its sensitive model logic.</p>
+
+      <h2>Evidence before a broader claim</h2>
+
+      <p>The implementation was replayed against 18 public XLSB fixtures from calamine and Apache POI. Fifteen current ZIP packages loaded; twelve had complete verified token coverage and three surfaced an honest coverage gap. Two protected/non-ZIP samples failed archive preflight before a binary part was read. An older Excel 2007 Beta 2 fixture was declined rather than parsed through an incompatible historical layout. Focused tests cover framing, relationships, cell and formula records, resource ceilings, redaction, and workflow gates; deterministic malformed-input sweeps covered 30,000 cases without an unexpected implementation exception.</p>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/formulafence/blob/v0.219.0/docs/validation.md">validation record</a> has the corpus and boundary details. The release passed 1,584 tests, package metadata checks, and a fresh-wheel profile smoke test.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.219.0/formulafence-0.219.0-py3-none-any.whl
+formulafence profile model.xlsb --format markdown --output xlsb-profile.md</code></pre>
+
+      <p>FormulaFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/formulafence">GitHub</a>. For the broader change-assurance workflow for full <code>.xlsx</code> and <code>.xlsm</code> inspection, see <a href="/posts/formulafence.html">Spreadsheet changes that can pass CI</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
