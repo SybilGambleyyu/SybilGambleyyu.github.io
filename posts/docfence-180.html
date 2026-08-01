@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.18 inventories direct WordprocessingML hyperlink markup without exposing or following targets.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-180.html">
+    <meta property="og:title" content="A relationship is not a Word hyperlink">
+    <meta property="og:description" content="DocFence 0.18 makes direct w:hyperlink markup review-visible without copying targets into CI.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-180.html">
+    <title>A relationship is not a Word hyperlink — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>A relationship is not a Word hyperlink</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.18.0">DocFence 0.18.0</a></p>
+
+      <p>Package relationships are a useful review surface, but their count is not a count of Word links. A hyperlink relationship can remain in a package after its visible markup is gone. Conversely, a direct WordprocessingML <code>w:hyperlink</code> can point to an in-document anchor—or the start of the document—without a relationship at all.</p>
+
+      <p>That distinction matters in CI and controlled handoffs. A reviewer needs evidence about the stored element that a Word client can interpret, not an accidental proxy from an unrelated or residual package record. The right report says that direct hyperlink markup exists and changed, while keeping its target material out of logs.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.18 adds that review boundary.</p>
+
+      <h2>Three stored target forms</h2>
+
+      <p>The OOXML <a href="https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_hyperlink_topic_ID0EIMX1.html"><code>w:hyperlink</code> definition</a> separates a relationship ID from a local anchor. With <code>r:id</code>, the relationship specifies the target. With no ID, <code>w:anchor</code> can name a local destination. With neither, the documented form navigates to the start of the current document.</p>
+
+      <p>When both <code>r:id</code> and <code>w:anchor</code> are stored, the relationship wins. That is a precedence rule, not two destinations. The anchor remains useful review evidence, but copying its value into a build log would defeat a privacy-safe review boundary.</p>
+
+      <p>A recognized hyperlink relationship can have either an internal or external target mode. DocFence preserves that stored mode distinction, but never guesses whether a target is a web URL, reachable, permitted, safe, or rendered by a particular client.</p>
+
+      <h2>Count direct markup, not guesses</h2>
+
+      <p>The new inventory reports aggregate direct-element and story counts; relationship-backed totals; external, internal, and unsupported relationship classes; anchor-only and current-document-start forms; and anchors shadowed by a relationship-backed element. A hyperlink relationship with no direct <code>w:hyperlink</code> reference does not inflate this inventory.</p>
+
+      <p>Targets, anchors, locations, tooltips, frame names, history, display text, relationship IDs, story paths, and fingerprints remain private. The private signature still notices a same-count target or markup rewrite. Relationship-ID renumbering with otherwise identical semantics stays quiet.</p>
+
+      <p>DocFence does not resolve, retrieve, follow, validate, evaluate, or render a link. This is stored-package evidence for review—not a link scanner, URL validator, or safety verdict.</p>
+
+      <h2>Two policy choices</h2>
+
+      <p>For a handoff that must contain no direct Word hyperlink markup:</p>
+
+      <pre><code>rules:
+  require_no_word_hyperlink_markup: true</code></pre>
+
+      <p>This produces <code>DFP049</code>. For a governed template that intentionally retains direct links:</p>
+
+      <pre><code>rules:
+  no_word_hyperlink_markup_changes: true</code></pre>
+
+      <p><code>DFP050</code> protects the private direct-markup baseline. These policies complement—not replace—the generic relationship policy and the separate <code>HYPERLINK</code> field policies. Each representation carries different evidence.</p>
+
+      <h2>Release evidence</h2>
+
+      <p>The 0.18 suite has 44 tests. It covers external and internal relationship modes, a resolved unsupported relationship, anchor-only and current-document-start forms, <code>r:id</code> precedence over an anchor, body/header stories, Transitional and Strict namespaces, orphaned relationship exclusion, same-count target and anchor changes, relationship-ID renumbering stability, policy/SARIF output, and redaction.</p>
+
+      <p>For an independent smoke test, the released wheel profiles python-docx’s public <a href="https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/features/steps/test_files/par-hyperlinks.docx"><code>par-hyperlinks.docx</code> fixture</a>. It contains four direct relationship-backed hyperlink elements. DocFence reports four direct elements and four external relationship-backed elements without emitting their targets or display text.</p>
+
+      <p>Hosted CI passed on Python 3.11 and 3.13, including distribution validation. The wheel and source archive were independently rebuilt from the tagged commit and matched byte-for-byte; fresh GitHub release downloads passed the published SHA-256 manifest and package checks.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.18.0/docfence-0.18.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.18.0">public release</a> includes the wheel, source archive, and SHA-256 manifest. Read the exact contract in the <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.18.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.18.0/docs/threat-model.md">threat model</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
