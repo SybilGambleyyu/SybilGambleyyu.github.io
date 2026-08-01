@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FormulaFence 0.216.0 adds a privacy-safe CI safeguard for external spreadsheet criteria formulas.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/formulafence-ff114.html">
+    <meta property="og:title" content="The spreadsheet formula risk that appears only after a source workbook closes">
+    <meta property="og:description" content="FormulaFence 0.216.0 adds FF114, a bounded workbook-level safeguard for closed external source workbooks.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/formulafence-ff114.html">
+    <title>The spreadsheet formula risk that appears only after a source workbook closes — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 1, 2026</p>
+      <h1>The spreadsheet formula risk that appears only after a source workbook closes</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.216.0">FormulaFence 0.216.0</a></p>
+
+      <p>A spreadsheet can look healthy in review and still fail in the next operational handoff: a linked source workbook closes. Microsoft documents this limitation for <a href="https://support.microsoft.com/en-us/excel/how-to-correct-a-value-error-in-the-countif-countifs-function">COUNTIF and COUNTIFS</a>, and its <a href="https://support.microsoft.com/en-us/excel/how-to-correct-a-value-error-in-the-sumif-sumifs-function">SUMIF/SUMIFS guidance</a> identifies the same closed-workbook behavior for the related function family.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> 0.216.0 adds <code>FF114</code>, a medium-severity, workbook-level safeguard for direct external A1 references in native <code>COUNTBLANK</code>, <code>COUNTIF</code>, <code>COUNTIFS</code>, <code>SUMIF</code>, and <code>SUMIFS</code> calls. It reports a dependency to review, not a claim that a current workbook is failing: FormulaFence does not resolve the link, inspect whether the source is open, or evaluate a formula.</p>
+
+      <h2>Why one workbook finding matters</h2>
+
+      <p>Copied conditional formulas can occur at extraordinary scale. A per-cell alert would turn a useful operational signal into report noise, so <code>FF114</code> produces one bounded finding per workbook. Its JSON, Markdown, and SARIF evidence keeps only aggregate function, formula-cell, and external-reference-argument counts. Source paths, workbook names, sheet names, addresses, formulas, and values never enter the evidence.</p>
+
+      <p>The rule is intentionally strict: only exact native spellings (with optional <code>@</code>), complete nonempty arity, and directly visible external A1 tokens qualify. Text-built or computed references, external names, Tables, 3-D references, malformed or explicit <code>#REF!</code> syntax, array territory, and arbitrary namespaces stay quiet. A saved <code>#VALUE!</code> result remains separate <code>FF109</code> evidence because the syntax alone cannot establish why Excel produced it.</p>
+
+      <h2>Evidence without pretending to know the source state</h2>
+
+      <p>An aggregate-only SpreadsheetBench v0.1 census covered 5,464 public workbook artifacts and 1,200,528 ordinary formula instances. It found 444,523 complete calls in this narrow external-reference boundary across 2,206,648 argument spans; 15,949 corresponding formula instances had a saved <code>#VALUE!</code> result. That is prevalence and last-saved-state context, not proof that any source workbook was closed or that the external dependency caused the error.</p>
+
+      <p>The release passed 1,542 tests, hosted CI, package lint and compilation, fresh wheel and source-distribution installs, and a downloaded public-release-wheel install. The <a href="https://github.com/SybilGambleyyu/formulafence/blob/v0.216.0/docs/validation.md">full validation record</a> explains the boundary and the aggregate methodology.</p>
+
+      <p>FormulaFence is available under MIT on <a href="https://github.com/SybilGambleyyu/formulafence">GitHub</a>. For the broader spreadsheet CI approach, see <a href="/posts/formulafence.html">Spreadsheet changes that can pass CI</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
