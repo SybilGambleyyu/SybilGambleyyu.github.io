@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.22.0 contains
-37 deterministic scenarios: 36 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 39 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.23.0 contains
+38 deterministic scenarios: 37 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 40 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.22.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.23.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -230,6 +230,19 @@ that selected formula text. It does not evaluate a condition, calculate a
 workbook, decide which values are highlighted, render a worksheet, or claim
 Excel-client behavior.
 
+Version 0.23.0 adds a stored custom number-format case without a cell edit.
+[Excel's custom-number-format guidance](https://support.microsoft.com/en-us/excel/hide-or-display-cell-values)
+documents `;;;` as a way to hide worksheet values, while its
+[percentage-format guidance](https://support.microsoft.com/en-us/excel/format-numbers-as-percentages-in-excel)
+describes changing the display of a stored number. The pair holds
+`Operations!B2`'s raw `0.125` value, custom format ID `164`, cell-style
+assignment, and `Operations!B3=B2` formula fixed. Only the custom format code
+moves from `0.0%;[Red](0.0%);-` to `;;;`. The validator proves that only
+`xl/styles.xml` changes and that it is otherwise identical after erasing the
+selected format code. It does not render a cell, apply locale or column-width
+rules, infer a displayed result, calculate a workbook, or claim Excel-client
+behavior.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -265,7 +278,9 @@ visible unsupported coverage instead of a silent pass.
 The scenarios cover formula-to-value replacement, wrong-period
 reference drift, input propagation, external formula references, named-range
 redirection, copied-formula interruption, mismatched `SUMIFS` ranges, removed
-input validation, conditional-formatting removal, a `cellIs`
+input validation, conditional-formatting removal, a stored custom number format
+whose code changes from a percentage display to `;;;` while its raw value,
+style assignment, and dependent formula remain fixed, a `cellIs`
 conditional-formatting threshold whose raw cutoff moves while its target,
 priority, operator, values, and differential fill remain fixed,
 hidden-sheet visibility,
@@ -310,13 +325,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.22.0 passed 136 tests
-locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30770346003),
+so regeneration is byte-for-byte reproducible. Version 0.23.0 passed 143 tests
+locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30771287127),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 38
+making its report schema normative. FormulaFence 0.220.0 recovered all 39
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -377,6 +392,10 @@ raw `100 → 50` formula change while the declared target, priority, operator,
 values, and differential fill remain stable. FormulaFence does not evaluate a
 condition or infer a rendered result; WCAB independently verifies the raw
 worksheet rule.
+For the custom number-format fact, it requires FormulaFence's exact redacted
+`number_format_controls_changed` profile and `FF039`. FormulaFence deliberately
+redacts the code and target, so WCAB independently verifies the
+`Operations!B2` transition and the styles-only package boundary.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -405,5 +424,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.22.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.22.0),
+the [v0.23.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.23.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
