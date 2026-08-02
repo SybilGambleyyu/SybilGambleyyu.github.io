@@ -6,7 +6,7 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.2.0 contains
+is a small, open way to make those claims testable. Version 0.3.0 contains
 17 deterministic scenarios: 16 baseline/candidate workbook pairs and one
 two-workbook portfolio. Each scenario supplies machine-readable truth about an
 observable change, a benchmark review disposition, and—where appropriate—a
@@ -14,7 +14,7 @@ static dependency-impact lower bound. The workbook files are generated from
 source, not copied from a financial model, email archive, or other sensitive
 corpus.
 
-Version 0.2.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.3.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -23,6 +23,14 @@ It also upgrades the truth contract to schema version 2 with an Excel Table
 scope-expansion case: `=SUM(SalesLedger[Amount])` stays unchanged while the
 stored Table range grows from `A1:D4` to `A1:D5`. [Microsoft documents](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables)
 that structured references adjust when a Table gains or loses data.
+
+Version 0.3.0 also adds a tool-neutral normalized observation protocol. An
+adapter can declare a case analyzed, unsupported, or errored; the scorer then
+reports expected-fact recall, analyzed coverage, and agreement with the
+benchmark's reference review convention. WCAB's facts are deliberately
+targeted rather than exhaustive, so an unrecognized observation stays visible
+for review instead of being labeled a false positive. Unsupported analysis is
+visible too—it cannot become a pass.
 
 ## A gap between existing benchmarks
 
@@ -69,15 +77,17 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.2.0 passed 11 tests
+so regeneration is byte-for-byte reproducible. Version 0.3.0 passed 18 tests
 and validated fixtures under Python 3.10 and 3.13; a fresh Python 3.12 wheel
 installation reproduced the catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.219.0 recovered all 17
-currently mappable facts and five targeted lint rules. The structural rewrite
-is intentionally left unmapped: it documents intent, but does not pretend that
-a small fixture proves generic Excel semantic equivalence.
+making its report schema normative. FormulaFence 0.219.0 recovered all 18
+currently mappable facts and five targeted lint rules. Its normalized export
+reports those facts without inventing review decisions, so policy agreement
+remains explicitly unset. The structural rewrite is intentionally left
+unmapped: it documents intent, but does not pretend that a small fixture proves
+generic Excel semantic equivalence.
 
 ## Try it
 
@@ -88,11 +98,13 @@ python -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 wcab validate --fixtures fixtures
 wcab manifest --fixtures fixtures
+wcab observation-template --fixtures fixtures --output observations.json
+wcab score --fixtures fixtures --observations observations.json
 pytest
 ```
 
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.2.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.2.0),
+the [v0.3.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.3.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
