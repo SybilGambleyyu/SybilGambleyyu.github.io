@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.21.0 contains
-36 deterministic scenarios: 35 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 38 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.22.0 contains
+37 deterministic scenarios: 36 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 39 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.21.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.22.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -216,6 +216,20 @@ user later enters a value. It does not evaluate either list, decide whether a
 future input is valid, accept or reject an entry, calculate the workbook, or
 claim Excel-client behavior.
 
+Version 0.22.0 adds a stored conditional-formatting threshold case without a
+cell edit. [Microsoft's Open XML guidance](https://learn.microsoft.com/en-us/office/open-xml/spreadsheet/working-with-conditional-formatting)
+describes conditional-formatting rules stored alongside a worksheet, and its
+[formula specification](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/7476f340-5fe0-4051-9524-6daeaa1e0006)
+separates the rule expression from a rendered worksheet outcome. The pair holds
+one `Operations!B2:B4` `cellIs` rule's target, priority `1`,
+`greaterThan` operator, values `10`, `75`, and `120`, and solid
+`FFFFC7CE` differential fill fixed. Only the raw rule formula moves from
+`100` to `50`. The validator proves the Operations worksheet is the sole
+changed package member and that its XML is otherwise identical after erasing
+that selected formula text. It does not evaluate a condition, calculate a
+workbook, decide which values are highlighted, render a worksheet, or claim
+Excel-client behavior.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -251,7 +265,10 @@ visible unsupported coverage instead of a silent pass.
 The scenarios cover formula-to-value replacement, wrong-period
 reference drift, input propagation, external formula references, named-range
 redirection, copied-formula interruption, mismatched `SUMIFS` ranges, removed
-input validation, conditional-formatting removal, hidden-sheet visibility,
+input validation, conditional-formatting removal, a `cellIs`
+conditional-formatting threshold whose raw cutoff moves while its target,
+priority, operator, values, and differential fill remain fixed,
+hidden-sheet visibility,
 formula-cell unlocking, incomplete manual calculation, direct static cycles,
 3-D formula scope expansion, an Excel Table scope expansion with unchanged
 structured-reference text, an introduced `INDIRECT` reference, unchanged
@@ -293,15 +310,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.21.0 passed 129 tests
-locally under Python 3.13 and in
-[hosted CI](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30769194355)
-under Python 3.10 and 3.13; fresh
-Python 3.13 wheel and source-distribution installations reproduced the
+so regeneration is byte-for-byte reproducible. Version 0.22.0 passed 136 tests
+locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30770346003),
+and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 37
+making its report schema normative. FormulaFence 0.220.0 recovered all 38
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -356,6 +371,12 @@ For the list-source fact, it requires FormulaFence's exact
 the stored source/control metadata but does not evaluate a list or decide
 whether an input is permitted. WCAB independently verifies the local source
 bindings and stored transition without executing Excel or Power Query.
+For the conditional-formatting threshold fact, it requires FormulaFence's exact
+`conditional_formatting_changed` rule transition and `FF021`, with the
+raw `100 → 50` formula change while the declared target, priority, operator,
+values, and differential fill remain stable. FormulaFence does not evaluate a
+condition or infer a rendered result; WCAB independently verifies the raw
+worksheet rule.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -384,5 +405,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.21.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.21.0),
+the [v0.22.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.22.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
