@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.24.0 contains
-39 deterministic scenarios: 38 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 41 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.25.0 contains
+40 deterministic scenarios: 39 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 42 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.24.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.25.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -256,6 +256,19 @@ warning, evaluate a formula, decide whether suppression is justified, render
 an indicator, change application-level error checking, calculate a workbook,
 or claim Excel-client behavior.
 
+Version 0.25.0 adds a stored workbook-structure protection change without a
+cell edit. Microsoft's [workbook-protection guidance](https://support.microsoft.com/en-us/office/protect-a-workbook-7e365a4d-3e89-4616-84ca-1931257c1517)
+distinguishes structure protection from file and worksheet protection and says
+that it restricts adding, moving, deleting, hiding, unhiding, and renaming
+sheets. Its [Open XML specification](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/ae53f189-04e6-45e6-acb2-7f61fecabee4)
+records the stored workbook control. The pair keeps the hidden
+`ReviewControls` sheet and `Inputs!D2=B2*C2` fixed. Only
+`workbookProtection/@lockStructure` moves from `1` to `0`; the validator proves
+that `xl/workbook.xml` is the only changed package member and otherwise equal
+after removing that attribute. It does not test a password, encryption,
+authentication, authorization, hidden-sheet exposure, or client
+sheet-operation behavior.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -295,7 +308,9 @@ input validation, conditional-formatting removal, a stored custom number format
 whose code changes from a percentage display to `;;;` while its raw value,
 style assignment, and dependent formula remain fixed, a stored ignored-error
 declaration whose formula-range suppression is added while its ordinary cells
-and formula context remain fixed, a `cellIs`
+and formula context remain fixed, a stored workbook-structure lock whose
+`lockStructure` flag is disabled while a hidden review sheet and formula context
+stay fixed, a `cellIs`
 conditional-formatting threshold whose raw cutoff moves while its target,
 priority, operator, values, and differential fill remain fixed,
 hidden-sheet visibility,
@@ -340,13 +355,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.24.0 passed 150 tests
-locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30772189840),
+so regeneration is byte-for-byte reproducible. Version 0.25.0 passed 157 tests
+locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30773084149),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 40
+making its report schema normative. FormulaFence 0.220.0 recovered all 41
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -415,6 +430,12 @@ For the stored ignored-error fact, it requires FormulaFence's exact redacted
 `ignored_error_controls_changed` profile and `FF037`. FormulaFence deliberately
 redacts the target and formula, so WCAB independently verifies the generated
 `Operations!B5` declaration and worksheet-only package boundary.
+For the stored workbook-structure fact, it requires FormulaFence's exact
+non-secret `workbook_protection_changed` profile and `FF022`: only
+`lock_structure` changes from true to false, all other locks remain false, and
+neither side has credential or opaque metadata. WCAB independently validates
+the generated raw `workbookProtection/@lockStructure` transition and
+`xl/workbook.xml`-only boundary.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -443,5 +464,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.24.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.24.0),
+the [v0.25.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.25.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
