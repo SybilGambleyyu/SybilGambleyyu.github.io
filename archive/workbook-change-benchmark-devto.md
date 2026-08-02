@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.23.0 contains
-38 deterministic scenarios: 37 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 40 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.24.0 contains
+39 deterministic scenarios: 38 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 41 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.23.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.24.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -243,6 +243,19 @@ selected format code. It does not render a cell, apply locale or column-width
 rules, infer a displayed result, calculate a workbook, or claim Excel-client
 behavior.
 
+Version 0.24.0 adds a stored error-checking suppression without a formula or
+cell edit. Microsoft's [formula-error guidance](https://support.microsoft.com/en-us/excel/detect-formula-errors-in-excel)
+explains that an ignored error does not appear in later error checks until it is
+reset, and documents the formula-range-omission rule. The pair keeps
+`Operations!B2=10`, `B3=20`, `B4=30`, `B5=SUM(B2:B3)`, and `C5=B5` fixed.
+Only one standard `ignoredErrors/ignoredError` declaration with `sqref="B5"`
+and `formulaRange="1"` is added. The validator proves that only
+`xl/worksheets/sheet1.xml` changes and that it is otherwise identical after
+removing that declaration. It does not determine whether Excel would show a
+warning, evaluate a formula, decide whether suppression is justified, render
+an indicator, change application-level error checking, calculate a workbook,
+or claim Excel-client behavior.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -280,7 +293,9 @@ reference drift, input propagation, external formula references, named-range
 redirection, copied-formula interruption, mismatched `SUMIFS` ranges, removed
 input validation, conditional-formatting removal, a stored custom number format
 whose code changes from a percentage display to `;;;` while its raw value,
-style assignment, and dependent formula remain fixed, a `cellIs`
+style assignment, and dependent formula remain fixed, a stored ignored-error
+declaration whose formula-range suppression is added while its ordinary cells
+and formula context remain fixed, a `cellIs`
 conditional-formatting threshold whose raw cutoff moves while its target,
 priority, operator, values, and differential fill remain fixed,
 hidden-sheet visibility,
@@ -325,13 +340,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.23.0 passed 143 tests
-locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30771287127),
+so regeneration is byte-for-byte reproducible. Version 0.24.0 passed 150 tests
+locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30772189840),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 39
+making its report schema normative. FormulaFence 0.220.0 recovered all 40
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -396,6 +411,10 @@ For the custom number-format fact, it requires FormulaFence's exact redacted
 `number_format_controls_changed` profile and `FF039`. FormulaFence deliberately
 redacts the code and target, so WCAB independently verifies the
 `Operations!B2` transition and the styles-only package boundary.
+For the stored ignored-error fact, it requires FormulaFence's exact redacted
+`ignored_error_controls_changed` profile and `FF037`. FormulaFence deliberately
+redacts the target and formula, so WCAB independently verifies the generated
+`Operations!B5` declaration and worksheet-only package boundary.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -424,5 +443,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.23.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.23.0),
+the [v0.24.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.24.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
