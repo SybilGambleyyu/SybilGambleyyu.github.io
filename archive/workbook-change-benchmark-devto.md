@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.13.0 contains
-28 deterministic scenarios: 27 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 30 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.14.0 contains
+29 deterministic scenarios: 28 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 31 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.13.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.14.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -116,7 +116,19 @@ dependency edge, and the report-worksheet-only package difference. It does not
 apply a filter, calculate the subtotal, infer visible rows, or claim what an
 Excel client displays, copies, charts, or prints.
 
-Version 0.13.0 retains the tool-neutral normalized observation protocol.
+Version 0.14.0 adds a relationship-backed PivotTable cache refresh-on-open
+control without a cell edit. [Excel's PivotTable refresh guidance](https://support.microsoft.com/en-us/excel/refresh-pivottable-data)
+includes refreshing data when a workbook opens, and the Open XML
+[`PivotCacheDefinition` reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.pivotcachedefinition?view=openxml-3.0.1)
+defines `refreshOnLoad`. The pair binds a local `Source!A1:B5` cache through a
+PivotTable at `Report!A1:B2` and a direct `Dashboard!B4=Report!$B$2` consumer.
+Every source cell, cache record, stored report cell, and formula stays fixed;
+only `pivotCacheDefinition/@refreshOnLoad` moves from false to true. WCAB reads
+the raw relationship-backed package. It does not open Excel, refresh a cache,
+calculate or render a PivotTable, infer a result, or claim that a client honors
+the request.
+
+Version 0.14.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
 and agreement with the benchmark's reference review convention. WCAB's facts are deliberately
@@ -153,7 +165,8 @@ formula-cell unlocking, incomplete manual calculation, direct static cycles,
 structured-reference text, an introduced `INDIRECT` reference, unchanged
 `INDIRECT` and `OFFSET` formulas whose selectors change, structural formula
 rewrites, a connection refresh-on-open control, an external-workbook link
-update-on-open policy, an unchanged circular formula whose iterative
+update-on-open policy, a local PivotTable-cache refresh-on-open control, an
+unchanged circular formula whose iterative
 calculation becomes enabled, an unchanged precision-sensitive input and formula
 whose calculation switches to precision as displayed, a saved formula result
 that changes without a formula or input edit, a workbook serial-date-system
@@ -177,13 +190,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.13.0 passed 71 tests
+so regeneration is byte-for-byte reproducible. Version 0.14.0 passed 80 tests
 locally under Python 3.13 and in hosted CI under Python 3.10 and 3.13; fresh
 Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 29
+making its report schema normative. FormulaFence 0.220.0 recovered all 30
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -205,7 +218,10 @@ fact, it requires `date1904: false → true`, explicit
 active-filter fact, it requires the matching redacted
 `filter_visibility_controls_changed` record and `FF036`; WCAB's raw validator
 independently establishes the `North → South` values and stable formulas. For
-the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
+the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
+`FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
+cache profile; WCAB independently verifies the source and PivotTable bindings.
+For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
 without inventing review decisions, so policy agreement remains explicitly
@@ -230,5 +246,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.13.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.13.0),
+the [v0.14.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.14.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
