@@ -6,15 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.12.0 contains
-27 deterministic scenarios: 26 baseline/candidate workbook pairs and one
-two-workbook portfolio. Each scenario supplies machine-readable truth about an
-observable change, a benchmark review disposition, and—where appropriate—a
-static dependency-impact lower bound. The workbook files are generated from
-source, not copied from a financial model, email archive, or other sensitive
-corpus.
+is a small, open way to make those claims testable. Version 0.13.0 contains
+28 deterministic scenarios: 27 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 30 observable facts, a benchmark
+review disposition, and—where appropriate—a static dependency-impact lower
+bound. The workbook files are generated from source, not copied from a
+financial model, email archive, or other sensitive corpus.
 
-Version 0.12.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.13.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -104,7 +103,20 @@ formulas while only `workbookPr/@date1904` changes from false to true;
 formula text only. It does not calculate a formula, convert a serial, predict a
 displayed date, or claim Excel-client behavior.
 
-Version 0.12.0 retains the tool-neutral normalized observation protocol.
+Version 0.13.0 adds an active worksheet AutoFilter criterion change without a
+cell edit. [Excel's filter guidance](https://support.microsoft.com/en-us/excel/get-started/filter-data-in-a-range-or-table-in-excel)
+explains that filters show matching data and hide the rest, and that the
+filtered subset can be copied, charted, or printed. Its
+[`SUBTOTAL` documentation](https://support.microsoft.com/en-us/excel/functions/subtotal-function)
+states that filter-excluded rows are always excluded. The pair changes the
+sole column-0 list value in `Report!A1:B5` from `North` to `South`, while
+`Report!D2=SUBTOTAL(109,B2:B5)` and `Dashboard!B4=Report!$D$2` remain fixed.
+The raw validator proves that stored transition, stable formulas and direct
+dependency edge, and the report-worksheet-only package difference. It does not
+apply a filter, calculate the subtotal, infer visible rows, or claim what an
+Excel client displays, copies, charts, or prints.
+
+Version 0.13.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
 and agreement with the benchmark's reference review convention. WCAB's facts are deliberately
@@ -145,8 +157,9 @@ update-on-open policy, an unchanged circular formula whose iterative
 calculation becomes enabled, an unchanged precision-sensitive input and formula
 whose calculation switches to precision as displayed, a saved formula result
 that changes without a formula or input edit, a workbook serial-date-system
-control change without a cell edit, an unchanged array formula whose mode
-changes from legacy CSE to dynamic, and a cross-workbook dependency.
+control change without a cell edit, an active AutoFilter criterion change with
+stable `SUBTOTAL` and downstream formulas, an unchanged array formula whose
+mode changes from legacy CSE to dynamic, and a cross-workbook dependency.
 
 That combination is deliberate. A column insertion can rewrite many formulas
 while retaining declared logical inputs. Conversely, inserting a tab inside
@@ -164,13 +177,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.12.0 passed 63 tests
+so regeneration is byte-for-byte reproducible. Version 0.13.0 passed 71 tests
 locally under Python 3.13 and in hosted CI under Python 3.10 and 3.13; fresh
 Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 28
+making its report schema normative. FormulaFence 0.220.0 recovered all 29
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -189,7 +202,10 @@ with exactly one unexplained material cache change; the tool deliberately
 redacts raw cache values and the formula-cell location. For the date-system
 fact, it requires `date1904: false → true`, explicit
 `dateCompatibility=true`, zero unrecognized controls, and `FF117`. For the
-array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
+active-filter fact, it requires the matching redacted
+`filter_visibility_controls_changed` record and `FF036`; WCAB's raw validator
+independently establishes the `North → South` values and stable formulas. For
+the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
 without inventing review decisions, so policy agreement remains explicitly
@@ -214,5 +230,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.12.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.12.0),
+the [v0.13.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.13.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
