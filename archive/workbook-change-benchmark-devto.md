@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.17.0 contains
-32 deterministic scenarios: 31 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 34 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.18.0 contains
+33 deterministic scenarios: 32 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 35 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.17.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.18.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -165,7 +165,20 @@ and proves that only `xl/slicerCaches/slicerCache1.xml` changes. This fixture
 has no visual Slicer or drawing: it does not apply a filter, refresh, calculate,
 or render a PivotTable, infer a changed result, or claim client behavior.
 
-Version 0.17.0 retains the tool-neutral normalized observation protocol.
+Version 0.18.0 adds a connection-only Power Query M filter case without a
+worksheet edit. [Power Query's overview](https://support.microsoft.com/en-us/excel/about-power-query-in-excel)
+explains that transformations are stored as M, and its [query-management
+guidance](https://support.microsoft.com/en-us/excel/manage-queries-power-query)
+allows a query to be connection-only. The pair keeps a local
+`Source!A1:B5` `SourceData` Table, every worksheet cell, metadata, permission
+control, and calculation property fixed while its stored
+`Table.SelectRows` `Region` literal moves from `North` to `South` inside
+`customXml/item1.xml`. The validator follows the package-root custom-XML
+relationship and a bounded generated Data Mashup envelope. It does not execute
+M, apply the filter, refresh a query, materialize output, calculate a workbook,
+infer returned rows, or claim client behavior.
+
+Version 0.18.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
 and agreement with the benchmark's reference review convention. WCAB's facts are deliberately
@@ -206,7 +219,9 @@ update-on-open policy, a local PivotTable-cache refresh-on-open control, a
 local PivotTable value field whose aggregate changes from Sum to Average while
 its source, cache, and stored report cells remain fixed, a local PivotTable
 Slicer cache whose selected Region item changes while its source, cache, and
-stored report cells remain fixed, a dashboard chart
+stored report cells remain fixed, a connection-only Power Query M definition
+whose local-table filter literal changes while its source and controls remain
+fixed, a dashboard chart
 whose numeric-series source changes while cells and its other bindings remain fixed, an
 unchanged circular formula whose iterative
 calculation becomes enabled, an unchanged precision-sensitive input and formula
@@ -232,13 +247,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.17.0 passed 101 tests
+so regeneration is byte-for-byte reproducible. Version 0.18.0 passed 108 tests
 locally under Python 3.13 and in hosted CI under Python 3.10 and 3.13; fresh
 Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 33
+making its report schema normative. FormulaFence 0.220.0 recovered all 34
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -273,6 +288,11 @@ For the PivotTable Slicer fact, it requires FormulaFence's exact redacted
 does not expose the Slicer name, selected item/value, or a rendered report, so
 WCAB independently verifies the local graph and stored `North → South`
 selection.
+For the Power Query fact, it requires FormulaFence's exact redacted
+`power_query_changed` profile and `FF024`; FormulaFence does not expose M
+source, local-table values, or a query result, so WCAB independently verifies
+the package-root binding, local source, connection-only controls, and stored
+`North → South` literal.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -301,5 +321,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.17.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.17.0),
+the [v0.18.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.18.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
