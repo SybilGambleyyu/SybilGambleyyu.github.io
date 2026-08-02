@@ -6,19 +6,23 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.1.1 contains
-16 deterministic scenarios: 15 baseline/candidate workbook pairs and one
+is a small, open way to make those claims testable. Version 0.2.0 contains
+17 deterministic scenarios: 16 baseline/candidate workbook pairs and one
 two-workbook portfolio. Each scenario supplies machine-readable truth about an
 observable change, a benchmark review disposition, and—where appropriate—a
 static dependency-impact lower bound. The workbook files are generated from
 source, not copied from a financial model, email archive, or other sensitive
 corpus.
 
-Version 0.1.1 also adds a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.2.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
 is mirrored as a [Hugging Face dataset](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
+It also upgrades the truth contract to schema version 2 with an Excel Table
+scope-expansion case: `=SUM(SalesLedger[Amount])` stays unchanged while the
+stored Table range grows from `A1:D4` to `A1:D5`. [Microsoft documents](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables)
+that structured references adjust when a Table gains or loses data.
 
 ## A gap between existing benchmarks
 
@@ -40,12 +44,13 @@ visible unsupported coverage instead of a silent pass.
 
 ## Cases that distinguish text changes from semantic risk
 
-The initial scenarios cover formula-to-value replacement, wrong-period
+The scenarios cover formula-to-value replacement, wrong-period
 reference drift, input propagation, external formula references, named-range
 redirection, copied-formula interruption, mismatched `SUMIFS` ranges, removed
 input validation, conditional-formatting removal, hidden-sheet visibility,
 formula-cell unlocking, incomplete manual calculation, direct static cycles,
-3-D formula scope expansion, structural formula rewrites, and a cross-workbook
+3-D formula scope expansion, an Excel Table scope expansion with unchanged
+structured-reference text, structural formula rewrites, and a cross-workbook
 dependency.
 
 That combination is deliberate. A column insertion can rewrite many formulas
@@ -64,7 +69,7 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.1.1 passed nine tests
+so regeneration is byte-for-byte reproducible. Version 0.2.0 passed 11 tests
 and validated fixtures under Python 3.10 and 3.13; a fresh Python 3.12 wheel
 installation reproduced the catalogue byte-for-byte.
 
@@ -89,5 +94,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.1.1 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.1),
+the [v0.2.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.2.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
