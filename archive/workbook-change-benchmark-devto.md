@@ -6,13 +6,19 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Its first release contains
+is a small, open way to make those claims testable. Version 0.1.1 contains
 16 deterministic scenarios: 15 baseline/candidate workbook pairs and one
 two-workbook portfolio. Each scenario supplies machine-readable truth about an
 observable change, a benchmark review disposition, and—where appropriate—a
 static dependency-impact lower bound. The workbook files are generated from
 source, not copied from a financial model, email archive, or other sensitive
 corpus.
+
+Version 0.1.1 also adds a deterministic, one-row-per-case `manifest.jsonl`
+catalogue. It carries the truth contract alongside exact relative paths, byte
+counts, and SHA-256 digests for every baseline and candidate workbook, so an
+evaluator can identify precisely which fixtures it consumed. The same release
+is mirrored as a [Hugging Face dataset](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
 
 ## A gap between existing benchmarks
 
@@ -58,8 +64,9 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. The first release passed its
-tests and validated fixtures under Python 3.10 and 3.13.
+so regeneration is byte-for-byte reproducible. Version 0.1.1 passed nine tests
+and validated fixtures under Python 3.10 and 3.13; a fresh Python 3.12 wheel
+installation reproduced the catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
 making its report schema normative. FormulaFence 0.219.0 recovered all 17
@@ -75,9 +82,12 @@ cd workbook-change-benchmark
 python -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 wcab validate --fixtures fixtures
+wcab manifest --fixtures fixtures
 pytest
 ```
 
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
-available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark).
+available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
+the [v0.1.1 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.1),
+and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).

@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Workbook Change Assurance Benchmark is an open, deterministic suite for evaluating spreadsheet-change review and CI tools.">
+    <meta name="description" content="WCAB 0.1.1 is an open, deterministic suite for evaluating spreadsheet-change review and CI tools, with an integrity-addressed case catalogue.">
     <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html">
     <meta property="og:title" content="A benchmark for reviewing spreadsheet changes, not just editing them">
-    <meta property="og:description" content="WCAB 0.1.0 provides paired workbooks, observable change facts, static-impact lower bounds, and explicit coverage boundaries.">
+    <meta property="og:description" content="WCAB 0.1.1 provides paired workbooks, observable change facts, static-impact lower bounds, and an integrity-addressed JSONL catalogue.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html">
     <title>A benchmark for reviewing spreadsheet changes, not just editing them — SybilGambleyyu</title>
@@ -22,11 +22,11 @@
     <main class="article">
       <p class="eyebrow">Release note · August 2, 2026</p>
       <h1>A benchmark for reviewing spreadsheet changes, not just editing them</h1>
-      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.0">Workbook Change Assurance Benchmark 0.1.0</a></p>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.1">Workbook Change Assurance Benchmark 0.1.1</a></p>
 
       <p>Spreadsheet tools are increasingly good at writing a formula or producing a finished workbook. The harder operational question comes afterward: a workbook changed—what changed, which other formulas can it reach, should it block a review, and what could the tool not determine? <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">Workbook Change Assurance Benchmark</a> (WCAB) is a small, open way to make those claims testable.</p>
 
-      <p>Version 0.1.0 contains 16 deterministic scenarios: 15 baseline/candidate workbook pairs and one two-workbook portfolio. Each supplies machine-readable truth about an observable change, a benchmark review disposition, and—where appropriate—a static dependency-impact lower bound. The files are generated from source in the repository, not copied from a financial model, email archive, or other sensitive corpus.</p>
+      <p>Version 0.1.1 contains 16 deterministic scenarios: 15 baseline/candidate workbook pairs and one two-workbook portfolio. Each supplies machine-readable truth about an observable change, a benchmark review disposition, and—where appropriate—a static dependency-impact lower bound. The files are generated from source in the repository, not copied from a financial model, email archive, or other sensitive corpus.</p>
 
       <h2>The gap is about change assurance</h2>
 
@@ -44,11 +44,17 @@
 
       <p>Every case carries a <code>truth.json</code> document. It describes facts such as <code>formula_to_value</code>, <code>sheet_visibility_changed</code>, or <code>three_d_scope_changed</code>. Its <code>must_reach</code> section gives formula locations a conservative local A1 dependency walk must reach. These are deliberately lower bounds; WCAB is not a formula evaluator and does not claim complete Excel dependency semantics, dynamic-reference resolution, or numerical correctness.</p>
 
-      <p>The bundled validator reads the generated files and verifies those contracts. It does not trust a fixture merely because the manifest says it is right. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.1.0/docs/schema.md">schema</a> documents each fact kind and boundary.</p>
+      <p>The bundled validator reads the generated files and verifies those contracts. It does not trust a fixture merely because the manifest says it is right. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.1.1/docs/schema.md">schema</a> documents each fact kind and boundary.</p>
 
       <h2>Reproducibility is part of the artifact</h2>
 
-      <p>Openpyxl can build the workbooks, but ZIP timestamps would otherwise change on every run. WCAB fixes workbook metadata and canonicalizes package member order and timestamps, then tests byte-for-byte regeneration. The initial release validated all 16 cases and its seven tests under Python 3.10 and 3.13. It also builds a source distribution and wheel cleanly. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.1.0/docs/validation.md">validation record</a> contains the exact commands and results.</p>
+      <p>Openpyxl can build the workbooks, but ZIP timestamps would otherwise change on every run. WCAB fixes workbook metadata and canonicalizes package member order and timestamps, then tests byte-for-byte regeneration. Version 0.1.1 validated all 16 cases and nine tests under Python 3.10 and 3.13, and a fresh Python 3.12 wheel installation reproduced the catalogue byte-for-byte. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.1.1/docs/validation.md">validation record</a> contains the exact commands and results.</p>
+
+      <h2>A distribution that tools can verify</h2>
+
+      <p>Version 0.1.1 adds a deterministic, one-row-per-case <code>manifest.jsonl</code> catalogue. It retains each case’s facts, review convention, static-impact lower bounds, and coverage text, then adds the exact relative path, byte count, and SHA-256 digest for every baseline and candidate workbook. A runner can now record precisely which fixtures it consumed instead of inferring identity from a directory name.</p>
+
+      <p>The same release is available as a <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">Hugging Face dataset</a>. Its downloadable catalogue matches the GitHub release byte-for-byte, while the source repository remains the place to regenerate and validate every file.</p>
 
       <h2>A baseline adapter, without making it the benchmark</h2>
 
@@ -63,9 +69,10 @@ cd workbook-change-benchmark
 python -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 wcab validate --fixtures fixtures
+wcab manifest --fixtures fixtures
 pytest</code></pre>
 
-      <p>The benchmark is MIT-licensed. Start with the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">source</a> or the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.0">v0.1.0 release</a>. The useful next additions are cases that retain the same standard: deterministic generation, an inspectable fact contract, explicit limits, and a validation test.</p>
+      <p>The benchmark is MIT-licensed. Start with the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">source</a>, the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.1">v0.1.1 release</a>, or the <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">dataset mirror</a>. The useful next additions are cases that retain the same standard: deterministic generation, an inspectable fact contract, explicit limits, and a validation test.</p>
     </main>
     <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
   </body>
