@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.18.0 contains
-33 deterministic scenarios: 32 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 35 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.19.0 contains
+34 deterministic scenarios: 33 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 36 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.18.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.19.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -178,7 +178,18 @@ relationship and a bounded generated Data Mashup envelope. It does not execute
 M, apply the filter, refresh a query, materialize output, calculate a workbook,
 infer returned rows, or claim client behavior.
 
-Version 0.18.0 retains the tool-neutral normalized observation protocol.
+Version 0.19.0 adds a Scenario Manager alternate-input case without a worksheet
+edit. [Excel’s Scenario Manager guidance](https://support.microsoft.com/en-us/excel/switch-between-various-sets-of-values-by-using-scenarios)
+describes scenarios as saved sets of values for changing cells. The pair keeps
+`Inputs!B2=0.1`, `Inputs!B3=125`, `Inputs!D2=B2*B3`, and
+`Dashboard!B4=Inputs!$D$2` fixed. In the selected locked `WCAB downside`
+scenario, only the raw stored `Inputs!B2` value moves from `0.08` to `0.16`.
+The scenario remains stored rather than shown or applied. The validator proves
+the exact scenario metadata and that only `xl/worksheets/sheet1.xml` differs;
+it does not show or apply a scenario, calculate a formula, create a scenario
+summary, infer a result, or claim Excel-client behavior.
+
+Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
 and agreement with the benchmark's reference review convention. WCAB's facts are deliberately
@@ -221,7 +232,8 @@ its source, cache, and stored report cells remain fixed, a local PivotTable
 Slicer cache whose selected Region item changes while its source, cache, and
 stored report cells remain fixed, a connection-only Power Query M definition
 whose local-table filter literal changes while its source and controls remain
-fixed, a dashboard chart
+fixed, a stored Scenario Manager alternate input whose raw value changes while
+visible worksheet values and formulas stay fixed, a dashboard chart
 whose numeric-series source changes while cells and its other bindings remain fixed, an
 unchanged circular formula whose iterative
 calculation becomes enabled, an unchanged precision-sensitive input and formula
@@ -247,13 +259,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.18.0 passed 108 tests
+so regeneration is byte-for-byte reproducible. Version 0.19.0 passed 115 tests
 locally under Python 3.13 and in hosted CI under Python 3.10 and 3.13; fresh
 Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 34
+making its report schema normative. FormulaFence 0.220.0 recovered all 35
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -293,6 +305,10 @@ For the Power Query fact, it requires FormulaFence's exact redacted
 source, local-table values, or a query result, so WCAB independently verifies
 the package-root binding, local source, connection-only controls, and stored
 `North → South` literal.
+For the Scenario Manager fact, it requires FormulaFence's exact redacted
+`scenario_manager_changed` profile and `FF035`; FormulaFence does not expose
+the scenario name, input cells, values, comment, or user, so WCAB independently
+verifies the selected locked scenario and the raw `0.08 → 0.16` stored value.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -321,5 +337,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.18.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.18.0),
+the [v0.19.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.19.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
