@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.14.0 contains
-29 deterministic scenarios: 28 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 31 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.15.0 contains
+30 deterministic scenarios: 29 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 32 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.14.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.15.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -128,7 +128,19 @@ the raw relationship-backed package. It does not open Excel, refresh a cache,
 calculate or render a PivotTable, infer a result, or claim that a client honors
 the request.
 
-Version 0.14.0 retains the tool-neutral normalized observation protocol.
+Version 0.15.0 adds a DrawingML chart-series source-reference case without a
+worksheet-cell edit. [Excel's series guidance](https://support.microsoft.com/en-US/Excel/rename-a-data-series)
+allows a series to use a different source range, while the Open XML
+[`NumberReference` reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.numberreference?view=openxml-3.0.1)
+models that binding. The pair keeps `Dashboard!D2`, the title `'Source'!B1`,
+the category range `'Source'!$A$2:$A$4`, and every worksheet cell fixed, while
+its raw numeric-series source moves from `'Source'!$B$2:$B$4` to
+`'Source'!$C$2:$C$4`. The validator follows the worksheet-to-drawing-to-chart
+relationship chain and proves that only `xl/charts/chart1.xml` changes. It
+does not calculate, refresh, render, infer a visible difference, or claim
+client behavior.
+
+Version 0.15.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
 and agreement with the benchmark's reference review convention. WCAB's facts are deliberately
@@ -165,7 +177,9 @@ formula-cell unlocking, incomplete manual calculation, direct static cycles,
 structured-reference text, an introduced `INDIRECT` reference, unchanged
 `INDIRECT` and `OFFSET` formulas whose selectors change, structural formula
 rewrites, a connection refresh-on-open control, an external-workbook link
-update-on-open policy, a local PivotTable-cache refresh-on-open control, an
+update-on-open policy, a local PivotTable-cache refresh-on-open control, a
+dashboard chart whose numeric-series source changes while cells and its other
+bindings remain fixed, an
 unchanged circular formula whose iterative
 calculation becomes enabled, an unchanged precision-sensitive input and formula
 whose calculation switches to precision as displayed, a saved formula result
@@ -190,13 +204,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.14.0 passed 80 tests
+so regeneration is byte-for-byte reproducible. Version 0.15.0 passed 87 tests
 locally under Python 3.13 and in hosted CI under Python 3.10 and 3.13; fresh
 Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 30
+making its report schema normative. FormulaFence 0.220.0 recovered all 31
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -221,6 +235,9 @@ independently establishes the `North → South` values and stable formulas. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
+For the chart fact, it requires FormulaFence's exact one-chart redacted
+`chart_definitions_changed` profile and `FF030`; WCAB independently verifies
+the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
@@ -246,5 +263,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.14.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.14.0),
+the [v0.15.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.15.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
