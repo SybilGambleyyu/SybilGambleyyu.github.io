@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.19.0 contains
-34 deterministic scenarios: 33 baseline/candidate workbook pairs and one
-two-workbook portfolio. Together they declare 36 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.20.0 contains
+35 deterministic scenarios: 34 baseline/candidate workbook pairs and one
+two-workbook portfolio. Together they declare 37 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.19.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.20.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -189,6 +189,20 @@ the exact scenario metadata and that only `xl/worksheets/sheet1.xml` differs;
 it does not show or apply a scenario, calculate a formula, create a scenario
 summary, infer a result, or claim Excel-client behavior.
 
+Version 0.20.0 adds a one-variable What-If Data Table input-reference case
+without a formula edit. [Excel's Data Table guidance](https://support.microsoft.com/en-us/excel/calculate-multiple-results-by-using-a-data-table)
+distinguishes one- and two-variable tables and their row or column input cells.
+The Open XML [`CellFormula` reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cellformula?view=openxml-3.0.1)
+defines the `dataTable` master formula with its output range, input references,
+and orientation controls. The pair keeps the column-oriented
+`Sensitivity!D3` master's `D3:D5` output range, recalculation request, input
+grid, ordinary formulas, calculation properties, and saved table results fixed
+while only raw `f/@r1` moves from `B2` to `B3`. The validator proves that the
+Sensitivity worksheet is the sole changed package member and that both possible
+input cells retain ordinary static paths to the model and dashboard. It does
+not substitute inputs, calculate a table or workbook, infer output values,
+resolve a circular dependency, or claim Excel-client behavior.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -196,6 +210,10 @@ and agreement with the benchmark's reference review convention. WCAB's facts are
 targeted rather than exhaustive, so an unrecognized observation stays visible
 for review instead of being labeled a false positive. Unsupported analysis is
 visible too—it cannot become a pass.
+
+Version 0.20.0 retains that protocol and adds a one-variable What-If Data
+Table input-reference fact, so a tool can distinguish a stored table control
+change from a calculated sensitivity result.
 
 ## A gap between existing benchmarks
 
@@ -233,7 +251,9 @@ Slicer cache whose selected Region item changes while its source, cache, and
 stored report cells remain fixed, a connection-only Power Query M definition
 whose local-table filter literal changes while its source and controls remain
 fixed, a stored Scenario Manager alternate input whose raw value changes while
-visible worksheet values and formulas stay fixed, a dashboard chart
+visible worksheet values and formulas stay fixed, a one-variable What-If Data
+Table whose raw input reference changes while its output range and ordinary
+formulas stay fixed, a dashboard chart
 whose numeric-series source changes while cells and its other bindings remain fixed, an
 unchanged circular formula whose iterative
 calculation becomes enabled, an unchanged precision-sensitive input and formula
@@ -259,13 +279,15 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.19.0 passed 115 tests
-locally under Python 3.13 and in hosted CI under Python 3.10 and 3.13; fresh
+so regeneration is byte-for-byte reproducible. Version 0.20.0 passed 122 tests
+locally under Python 3.13 and in
+[hosted CI](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30768076919)
+under Python 3.10 and 3.13; fresh
 Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 35
+making its report schema normative. FormulaFence 0.220.0 recovered all 36
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -309,6 +331,12 @@ For the Scenario Manager fact, it requires FormulaFence's exact redacted
 `scenario_manager_changed` profile and `FF035`; FormulaFence does not expose
 the scenario name, input cells, values, comment, or user, so WCAB independently
 verifies the selected locked scenario and the raw `0.08 → 0.16` stored value.
+For the What-If Data Table fact, it requires FormulaFence's exact redacted
+one-variable `what_if_data_tables_changed` profile and `FF034`; FormulaFence
+does not expose the output range, local input references, or calculated table
+values, so WCAB independently verifies the generated `D3:D5` master, raw
+`B2 → B3` `r1` transition, stable surrounding controls, and worksheet-only
+package change.
 For the chart fact, it requires FormulaFence's exact one-chart redacted
 `chart_definitions_changed` profile and `FF030`; WCAB independently verifies
 the title, category, and numeric-series source references.
@@ -337,5 +365,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.19.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.19.0),
+the [v0.20.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.20.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
