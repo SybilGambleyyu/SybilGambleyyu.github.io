@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Workbook Change Assurance Benchmark is an open, deterministic suite for evaluating spreadsheet-change review and CI tools.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html">
+    <meta property="og:title" content="A benchmark for reviewing spreadsheet changes, not just editing them">
+    <meta property="og:description" content="WCAB 0.1.0 provides paired workbooks, observable change facts, static-impact lower bounds, and explicit coverage boundaries.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html">
+    <title>A benchmark for reviewing spreadsheet changes, not just editing them — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">WCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 2, 2026</p>
+      <h1>A benchmark for reviewing spreadsheet changes, not just editing them</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.0">Workbook Change Assurance Benchmark 0.1.0</a></p>
+
+      <p>Spreadsheet tools are increasingly good at writing a formula or producing a finished workbook. The harder operational question comes afterward: a workbook changed—what changed, which other formulas can it reach, should it block a review, and what could the tool not determine? <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">Workbook Change Assurance Benchmark</a> (WCAB) is a small, open way to make those claims testable.</p>
+
+      <p>Version 0.1.0 contains 16 deterministic scenarios: 15 baseline/candidate workbook pairs and one two-workbook portfolio. Each supplies machine-readable truth about an observable change, a benchmark review disposition, and—where appropriate—a static dependency-impact lower bound. The files are generated from source in the repository, not copied from a financial model, email archive, or other sensitive corpus.</p>
+
+      <h2>The gap is about change assurance</h2>
+
+      <p>There are already useful spreadsheet datasets. <a href="https://spreadsheets.sai.tugraz.at/index.php/corpora-for-benchmarking/euses/">Modified EUSES</a> injects formula faults and supplies test decisions. <a href="https://researchportal.hkust.edu.hk/en/publications/venron-a-versioned-spreadsheet-corpus-and-related-evolution-analy/">VEnron</a> recovered version information from business spreadsheets. <a href="https://github.com/RUCKBReasoning/SpreadsheetBench">SpreadsheetBench</a> tests spreadsheet manipulation. And recent <a href="https://www.microsoft.com/en-us/research/publication/benchmark-dataset-generation-and-evaluation-for-excel-formula-repair-with-llms/">formula-repair research</a> measures whether a tool can fix runtime formula problems.</p>
+
+      <p>Those are complementary questions. I could not find an open benchmark whose primary contract is the review boundary between two workbook versions: explicit change facts, a stated accept/review/block convention, static impact that must not be missed, and a way to say “unsupported” rather than silently pass. That is the narrower problem WCAB addresses.</p>
+
+      <h2>What the first cases cover</h2>
+
+      <p>The initial suite includes formula-to-value replacement, wrong-period reference drift, material input propagation, external formula references, defined-name redirection, copied-formula interruption, mismatched <code>SUMIFS</code> ranges, data validation and conditional-formatting removal, hidden-sheet visibility, direct formula-cell unlocking, incomplete manual calculation, direct static cycles, a 3-D formula whose tab span changes without its text changing, a documented structural rewrite, and a local cross-workbook dependency.</p>
+
+      <p>That mix matters. A row or column insertion can rewrite many formulas while retaining the declared logical inputs. Conversely, inserting a tab inside <code>SUM(Jan:Mar!B5)</code> can change the formula’s scope while its text does not change at all. A benchmark that treats every text difference as a regression—or every unchanged formula string as safe—cannot measure the review problem honestly.</p>
+
+      <h2>Truth that can be inspected</h2>
+
+      <p>Every case carries a <code>truth.json</code> document. It describes facts such as <code>formula_to_value</code>, <code>sheet_visibility_changed</code>, or <code>three_d_scope_changed</code>. Its <code>must_reach</code> section gives formula locations a conservative local A1 dependency walk must reach. These are deliberately lower bounds; WCAB is not a formula evaluator and does not claim complete Excel dependency semantics, dynamic-reference resolution, or numerical correctness.</p>
+
+      <p>The bundled validator reads the generated files and verifies those contracts. It does not trust a fixture merely because the manifest says it is right. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.1.0/docs/schema.md">schema</a> documents each fact kind and boundary.</p>
+
+      <h2>Reproducibility is part of the artifact</h2>
+
+      <p>Openpyxl can build the workbooks, but ZIP timestamps would otherwise change on every run. WCAB fixes workbook metadata and canonicalizes package member order and timestamps, then tests byte-for-byte regeneration. The initial release validated all 16 cases and its seven tests under Python 3.10 and 3.13. It also builds a source distribution and wheel cleanly. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.1.0/docs/validation.md">validation record</a> contains the exact commands and results.</p>
+
+      <h2>A baseline adapter, without making it the benchmark</h2>
+
+      <p>WCAB has an optional local adapter for <a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a>. It invokes a locally installed executable, maps its JSON evidence into WCAB facts, and leaves unmapped cases visible. FormulaFence 0.219.0 observed all 17 facts that version 0.1 maps, including the portfolio impact, and produced five targeted lint rules. The structural rewrite remains intentionally unmapped: a small fixture can document its before/after intent, but it cannot establish a generic proof of Excel semantic equivalence.</p>
+
+      <p>That distinction is the point. A tool should be rewarded for finding what it can prove and for exposing what it cannot—not for converting a coverage gap into an unearned pass.</p>
+
+      <h2>Use or extend it</h2>
+
+      <pre><code>git clone https://github.com/SybilGambleyyu/workbook-change-benchmark.git
+cd workbook-change-benchmark
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+wcab validate --fixtures fixtures
+pytest</code></pre>
+
+      <p>The benchmark is MIT-licensed. Start with the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">source</a> or the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.1.0">v0.1.0 release</a>. The useful next additions are cases that retain the same standard: deterministic generation, an inspectable fact contract, explicit limits, and a validation test.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
