@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.2.0 adds a deterministic Word attached-template relationship target-change case for static document review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-attached-template-review.html">
+    <meta property="og:title" content="A template target can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.2.0 makes attached-template target changes reproducible and scoreable without resolving a template.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-attached-template-review.html">
+    <title>A template target can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A template target can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.2.0">Document Change Assurance Benchmark 0.2.0</a></p>
+
+      <p>A Word document can retain the same visible text, the same settings anchor, and the same relationship ID while changing which external template that anchor names. That is a meaningful stored review boundary—not because a static tool should fetch or open the template, but because it should make the retargeting visible to a reviewer.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.2.0 adds its thirteenth deterministic paired package: <code>external.attached_template_target_retargeted</code>. The pair preserves every package member and every stored <code>w:t</code> sequence. It changes only <code>word/_rels/settings.xml.rels</code>, retaining a fixed <code>w:attachedTemplate</code> anchor in <code>word/settings.xml</code>.</p>
+
+      <h2>Inspect the relationship; do not resolve it</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/7713efa6-b1ff-4cbd-9339-5bf9018433ac">Office Open XML notes for attached templates</a> state that Word determines the template file path from the <code>attachedTemplate</code> relationship. DCAB represents that relation as an external package relationship, but its builder, validator, scorer, and reference adapter never follow the target or launch a document client.</p>
+
+      <p>The package target is synthetic and uses <code>example.invalid</code>. The public truth contract does not disclose it, the relationship ID, or the relationship path. It declares only the target-free fact <code>external_document_dependency_target_changed</code>, with an attached-template dependency and external binding. That lets tools demonstrate coverage without requiring real document destinations in benchmark output.</p>
+
+      <h2>A constrained, reproducible case</h2>
+
+      <p>The generator adds the settings relationship part only when an attached template is present. The independent validator checks the anchor, relationship type, external target mode, deterministic package bytes, stable member set, and the exact one-member pair boundary. The standard <code>python-docx</code> reader opens every <code>.docx</code> fixture, including this pair; its lower-level OPC reader opens all 26 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter recognizes the change from public aggregate evidence: an external-relationship change plus an external-document-dependency inventory change, while the attached-template anchor and relationship counts stay at one. It does not consume DocFence’s private signatures or targets.</p>
+
+      <p>The release passed 12 tests locally, including that adapter path, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs each validate the bundled corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.2.0/document_change_benchmark-0.2.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.2.0 preserves fixture schema version 1 because its public truth and observation envelopes have not changed; the new release extends the catalogue from 12 to 13 cases. It does not claim a Word runtime outcome, template safety, universal policy, or rendering equivalence. It gives reviewers a compact way to prove that this stored target change is covered.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
