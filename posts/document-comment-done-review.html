@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.12.0 adds a deterministic Office 2013 commentsExtended done-state case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-comment-done-review.html">
+    <meta property="og:title" content="A comment can be marked done without changing Word text">
+    <meta property="og:description" content="DCAB 0.12.0 makes an Office 2013 commentsExtended done-state change reproducible without asserting a Word UI or service workflow.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-comment-done-review.html">
+    <title>A comment can be marked done without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A comment can be marked done without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.12.0">Document Change Assurance Benchmark 0.12.0</a></p>
+
+      <p>Word review data can change in a package part that ordinary text comparison never sees. A comment can retain its anchor, ordinary comment content, package topology, and every stored <code>w:t</code> value while its persisted done state changes. That is useful static review evidence—but it is not proof of a particular Word UI, identity, or collaboration workflow.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.12.0 adds its twenty-third deterministic pair: <code>review.modern_comment_done_state_changed</code>. Both packages retain the same members, classic comment, document anchor, matching paragraph identifier, internal relationships, content types, and Word text. Only <code>word/commentsExtended.xml</code> changes: one Office 2013 <code>w15:commentEx</code> record moves from its explicit stored <code>done="0"</code> value to <code>done="1"</code>.</p>
+
+      <h2>Stored comment metadata is a distinct review surface</h2>
+
+      <p>Microsoft's <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/31f689cd-4192-4c2d-8d2f-202b1f8f20e9"><code>commentsExtended</code> part documentation</a> describes it as additional information for comments represented in the classic comments part. Its <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.office2013.word.commentex?view=openxml-3.0.1"><code>w15:commentEx</code> schema reference</a> says the construct is available in Office 2013 and later, links its <code>paraId</code> to the associated comment's last paragraph, and defines <code>done="1"</code> as a user indication that the comment is done.</p>
+
+      <p>Those definitions also set the limit of the fixture. DCAB fixes exactly one compact classic-comment topology and one matching extension record. It does not open Word, render or update comments, resolve a thread, fetch or synchronize anything, authenticate a person, inspect a service account, or assert how a client displays a done state. It tests only one direct stored metadata boundary.</p>
+
+      <h2>One metadata-state boundary</h2>
+
+      <p>The independent verifier checks the classic comment, range start/end/reference anchor, Office 2010 paragraph identifier, internal relationships, content-type overrides, Office 2013 extension root, and exact one-member boundary. The standard <code>python-docx</code> reader opens all 44 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 46 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps aggregate <code>modern_comment_metadata_inventory_changed</code> evidence. Both sides retain one classic comment, one <code>commentsExtended</code> part, one extension record, and zero people, thread, reaction, comments-ID, and extensible-comment records. Only the aggregate resolved-comment count changes from zero to one. The adapter uses counts and private local fingerprints without disclosing the fixture's text, author metadata, identifiers, or raw state serialization.</p>
+
+      <p>The release passed the full 19-test suite in hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs, the uploaded GitHub artifacts, and a fresh Hugging Face dataset download each validate the bundled 23-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.12.0/document_change_benchmark-0.12.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.12.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 22 to 23 cases. It publishes a narrow static review fact, not a visual-rendering, identity, workflow, or security-policy claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
