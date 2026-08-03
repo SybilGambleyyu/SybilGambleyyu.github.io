@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.31.0 contains
-46 deterministic scenarios: 45 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 48 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.32.0 contains
+47 deterministic scenarios: 46 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 49 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.31.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.32.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -355,6 +355,21 @@ the one external relationship `Target` in
 URLs. WCAB reads local OOXML only: it does not resolve, open, fetch, visit,
 execute, calculate, or claim that a client follows either target.
 
+Version 0.32.0 adds a relationship-backed external-workbook source-retarget
+case without changing formula text. Excel's [workbook-link guidance](https://support.microsoft.com/en-us/excel/manage-workbook-links)
+documents **Change source**, while the Open XML [ExternalBook reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.externalbook?view=openxml-3.0.1)
+describes an external workbook supplying data through a relationship to its
+supporting book path. The pair retains
+`LinkedModel!B2` with `='[WCABSource.xlsx]Inputs'!$B$2`, its direct
+`Dashboard!B4=LinkedModel!$B$2` consumer, calculation properties, workbook
+external-reference binding, `externalLink/externalBook` declaration,
+source-sheet name, relationship IDs/types, and content type. Only
+`xl/externalLinks/_rels/externalLink1.xml.rels` changes: one external
+`Relationship/@Target` moves between reserved `example.invalid` sources. WCAB
+reads local OOXML only; it does not resolve, open, fetch, authenticate to,
+trust, refresh, calculate, or claim that a client updates a link or returns a
+value.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -447,13 +462,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.31.0 passed 199 tests
-locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30782055417),
+so regeneration is byte-for-byte reproducible. Version 0.32.0 passed 206 tests
+locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30783978522),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 47
+making its report schema normative. FormulaFence 0.220.0 recovered all 48
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -517,6 +532,15 @@ its binding, definition material, and relationship material change. It redacts
 the target and relationship ID, so WCAB independently verifies the reserved
 target transition, stable visible text/formulas, and relationship-part-only
 boundary. For
+the external-workbook source fact, it requires exact
+`external_link_packages_changed` evidence and `FF025`: FormulaFence retains one
+external workbook and source sheet, no DDE/OLE link, no cached external data,
+and no opaque metadata while only `source_material_changed` changes. It redacts
+the target and relationship IDs, so WCAB independently verifies the
+reserved-target transition, external-reference graph, stable formula context,
+and externalLink-relationship-part-only boundary. Its generic
+`external_relationships_changed` / `FF063` diagnostic remains deliberately
+unmapped. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -576,7 +600,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 47 of 48 declared facts,
+without inventing review decisions, so its score is 48 of 49 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -599,5 +623,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.31.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.31.0),
+the [v0.32.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.32.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
