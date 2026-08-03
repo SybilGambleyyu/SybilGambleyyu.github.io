@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.20 adds a deterministic Word field-recalculation-on-open setting transition for static package review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-field-recalculation-on-open-review.html">
+    <meta property="og:title" content="A stored Word field-update request deserves review">
+    <meta property="og:description" content="DCAB 0.20 makes a stored w:updateFields transition reproducible without evaluating fields or opening Word.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-field-recalculation-on-open-review.html">
+    <title>A stored Word field-update request deserves review — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A stored Word field-update request deserves review</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.20.0">Document Change Assurance Benchmark 0.20.0</a></p>
+
+      <p>A consequential WordprocessingML change need not alter text, a relationship target, or a visible page. A document can move from a stored disabled field-recalculation-on-open setting to an enabled one while its package member set and stored text remain fixed. A static package-review tool should be able to name that exact transition without pretending to run the document.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.20.0 adds its thirty-first deterministic pair: <code>review.field_recalculation_on_open_enabled</code>. The baseline stores <code>w:updateFields w:val="false"</code>; the candidate stores <code>w:updateFields w:val="true"</code>. Only <code>word/settings.xml</code> changes.</p>
+
+      <h2>A direct setting with an intentionally narrow boundary</h2>
+
+      <p>Microsoft documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.updatefieldsonopen?view=openxml-3.0.1"><code>UpdateFieldsOnOpen</code></a> as the WordprocessingML request to automatically recalculate fields from field codes when a supporting application opens the document. The benchmark models exactly the stored direct leaf—not a client run or an assertion about whether any application will honor it.</p>
+
+      <pre><code>word/settings.xml                         only changed package member
+  w:updateFields w:val="false"            baseline direct leaf
+  w:updateFields w:val="true"             candidate direct leaf
+
+word/_rels/settings.xml.rels              absent on both sides</code></pre>
+
+      <p>The pair retains the same package members and the same stored <code>w:t</code> sequence. It adds no Settings relationship part, source target, external link, macro, or payload. It does not open Word, evaluate a field, calculate a field result, resolve a field instruction, access a data source, or claim a runtime effect.</p>
+
+      <h2>A public fact without setting-value disclosure</h2>
+
+      <p>The target-free oracle reports one fact with two stable properties:</p>
+
+      <pre><code>{
+  "kind": "field_recalculation_on_open_enabled",
+  "source": "word_settings"
+}</code></pre>
+
+      <p>It excludes raw Setting XML, Settings-part paths, relationship information, field instructions, results, source identifiers, and private fingerprints. Independent structural validation checks the exact direct-leaf forms, one-member change boundary, absence of a Settings relationship part, stable package topology, unchanged stored text, deterministic regeneration, and the absence of setting material from public truth.</p>
+
+      <h2>One released consumer, still a tool-neutral case</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.30.0">DocFence 0.30.0</a> adapter reaches a strict 31/31 score from aggregate evidence: <code>field_update_on_open_inventory_changed</code>, with an enabled-count transition from zero to one and a disabled-count transition from one to zero. It does not consume a Settings path, raw attribute value, field instruction, or fingerprint.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13 for the main commit and release tag. Clean wheel and source-distribution installs validate the bundled 31-case corpus, and a clean combined install reaches complete DocFence adapter coverage. The public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset mirror</a> was verified against the generated fixture tree and validated directly after download.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.20.0/document_change_benchmark-0.20.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB retains fixture schema version 1 because the public truth and observation envelopes are unchanged. This release adds one exact static-review fact—not a field evaluator, document client, renderer, source resolver, or universal policy claim.</p>
+
+      <p>The MIT-licensed builder, generated fixtures, verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

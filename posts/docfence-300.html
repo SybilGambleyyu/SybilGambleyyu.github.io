@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.30 makes a Word field-recalculation-on-open setting reviewable as private aggregate evidence, without evaluating a field or opening a document client.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-300.html">
+    <meta property="og:title" content="A stored Word field-update request is a review boundary">
+    <meta property="og:description" content="DocFence 0.30 inventories the stored w:updateFields setting without evaluating fields or predicting client behavior.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-300.html">
+    <title>A stored Word field-update request is a review boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A stored Word field-update request is a review boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.30.0">DocFence 0.30.0</a></p>
+
+      <p>A Word document can store a request that its field results be recalculated when it is opened by an application that supports the setting. That request can change with visible document text and package topology otherwise unchanged. It deserves a precise package-review signal, but it does not make a static reviewer a field evaluator or a predictor of what a particular document client will do.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.30 adds a private-by-default inventory for direct <code>w:updateFields</code> settings. It lets a team gate a stored automatic-field-update request in CI without publishing a Settings path, raw XML, or private fingerprint.</p>
+
+      <h2>The setting is stored state, not a field run</h2>
+
+      <p>Microsoft documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.updatefieldsonopen?view=openxml-3.0.1"><code>UpdateFieldsOnOpen</code></a> as the WordprocessingML setting for automatically recalculating fields from field codes when a supporting application opens a document. The setting is a direct child of Settings. That makes the stored request meaningful to review; it does not establish that any particular application will honor it, identify a field source, resolve a link, retrieve data, or change a field result.</p>
+
+      <pre><code>word/settings.xml
+  w:updateFields w:val="true"    stored enabled request
+
+No relationship target is required for this direct setting.</code></pre>
+
+      <p>DocFence accepts the strict <code>CT_OnOff</code> leaf form in Transitional and Strict Word namespaces: no child markup or nonblank text, at most one Word-namespace <code>w:val</code> attribute, and one of <code>true</code>, <code>false</code>, <code>on</code>, <code>off</code>, <code>1</code>, or <code>0</code>. An omitted value is treated as the enabled form. Malformed and duplicate direct leaves are rejected rather than guessed about.</p>
+
+      <p>The feature reads the stored setting only. It never opens Word, evaluates a field, recalculates a result, resolves a field instruction, follows a link, accesses a source, runs a macro, or makes a runtime-behavior claim.</p>
+
+      <h2>Aggregate evidence without a settings leak</h2>
+
+      <p>Public JSON, Markdown, and SARIF expose two counts: <code>field_update_on_open_enabled_setting_count</code> and <code>field_update_on_open_disabled_setting_count</code>. Settings-part paths, raw values, and semantic fingerprints remain private. Equivalent enabled spellings stay quiet at the inventory layer; an enabled-to-disabled change is still visible as a private semantic transition.</p>
+
+      <p>Two small policies make the boundary reviewable:</p>
+
+      <pre><code>rules:
+  require_no_field_updates_on_open: true</code></pre>
+
+      <p>The candidate-state gate emits <code>DFP073</code> only when an enabled setting is present. A team that intentionally retains a known setting can instead protect its approved baseline:</p>
+
+      <pre><code>rules:
+  no_field_update_on_open_changes: true</code></pre>
+
+      <p><code>DFP074</code> flags a material inventory transition. Neither policy calls a field safe or unsafe; they make a stored configuration boundary visible and reviewable.</p>
+
+      <h2>Evidence, not client execution</h2>
+
+      <p>The 56-test release suite covers absent, implicit, enabled, disabled, and Strict forms; malformed leaf rejection; equivalent-spelling stability; privacy redaction; policy behavior; and JSON, Markdown, and SARIF output. Hosted CI passed for the release commit and tag, while fresh wheel and source-distribution installs completed the package smoke checks.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.20.0">Document Change Assurance Benchmark 0.20.0</a> supplies a matching deterministic fixture that moves the stored setting from explicitly disabled to enabled. Its optional DocFence adapter consumes only public aggregate evidence.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.30.0/docfence-0.30.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.30.0">public release</a> includes the wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.30.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.30.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.30.0/docs/validation.md">validation notes</a> define the exact evidence contract and its limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
