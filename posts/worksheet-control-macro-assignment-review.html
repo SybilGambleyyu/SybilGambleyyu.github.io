@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="WCAB 0.44.1 makes a relationship-bound worksheet-control macro assignment reviewable without executing a macro or exposing private control metadata.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/worksheet-control-macro-assignment-review.html">
+    <meta property="og:title" content="A worksheet control can retarget a macro without a cell changing">
+    <meta property="og:description" content="A bounded, redacted review contract for stored Excel control macro assignments.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/worksheet-control-macro-assignment-review.html">
+    <title>A worksheet control can retarget a macro without a cell changing — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a><a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">WCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A worksheet control can retarget a macro without a cell changing</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.225.0">FormulaFence 0.225.0</a> and <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.44.1">WCAB 0.44.1</a></p>
+
+      <p>A spreadsheet can keep every ordinary cell, formula, and saved calculation stable while a clickable worksheet control changes which macro it names. That is a review boundary that a cell diff can miss. It is also a boundary where the safest result is deliberately small: record the stored assignment change, preserve the surrounding package evidence, and do not turn a review tool into a macro runner.</p>
+
+      <p><a href="https://support.microsoft.com/en-us/excel/assign-a-macro-to-a-form-or-a-control-button">Microsoft's Excel guidance</a> documents assigning macros to Form and ActiveX controls. The new <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">Workbook Change Assurance Benchmark</a> (WCAB) 0.44.1 makes the persisted Form-control side of that workflow testable, while FormulaFence supplies the existing critical control-change evidence.</p>
+
+      <h2>The important thing is not a cell</h2>
+
+      <p>The generated pair has one relationship-bound worksheet Form control. Its worksheet declaration, control-properties part, relationship, content type, ordinary <code>Controls!B2=12</code> input, <code>Controls!D2=B2*C2</code> formula, and direct <code>Dashboard!B4=Controls!$D$2</code> consumer remain fixed. The sole package difference is one private inline macro-assignment attribute in <code>xl/worksheets/sheet1.xml</code>.</p>
+
+      <p>The fixture contains no VBA project or macro payload. That is intentional. The benchmark tests whether a reviewer notices an altered stored dispatch declaration; it does not need executable code to establish that the declaration changed.</p>
+
+      <h2>Evidence without a new disclosure channel</h2>
+
+      <p>The raw WCAB validator proves the exact local relationship shape and assignment transition, but its public truth contains only structural counts and safe package-member boundaries. It deliberately excludes the control name, shape identifier, macro names, relationship identifier, and raw XML.</p>
+
+      <p>The optional FormulaFence adapter accepts the fact only when FormulaFence emits its exact critical <code>worksheet_embedded_controls_changed</code> record and <code>FF029</code> finding with a redacted one-control profile. A generic worksheet difference is not enough; a report that exposes the control or macro identity is not required. That keeps the benchmark useful for exact integration testing without normalizing disclosure of workbooks' operational identifiers.</p>
+
+      <h2>What the result does not say</h2>
+
+      <p>This is a stored assignment change, not proof that a macro exists, was resolved, was enabled, ran, or produced a result. Neither WCAB nor FormulaFence loads a control, inspects or executes VBA, invokes an Office client, authenticates a user, evaluates permissions, or claims an event-dispatch outcome. The useful claim is narrower and more defensible: a review-relevant workbook declaration moved while its ordinary spreadsheet context did not.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>git clone https://github.com/SybilGambleyyu/workbook-change-benchmark.git
+cd workbook-change-benchmark
+git checkout v0.44.1
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+wcab validate --fixtures fixtures
+
+formulafence diff approved.xlsx candidate.xlsx</code></pre>
+
+      <p>WCAB 0.44.1 contains 61 validated cases and 63 observable facts. It corrects three stale score-test totals in 0.44.0; the generated fixtures and adapter contract are unchanged. Its 294-test local suite, package checks, fresh wheel/source installs, and strict FormulaFence 0.225.0 adapter run passed; FormulaFence maps all 62 supported facts and all three coverage expectations, with one intentionally structural formula rewrite remaining unmapped. The synchronized benchmark dataset is available on <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">Hugging Face</a>.</p>
+
+      <p>Both projects are MIT-licensed. Read the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.44.1">WCAB 0.44.1 release</a>, the <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.225.0">FormulaFence release</a>, or the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.44.1/docs/validation.md">validation record</a> for source, artifact hashes, and reproducible checks.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
