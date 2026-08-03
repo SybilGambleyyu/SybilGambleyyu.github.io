@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.27.0 contains
-42 deterministic scenarios: 41 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 44 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.28.0 contains
+43 deterministic scenarios: 42 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 45 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.27.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.28.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -298,6 +298,21 @@ The validator follows local workbook and worksheet relationships and proves
 a file, validate a schema, import or export XML, materialize data, calculate a
 result, or claim client behavior.
 
+Version 0.28.0 adds an Office Web Add-in task-pane auto-show request without a
+cell edit. Microsoft's [workbook auto-open guidance](https://learn.microsoft.com/en-us/office/dev/add-ins/excel/pnp-open-in-excel)
+documents the package association and makes clear that the add-in must already
+be installed, sideloaded, or deployed before an application can honor it. The
+[MS-OWEMXML specification](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-owemxml/4b94ac5d-a8df-44f4-8433-81d43e35a2d7)
+defines `Office.AutoShowTaskpaneWithDocument` as an extension property. The
+pair keeps a synthetic local FileSystem reference, a hidden locked task pane,
+ordinary cells, calculation properties, and the
+`Inputs!B2 → Model!B2 → Dashboard!B4` formula context fixed. Only that
+property moves from false to true, and
+`xl/webextensions/webextension1.xml` is the sole changed package member.
+There is no manifest payload or external relationship. WCAB does not install,
+load, execute, or fetch an add-in or manifest, and does not claim that a task
+pane opens or that an add-in accesses a workbook cell.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -387,13 +402,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.27.0 passed 171 tests
-locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30776082123),
+so regeneration is byte-for-byte reproducible. Version 0.28.0 passed 178 tests
+locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30777438536),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 43
+making its report schema normative. FormulaFence 0.220.0 recovered all 44
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -427,6 +442,14 @@ file binding, table binding, and single-cell binding, with no unrecognized
 mapping metadata. It redacts the schema, map, XPath, table, and cell values, so
 WCAB independently verifies the `NetAmount → TaxAmount` transition, stable
 declarations and formulas, and the table-part-only boundary. For
+the Office Web Add-in fact, it requires exact `office_web_addins_changed`
+evidence and `FF028`: FormulaFence reports one declared task-pane part, task
+pane, web-extension part, and store reference; one hidden locked pane; no
+bindings, snapshots, external relationships, in-content references, or
+unrecognized parts; and an auto-show count moving from zero to one. It redacts
+the IDs, store name, and property value, so WCAB independently verifies the
+false-to-true property, stable workbook context, and web-extension-part-only
+boundary. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -486,7 +509,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 43 of 44 declared facts,
+without inventing review decisions, so its score is 44 of 45 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -509,5 +532,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.27.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.27.0),
+the [v0.28.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.28.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
