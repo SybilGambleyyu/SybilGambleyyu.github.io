@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.34.0 contains
-51 deterministic scenarios: 50 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 53 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.35.0 contains
+52 deterministic scenarios: 51 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 54 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.34.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.35.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -37,6 +37,23 @@ formula fixed while its third-column raw `calculatedColumnFormula` moves from
 `A2*B2` to `A2*(B2+1)` in `xl/tables/table1.xml`. These cases record stored
 formula programs only: WCAB does not evaluate a LAMBDA, fill a Table column,
 calculate a structured reference, infer a result, or claim client behavior.
+
+Version 0.35.0 adds a Data Model relationship boundary that ordinary cell and
+formula diffs can miss. Microsoft's [PowerPivot Model
+overview](https://learn.microsoft.com/en-us/office/vba/excel/concepts/about-the-powerpivot-model-object-in-excel)
+explains that relationships filter data across model tables, while the Office
+Open XML definitions for [CT_DataModel](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/eaea0fe6-3e3c-401d-a3a0-2d2cbb9fce00)
+and [CT_ModelRelationship](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/02c4fd22-dfcb-4cbb-abc0-05fc16dd9db0)
+define the stored table and key declarations. The compact pair keeps two local
+Excel Tables, `SalesModel` and `CalendarModel`, their worksheet cells, the
+`powerPivotData` workbook binding, content type, calculation properties, and a
+fixed opaque `xl/model/item.data` payload unchanged. Only the raw Office 2013
+`x15:modelRelationship` in `xl/workbook.xml` moves from
+`SalesModel.CalendarKey → CalendarModel.DateKey` to
+`SalesModel.CalendarKey → CalendarModel.FiscalDateKey`. WCAB verifies that
+stored declaration and the payload digest only: it does not deserialize a Data
+Model, evaluate DAX, refresh, calculate, render a report, infer model-to-cell
+impact, or claim Excel-client behavior.
 
 Those selector cases are the important addition: formula text remains stable,
 but an input changes either the address text consumed by `INDIRECT` or the
@@ -481,7 +498,8 @@ control change without a cell edit, an active AutoFilter criterion change with
 stable `SUBTOTAL` and downstream formulas, a relationship-backed saved Named
 Sheet View criterion change with a stable base AutoFilter and formulas, an XML
 Map table-column XPath retargeting with stable map declarations, local bindings,
-cells, and formulas, an unchanged array formula whose
+cells, and formulas, a raw Power Pivot/Data Model relationship target-key
+change with fixed local Tables and opaque payload, an unchanged array formula whose
 mode changes from legacy CSE to dynamic, and a cross-workbook dependency.
 
 That combination is deliberate. A column insertion can rewrite many formulas
@@ -500,13 +518,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.34.0 passed 231 tests
-locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30788065596),
-and fresh Python 3.13 wheel and source-distribution installations reproduced the
-catalogue byte-for-byte.
+so regeneration is byte-for-byte reproducible. Version 0.35.0 passed 239 tests
+locally under Python 3.13, and fresh Python 3.13 wheel and source-distribution
+installations both validated all 52 cases and reproduced the catalogue
+byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 52
+making its report schema normative. FormulaFence 0.220.0 recovered all 53
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -599,6 +617,15 @@ FormulaFence's exact redacted `table_definition_changed` profile,
 not expose the master text, so WCAB independently verifies the local Table
 binding, raw master transition, stable row/dashboard formulas, and Table-part
 boundary. Neither mapping evaluates a workbook or claims a result. For
+the Data Model relationship fact, it requires an exact high-severity
+`power_pivot_data_model_changed` record and `FF033`, with one internal data
+part, one workbook binding, one declaration, two model tables, one model
+relationship, and a fixed fingerprinted payload profile on both sides. The
+adapter redacts model names and keys, so WCAB independently verifies the exact
+stored `DateKey → FiscalDateKey` transition, fixed opaque payload, and
+workbook-XML-only boundary. Neither side deserializes a Data Model, evaluates
+DAX, refreshes it, calculates or renders a report, or infers model-to-cell
+impact. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -658,7 +685,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 52 of 53 declared facts,
+without inventing review decisions, so its score is 53 of 54 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -681,5 +708,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.34.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.34.0),
+the [v0.35.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.35.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
