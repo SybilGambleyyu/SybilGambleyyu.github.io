@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.33.0 contains
-49 deterministic scenarios: 48 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 51 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.34.0 contains
+51 deterministic scenarios: 50 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 53 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.33.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.34.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -25,6 +25,18 @@ that structured references adjust when a Table gains or loses data. Schema v3
 also covers a direct-to-`INDIRECT` change. Version 0.5.0 adds scoreable
 requirements to disclose both that boundary and an unchanged `INDIRECT` or
 `OFFSET` formula whose selector changes.
+
+Version 0.34.0 also adds two stored formula-definition boundaries. A
+workbook-scoped `ScenarioValue` name moves from
+`=LAMBDA(rate,amount,rate*amount)` to
+`=LAMBDA(rate,amount,rate*(amount+10))` while its inputs, calling
+`Model!B2` formula, dashboard consumer, and every package member except
+`xl/workbook.xml` stay fixed. A local `ScenarioLedger` Table instead keeps its
+binding, headers, `Ledger!C2:C4` formulas, and structured-reference dashboard
+formula fixed while its third-column raw `calculatedColumnFormula` moves from
+`A2*B2` to `A2*(B2+1)` in `xl/tables/table1.xml`. These cases record stored
+formula programs only: WCAB does not evaluate a LAMBDA, fill a Table column,
+calculate a structured reference, infer a result, or claim client behavior.
 
 Those selector cases are the important addition: formula text remains stable,
 but an input changes either the address text consumed by `INDIRECT` or the
@@ -488,13 +500,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.33.0 passed 218 tests
-locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30786211484),
+so regeneration is byte-for-byte reproducible. Version 0.34.0 passed 231 tests
+locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30788065596),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 50
+making its report schema normative. FormulaFence 0.220.0 recovered all 52
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -578,6 +590,15 @@ sheet-protection sort-permission fact, it requires the exact
 except `sort`; WCAB independently verifies the raw `1 → 0` transition and
 worksheet-only package difference. Neither mapping opens a source, tests a
 password, performs a sort, or claims a resulting value. For
+the named-LAMBDA fact, it requires FormulaFence's exact `ScenarioValue`
+`defined_name_changed` record and matching `FF008` before/after texts; WCAB
+independently verifies the local definition, stable inputs/formulas, and the
+workbook-XML-only boundary. For the Table calculated-column fact, it requires
+FormulaFence's exact redacted `table_definition_changed` profile,
+`calculated_column_formula_material_changed`, and `FF013`; FormulaFence does
+not expose the master text, so WCAB independently verifies the local Table
+binding, raw master transition, stable row/dashboard formulas, and Table-part
+boundary. Neither mapping evaluates a workbook or claims a result. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -637,7 +658,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 50 of 51 declared facts,
+without inventing review decisions, so its score is 52 of 53 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -660,5 +681,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.33.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.33.0),
+the [v0.34.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.34.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).

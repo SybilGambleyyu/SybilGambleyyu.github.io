@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="WCAB 0.33.0 makes a named external source and a protected-sheet sort permission reviewable without opening a source or sorting a sheet.">
+    <meta name="description" content="WCAB 0.34.0 makes named LAMBDA and Table calculated-column formula definitions reviewable without evaluating a workbook.">
     <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html">
     <meta property="og:title" content="A benchmark for reviewing spreadsheet changes, not just editing them">
-    <meta property="og:description" content="WCAB 0.33.0 makes a named external source and a protected-sheet sort permission reviewable without opening a source or sorting a sheet.">
+    <meta property="og:description" content="WCAB 0.34.0 makes named LAMBDA and Table calculated-column formula definitions reviewable without evaluating a workbook.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html">
     <title>A benchmark for reviewing spreadsheet changes, not just editing them — SybilGambleyyu</title>
@@ -22,11 +22,11 @@
     <main class="article">
       <p class="eyebrow">Release note · August 3, 2026</p>
       <h1>A benchmark for reviewing spreadsheet changes, not just editing them</h1>
-      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.33.0">Workbook Change Assurance Benchmark 0.33.0</a></p>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.34.0">Workbook Change Assurance Benchmark 0.34.0</a></p>
 
       <p>Spreadsheet tools are increasingly good at writing a formula or producing a finished workbook. The harder operational question comes afterward: a workbook changed—what changed, which other formulas can it reach, should it block a review, and what could the tool not determine? <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">Workbook Change Assurance Benchmark</a> (WCAB) is a small, open way to make those claims testable.</p>
 
-      <p>Version 0.33.0 contains 49 deterministic scenarios: 48 baseline/candidate workbook pairs and one directory portfolio. Together they declare 51 observable facts, a benchmark review disposition, and—where appropriate—a static dependency-impact lower bound. The files are generated from source in the repository, not copied from a financial model, email archive, or other sensitive corpus.</p>
+      <p>Version 0.34.0 contains 51 deterministic scenarios: 50 baseline/candidate workbook pairs and one directory portfolio. Together they declare 53 observable facts, a benchmark review disposition, and—where appropriate—a static dependency-impact lower bound. The files are generated from source in the repository, not copied from a financial model, email archive, or other sensitive corpus.</p>
 
       <h2>An external-workbook source can move without changing the formula</h2>
 
@@ -39,6 +39,18 @@
       <p>Microsoft’s <a href="https://support.microsoft.com/en-us/excel/manage-workbook-links">workbook-link guidance</a> calls out defined names as a place links can be used, and the Open XML <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.definednames?view=openxml-3.0.1">DefinedNames reference</a> describes the workbook-level collection that stores those expressions. A formula can therefore remain unchanged while the name it consumes points elsewhere.</p>
 
       <p>WCAB 0.33.0 adds a local <code>ScenarioRate</code> name whose stored expression moves from <code>'[WCABApprovedSource.xlsx]Inputs'!$B$2</code> to <code>'[WCABReviewSource.xlsx]Inputs'!$B$2</code>. <code>Model!B2=ScenarioRate*2</code>, its direct <code>Dashboard!B4=Model!$B$2</code> consumer, calculation properties, sheet declarations, and workbook relationships remain fixed. Only <code>xl/workbook.xml</code> changes. The deliberately compact package has no <code>externalReferences</code> declaration and no <code>externalLink</code> part. The validator reads stored local OOXML only: it does not resolve, open, fetch, authenticate to, trust, refresh, calculate, or claim that a client resolves the name or returns a value.</p>
+
+      <h2>A reusable LAMBDA can change without editing its caller</h2>
+
+      <p>Microsoft’s <a href="https://support.microsoft.com/en-us/excel/functions/lambda-function">LAMBDA guidance</a> describes naming a LAMBDA in Name Manager so it becomes a reusable custom function throughout a workbook. The <a href="https://support.microsoft.com/en-us/excel/get-started/define-and-use-names-in-formulas">defined-names guidance</a> likewise treats names as reusable formula definitions. That means a caller’s cell formula can stay byte-for-byte stable while its callable body changes.</p>
+
+      <p>WCAB 0.34.0 adds a workbook-scoped <code>ScenarioValue</code> definition whose stored expression moves from <code>=LAMBDA(rate,amount,rate*amount)</code> to <code>=LAMBDA(rate,amount,rate*(amount+10))</code>. <code>Inputs!B2=0.08</code>, <code>Inputs!B3=100</code>, <code>Model!B2=ScenarioValue(Inputs!B2,Inputs!B3)</code>, and <code>Dashboard!B4=Model!$B$2</code> remain fixed. Only <code>xl/workbook.xml</code> changes, and the compact package has neither <code>externalReferences</code> nor an <code>externalLink</code> part. The validator reads the stored definition only: it does not evaluate the LAMBDA, calculate a result, infer Excel-version support, or claim a client recalculates, spills, or persists a value.</p>
+
+      <h2>A Table can store a formula master outside worksheet cells</h2>
+
+      <p>Microsoft’s <a href="https://support.microsoft.com/en-us/excel/use-calculated-columns-in-an-excel-table">calculated-column guidance</a> explains that a formula in one Excel Table column can fill through the column. The Open XML <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.calculatedcolumnformula?view=openxml-3.0.1">CalculatedColumnFormula reference</a> identifies the Table-column child that stores that formula. It is a formula-definition surface distinct from a worksheet <code>&lt;f&gt;</code> node.</p>
+
+      <p>The second 0.34.0 case keeps the local <code>ScenarioLedger</code> Table at <code>Ledger!A1:C4</code>, its headers, raw <code>Ledger!C2:C4</code> formulas, and <code>Dashboard!B4=SUM(ScenarioLedger[Calculated amount])</code> fixed. Only the third column’s raw <code>calculatedColumnFormula</code> moves from <code>A2*B2</code> to <code>A2*(B2+1)</code>, leaving <code>xl/tables/table1.xml</code> as the sole changed package member. WCAB records that stored master: it does not fill a column, reconcile the master with row formulas, calculate a structured reference, infer a total, or claim client behavior.</p>
 
       <h2>A protected sheet can permit sorting without a cell edit</h2>
 
@@ -72,21 +84,21 @@
 
       <p>Every case carries a <code>truth.json</code> document. Schema version 3 adds a machine-matchable <code>coverage_expectations</code> field alongside facts such as <code>formula_to_value</code>, <code>sheet_visibility_changed</code>, and <code>three_d_scope_changed</code>. Its <code>must_reach</code> section gives formula locations a conservative local A1 dependency walk must reach. These are deliberately lower bounds; WCAB is not a formula evaluator and does not claim complete Excel dependency semantics, dynamic-reference resolution, or numerical correctness.</p>
 
-      <p>The bundled validator reads the generated files and verifies those contracts. It does not trust a fixture merely because the manifest says it is right. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.33.0/docs/schema.md">schema</a> documents each fact kind and boundary.</p>
+      <p>The bundled validator reads the generated files and verifies those contracts. It does not trust a fixture merely because the manifest says it is right. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.34.0/docs/schema.md">schema</a> documents each fact kind and boundary.</p>
 
       <h2>Reproducibility is part of the artifact</h2>
 
-      <p>Openpyxl can build the workbooks, but ZIP timestamps would otherwise change on every run. WCAB fixes workbook metadata and canonicalizes package member order and timestamps, then tests byte-for-byte regeneration. Version 0.33.0 validated all 49 cases and 218 tests locally under Python 3.13; <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30786211484">hosted tag CI passed</a>, and fresh Python 3.13 wheel and source-distribution installations reproduced the catalogue byte-for-byte. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.33.0/docs/validation.md">validation record</a> contains the exact commands and results.</p>
+      <p>Openpyxl can build the workbooks, but ZIP timestamps would otherwise change on every run. WCAB fixes workbook metadata and canonicalizes package member order and timestamps, then tests byte-for-byte regeneration. Version 0.34.0 validated all 51 cases and 231 tests locally under Python 3.13; <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30788065596">hosted tag CI passed</a>, and fresh Python 3.13 wheel and source-distribution installations reproduced the catalogue byte-for-byte. The <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.34.0/docs/validation.md">validation record</a> contains the exact commands and results.</p>
 
       <h2>A distribution that tools can verify</h2>
 
-      <p>Version 0.33.0 retains a deterministic, one-row-per-case <code>manifest.jsonl</code> catalogue. It retains each case’s facts, review convention, static-impact lower bounds, coverage text, and scoreable coverage expectations, alongside the exact relative path, byte count, and SHA-256 digest for every baseline and candidate workbook. A runner can record precisely which fixtures it consumed instead of inferring identity from a directory name.</p>
+      <p>Version 0.34.0 retains a deterministic, one-row-per-case <code>manifest.jsonl</code> catalogue. It retains each case’s facts, review convention, static-impact lower bounds, coverage text, and scoreable coverage expectations, alongside the exact relative path, byte count, and SHA-256 digest for every baseline and candidate workbook. A runner can record precisely which fixtures it consumed instead of inferring identity from a directory name.</p>
 
       <p>The same release is available as a <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">Hugging Face dataset</a>. Its downloadable catalogue matches the GitHub release byte-for-byte, while the source repository remains the place to regenerate and validate every file.</p>
 
       <h2>A score that makes coverage gaps visible</h2>
 
-      <p>A benchmark needs more than files and truth documents: different review tools emit different report formats. WCAB 0.33.0 retains its small <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.33.0/docs/observations.md">normalized observation protocol</a> and scorer. An adapter declares each case as analyzed, unsupported, or errored; then the scorer reports expected-fact recall, coverage-disclosure recall, analyzed coverage, and agreement with WCAB’s reference review convention.</p>
+      <p>A benchmark needs more than files and truth documents: different review tools emit different report formats. WCAB 0.34.0 retains its small <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/blob/v0.34.0/docs/observations.md">normalized observation protocol</a> and scorer. An adapter declares each case as analyzed, unsupported, or errored; then the scorer reports expected-fact recall, coverage-disclosure recall, analyzed coverage, and agreement with WCAB’s reference review convention.</p>
 
       <p>That last boundary matters. WCAB’s truth is intentionally targeted, not a claim that it lists every possible workbook difference. A tool may report another real observation that the case does not name. The scorer keeps such evidence explicit as <em>unrecognized</em> instead of calling it a false positive. And an unsupported case remains visible in the result—it cannot become an unearned pass.</p>
 
@@ -258,7 +270,7 @@
 
       <h2>A baseline adapter, without making it the benchmark</h2>
 
-      <p>WCAB has an optional local adapter for <a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a>. It invokes a locally installed executable, maps its JSON evidence into WCAB facts, and leaves unmapped cases visible. FormulaFence 0.220.0 observed all 50 mappable facts, all three scoreable dynamic-reference coverage declarations, and five targeted lint rules. It maps the Power Query case only when the tool emits its exact redacted <code>power_query_changed</code> profile and <code>FF024</code>; FormulaFence deliberately does not expose M source, local-table values, or a query result.</p>
+      <p>WCAB has an optional local adapter for <a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a>. It invokes a locally installed executable, maps its JSON evidence into WCAB facts, and leaves unmapped cases visible. FormulaFence 0.220.0 observed all 52 mappable facts, all three scoreable dynamic-reference coverage declarations, and five targeted lint rules. It maps the Power Query case only when the tool emits its exact redacted <code>power_query_changed</code> profile and <code>FF024</code>; FormulaFence deliberately does not expose M source, local-table values, or a query result.</p>
 
       <p>The adapter makes the same distinction throughout: a native diff must match the declared fact boundary, rather than merely share a broad category. It requires exact evidence for the connection and PivotCache refresh controls, PivotTable aggregation and Slicer state, Power Query, Scenario Manager state, What-If Data Tables, list-validation sources, conditional-formatting thresholds, custom number-format controls, ignored-error controls, chart source, external-link policy, calculation controls, saved result, date system, active filter, saved Sheet View, XML Map binding, Office Web Add-in declarations, and array mode. The Scenario Manager mapping requires FormulaFence’s redacted <code>scenario_manager_changed</code> profile and <code>FF035</code>; the Data Table mapping requires its one-variable <code>what_if_data_tables_changed</code> profile and <code>FF034</code>. The list-source mapping requires the exact <code>data_validation_changed</code> rule transition and <code>FF020</code>: FormulaFence exposes the stored source/control metadata but does not evaluate a list or decide whether an input is permitted. The threshold mapping requires its exact <code>conditional_formatting_changed</code> rule transition and <code>FF021</code>, including the raw <code>100 → 50</code> formula change with all other declared rule details stable. The number-format mapping requires the exact redacted <code>number_format_controls_changed</code> profile and <code>FF039</code>; FormulaFence deliberately redacts the code and target, so WCAB independently verifies the <code>Operations!B2</code> transition and styles-only boundary. The ignored-error mapping requires the exact redacted <code>ignored_error_controls_changed</code> profile and <code>FF037</code>; FormulaFence deliberately redacts the target and formula, so WCAB independently verifies the <code>Operations!B5</code> declaration and worksheet-only boundary. WCAB’s raw validator then establishes the fixture-specific source bindings and stored transitions without executing Excel or Power Query.</p>
 
@@ -280,7 +292,9 @@
 
       <p>The 0.33.0 adapter mapping is deliberately narrower than its broad categories. The defined-name case requires both FormulaFence’s one-surface <code>external_workbook_link_surfaces_changed</code> / <code>FF081</code> evidence and matching <code>ScenarioRate</code> <code>defined_name_changed</code> / <code>FF008</code> evidence; either signal alone is insufficient. The sort-permission case requires an exact <code>sheet_protection_changed</code> profile and <code>FF022</code> with every action lock retained except <code>sort</code>. WCAB’s raw validator independently establishes the OOXML values and package boundaries in both cases.</p>
 
-      <p>Its normalized-observation export leaves review decisions unset rather than inventing a policy, so its score is 50 of 51 declared facts, three of three coverage disclosures, full analyzed coverage, and zero policy agreement. The structural rewrite remains intentionally unmapped: a small fixture can document its before/after intent, but it cannot establish a generic proof of Excel semantic equivalence.</p>
+      <p>The 0.34.0 mappings are equally narrow. The named-LAMBDA case requires FormulaFence’s exact <code>ScenarioValue</code> <code>defined_name_changed</code> record and matching <code>FF008</code> before/after texts. The Table case requires its exact redacted <code>table_definition_changed</code> profile, <code>calculated_column_formula_material_changed</code> flag, and <code>FF013</code>; FormulaFence intentionally does not expose the master text. WCAB’s raw validator supplies the exact local OOXML values, worksheet-to-Table binding, stable formula context, and one-part package boundaries rather than treating either adapter signal as proof of evaluation.</p>
+
+      <p>Its normalized-observation export leaves review decisions unset rather than inventing a policy, so its score is 52 of 53 declared facts, three of three coverage disclosures, full analyzed coverage, and zero policy agreement. The structural rewrite remains intentionally unmapped: a small fixture can document its before/after intent, but it cannot establish a generic proof of Excel semantic equivalence.</p>
 
       <p>That distinction is the point. A tool should be rewarded for finding what it can prove and for exposing what it cannot—not for converting a coverage gap into an unearned pass.</p>
 
@@ -296,7 +310,7 @@ wcab observation-template --fixtures fixtures --output observations.json
 wcab score --fixtures fixtures --observations observations.json
 pytest</code></pre>
 
-      <p>The benchmark is MIT-licensed. Start with the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">source</a>, the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.33.0">v0.33.0 release</a>, or the <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">dataset mirror</a>. The useful next additions are cases and adapters that retain the same standard: deterministic generation, inspectable evidence, explicit limits, and a validation test.</p>
+      <p>The benchmark is MIT-licensed. Start with the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">source</a>, the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.34.0">v0.34.0 release</a>, or the <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">dataset mirror</a>. The useful next additions are cases and adapters that retain the same standard: deterministic generation, inspectable evidence, explicit limits, and a validation test.</p>
     </main>
     <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
   </body>
