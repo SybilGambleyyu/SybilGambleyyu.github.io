@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.4.0 adds a deterministic master-document subdocument target-change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-subdocument-review.html">
+    <meta property="og:title" content="A subdocument target can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.4.0 makes a master-document subdocument relationship retarget reproducible without opening a subdocument.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-subdocument-review.html">
+    <title>A subdocument target can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A subdocument target can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.4.0">Document Change Assurance Benchmark 0.4.0</a></p>
+
+      <p>A Word master document can keep all stored text, its <code>w:subDoc</code> anchor, and the anchor’s relationship ID fixed while changing which separate subdocument it names. A text diff cannot make that dependency retarget visible, yet a static reviewer can record it without opening or merging either document.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.4.0 adds its fifteenth deterministic paired package: <code>external.subdocument_target_retargeted</code>. Both sides preserve every package member, every <code>w:t</code> sequence, and a fixed <code>w:subDoc r:id</code> marker. Only <code>word/_rels/document.xml.rels</code> changes, retargeting the standard external subdocument relationship.</p>
+
+      <h2>Inspect the dependency; do not open the subdocument</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.subdocumentreference?view=openxml-3.0.1">Open XML documentation for <code>SubDocumentReference</code></a> identifies <code>w:subDoc</code> as an anchor for a subdocument location. The corresponding OOXML relationship is an external master-document dependency. DCAB records that stored relationship boundary only: its builder, validator, scorer, and adapter never retrieve a target, launch Word, or merge subdocument content.</p>
+
+      <p>All package targets are synthetic <code>example.invalid</code> values. The target-free public truth declares <code>external_document_dependency_target_changed</code> with the <code>subdocument</code> dependency subtype. It excludes the target, relationship ID, relationship path, and any subdocument content, so tools can demonstrate coverage without leaking document locations.</p>
+
+      <h2>A small case with a strict contract</h2>
+
+      <p>The generator renders the anchor directly in the main document body and retains the standard <code>subDocument</code> relationship type with external target mode. Its independent validator checks those exact requirements, deterministic package bytes, stable member set, unchanged stored text, and the one-member relationship boundary. The standard <code>python-docx</code> reader opens all 28 <code>.docx</code> fixtures, including this pair, and its lower-level OPC reader opens all 30 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter recognizes the change through public aggregate evidence: an external-relationship change plus an external-document-dependency inventory change, while the subdocument anchor and relationship counts remain one. It never consumes a target or a private signature.</p>
+
+      <p>The release passed 12 tests locally, including that adapter path, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs each validate the bundled corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.4.0/document_change_benchmark-0.4.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.4.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 14 to 15 cases. It does not claim a subdocument exists, is safe, has a particular rendering, or will be loaded by any client. It supplies a reproducible static fact for serious review tooling.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
