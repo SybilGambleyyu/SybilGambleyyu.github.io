@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.29 makes Word's stored attached-custom-XML-schema associations reviewable as private aggregate evidence without resolving or validating a schema.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-290.html">
+    <meta property="og:title" content="A Word schema association is a review boundary">
+    <meta property="og:description" content="DocFence 0.29 inventories stored attached custom XML schema associations without loading or validating a schema.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-290.html">
+    <title>A Word schema association is a review boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A Word schema association is a review boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.29.0">DocFence 0.29.0</a></p>
+
+      <p>A Word document can retain a stored association between its custom XML markup and a schema target namespace. That association can change while ordinary document text and the rest of the package remain stable. It belongs in a package review—but it does not make a static reviewer a schema resolver, loader, or validator.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.29 adds a private-by-default inventory for direct <code>w:attachedSchema</code> elements in Word Settings parts. It provides a durable CI signal for a narrow stored-state boundary without disclosing namespace identifiers in public output.</p>
+
+      <h2>A stored association, deliberately not a validation run</h2>
+
+      <p>Microsoft’s Open XML SDK documentation identifies <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.attachedschema?view=openxml-3.0.1"><code>AttachedSchema</code></a> as an attached custom XML schema. The Word object model exposes a corresponding <a href="https://learn.microsoft.com/en-us/office/vba/api/word.xmlnamespace.attachtodocument">AttachToDocument</a> operation, and Word’s XML APIs have a separate validation operation. Those references establish why the stored element is worth reviewing; they do not establish that a given schema is available, valid, loaded, or applied in a particular environment.</p>
+
+      <pre><code>word/settings.xml
+  w:attachedSchema w:val="target namespace"   one or more direct entries
+
+No relationship target is required for this stored association.</code></pre>
+
+      <p>DocFence accepts the standard <code>CT_String</code> leaf shape in Transitional and Strict Word namespaces: exactly one Word-namespace <code>w:val</code> attribute, with no child markup or nonblank text. It inventories the stored topology only. It never locates a schema, resolves a namespace, retrieves anything, loads a schema, validates document XML, opens Word, or predicts client behavior.</p>
+
+      <h2>Aggregate evidence that can still detect a rewrite</h2>
+
+      <p>Public JSON, Markdown, and SARIF report one count: <code>attached_custom_xml_schema_count</code>. Namespace identifiers, Settings-part paths, and private fingerprints stay local. A same-count namespace rewrite still changes the private semantic inventory and is visible in a diff; a public report never needs to publish the value that changed.</p>
+
+      <p>That leads to two small, readable policies:</p>
+
+      <pre><code>rules:
+  require_no_attached_custom_xml_schemas: true</code></pre>
+
+      <p>The candidate-state gate emits <code>DFP071</code> when any stored association is present. A team that deliberately retains a known association can instead protect its baseline:</p>
+
+      <pre><code>rules:
+  no_attached_custom_xml_schema_changes: true</code></pre>
+
+      <p><code>DFP072</code> flags a material private-inventory transition. Neither rule judges a schema safe or unsafe; each makes a previously quiet configuration boundary visible in a policy that reviewers can inspect.</p>
+
+      <h2>Evidence that preserves the boundary</h2>
+
+      <p>The 55-test release suite covers conventional and Strict forms, multiple associations, malformed leaf rejection, same-count rewrites, privacy redaction, policy behavior, and JSON/Markdown/SARIF output. Hosted CI passed for the release commit and tag, and fresh wheel and source-distribution installs completed the package smoke checks.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.19.0">Document Change Assurance Benchmark 0.19.0</a> supplies a matching deterministic fixture that changes one synthetic namespace while retaining the same count. Its optional DocFence adapter consumes only aggregate evidence; it does not read a namespace, path, or fingerprint.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.29.0/docfence-0.29.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.29.0">public release</a> includes the wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.29.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.29.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.29.0/docs/validation.md">validation notes</a> define the exact evidence contract and its limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.19 adds a deterministic Word attached-custom-XML-schema namespace-change case for static package review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-attached-custom-xml-schema-review.html">
+    <meta property="og:title" content="A one-line Word setting can change a custom XML schema association">
+    <meta property="og:description" content="DCAB 0.19 makes a stored attached custom XML schema namespace rewrite reproducible without resolving or validating a schema.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-attached-custom-xml-schema-review.html">
+    <title>A one-line Word setting can change a custom XML schema association — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A one-line Word setting can change a custom XML schema association</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.19.0">Document Change Assurance Benchmark 0.19.0</a></p>
+
+      <p>A consequential WordprocessingML change need not alter text, a relationship target, or a visible page. A document can retain one direct <code>w:attachedSchema</code> entry in Settings while changing its target namespace. A text-oriented review has little reason to surface that stored association; a package-review tool should be able to state it precisely.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.19.0 adds its thirtieth deterministic pair: <code>binding.attached_custom_xml_schema_namespace_changed</code>. The baseline and candidate preserve their member set, stored text sequence, and schema-association count. Only <code>word/settings.xml</code> changes, where a synthetic namespace value is replaced.</p>
+
+      <h2>A valid leaf, an intentionally narrow boundary</h2>
+
+      <p>Microsoft documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.attachedschema?view=openxml-3.0.1"><code>AttachedSchema</code></a> as an attached custom XML schema. The OOXML definition places the <code>w:attachedSchema</code> <code>CT_String</code> leaf directly in document Settings. The benchmark models exactly that stored structure—one direct element, one <code>w:val</code> attribute, no child markup or text—and does not introduce a Settings relationship part.</p>
+
+      <pre><code>word/settings.xml                         only changed package member
+  w:attachedSchema w:val="namespace"     one valid direct leaf on each side
+
+word/_rels/settings.xml.rels              absent on both sides</code></pre>
+
+      <p>The change is deliberately not a schema-validation experiment. The pair includes no schema payload, does not locate or retrieve one, does not resolve the namespace, does not load a schema, does not validate custom XML, and does not open Word or claim host behavior. The synthetic values use the reserved <code>example.invalid</code> domain.</p>
+
+      <h2>A public fact with no namespace disclosure</h2>
+
+      <p>The target-free truth reports only three stable facts: <code>binding: custom_xml_schema</code>, <code>kind: attached_custom_xml_schema_namespace_changed</code>, and <code>source: word_settings</code>. It excludes both namespace identifiers, Settings-part paths, relationship information, and any private fingerprint.</p>
+
+      <p>Independent structural validation checks the exact leaf shape, one-member change boundary, absence of a Settings relationship part, stable package topology, unchanged stored text, deterministic regeneration, and the absence of fixture namespace material from public truth. The result is a scoreable review case without turning the corpus into a transport mechanism for operational identifiers.</p>
+
+      <h2>One released consumer, still a tool-neutral case</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.29.0">DocFence 0.29.0</a> adapter reaches a strict 30/30 score from aggregate evidence: <code>attached_custom_xml_schema_inventory_changed</code> plus a fixed <code>attached_custom_xml_schema_count</code> of one. It does not consume a namespace, Settings path, or private fingerprint.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13 for the main commit and release tag. Clean wheel and source-distribution installs validate the bundled 30-case corpus. The public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset mirror</a> was byte-verified against the generated fixture tree and validated directly after download.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.19.0/document_change_benchmark-0.19.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB retains fixture schema version 1 because the public truth and observation envelopes are unchanged. This release adds one exact static-review fact—not a schema resolver, document client, renderer, validator, or universal policy claim.</p>
+
+      <p>The MIT-licensed builder, generated fixtures, verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
