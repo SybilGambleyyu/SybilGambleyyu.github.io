@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.15.0 adds a deterministic legacy VML linked-OLE case for static package review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-vml-linked-ole-review.html">
+    <meta property="og:title" content="A Word OLE link can change without an embedded payload">
+    <meta property="og:description" content="DCAB 0.15.0 makes a VML linked-OLE target change reproducible without retrieving, parsing, or activating an object.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-vml-linked-ole-review.html">
+    <title>A Word OLE link can change without an embedded payload — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A Word OLE link can change without an embedded payload</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.15.0">Document Change Assurance Benchmark 0.15.0</a></p>
+
+      <p>An OLE object in a Word package is not always an opaque binary part under <code>word/embeddings</code>. Legacy VML can instead carry an OLE object typed as a link, with an external standard <code>oleObject</code> relationship. A package can therefore retain its ordinary stored text, its VML object carrier, and its entire member set while the linked source changes.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.15.0 adds its twenty-sixth deterministic pair: <code>external.vml_linked_ole_object_target_retargeted</code>. Neither side contains an embedded OLE payload. Both retain one <code>w:object</code> carrier, one VML placeholder, <code>Type="Link"</code>, the fixed link metadata, the relationship ID, and ordinary stored <code>w:t</code> values. Only <code>word/_rels/document.xml.rels</code> changes: one private external target is retargeted.</p>
+
+      <h2>The link is a relationship, not a payload</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.office.oleobject?view=openxml-3.0.1">VML <code>o:OLEObject</code> reference</a> places the element inside a Word <code>w:object</code> carrier, identifies the actual OLE object through <code>r:id</code>, and associates the object with a VML placeholder through <code>ShapeID</code>. Its <code>UpdateMode</code> applies when <code>Type</code> is <code>Link</code>. Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/19190ae3-5734-48eb-a919-b89d0b3ce114">Office compatibility notes</a> describe that type as distinguishing an object stored externally from one included in the package.</p>
+
+      <pre><code>word/document.xml
+  w:object
+    v:shape id="fixed placeholder" o:ole=""
+    o:OLEObject Type="Link" r:id="rIdLinkedOleObject"
+
+word/_rels/document.xml.rels
+  rIdLinkedOleObject ──oleObject, External──&gt; private source</code></pre>
+
+      <p>That is a different review boundary from DCAB’s embedded-OLE payload case. The new fixture has no <code>word/embeddings</code> member and does not interpret an OLE compound file. It requires a reviewer to associate a link-typed VML OLE anchor with its external <code>oleObject</code> relationship while preserving the fixed marker topology around it.</p>
+
+      <h2>One changed relationship, no activation claim</h2>
+
+      <p>The generator and verifier require exactly one object carrier, one sibling VML placeholder, one link-typed <code>o:OLEObject</code>, fixed ProgID/shape/object identifiers, visual aspect, update mode, and one external standard <code>oleObject</code> relationship. They also require the package-member set and stored Word text to remain stable, and declare the relationship part as the sole changed member.</p>
+
+      <p>No component opens Word, renders the VML object, resolves or retrieves a source, parses an OLE payload, activates an object, launches an application, authenticates to a target, or claims a client will update or display it. This is static package review evidence only.</p>
+
+      <h2>Aggregate evidence without the source</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps the aggregate <code>external_relationships_changed</code>, <code>embedded_object_inventory_changed</code>, and <code>word_vml_linked_ole_object_inventory_changed</code> transitions. Both sides retain one linked-OLE object and one external standard OLE relationship; DCAB observations do not include the source, relationship ID, shape/object IDs, ProgID, update mode, path, or document text.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13, including a separate clean DocFence adapter job. The standard <code>python-docx</code> reader opens all 50 <code>.docx</code> fixtures, while its lower-level OPC reader opens all 52 packages. Rebuilt fixtures, fresh wheel and source-distribution installs, the published GitHub release downloads, and a fresh Hugging Face dataset snapshot each validate the 26-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.15.0/document_change_benchmark-0.15.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.15.0 retains fixture schema version 1 because its public truth and observation envelopes are unchanged. It adds one precise linked-object relationship boundary, not an OLE parser, object launcher, document renderer, or runtime security claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
