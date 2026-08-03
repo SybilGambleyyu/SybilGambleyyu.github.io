@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.7.0 adds a deterministic DDE field source-change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-dde-review.html">
+    <meta property="og:title" content="A DDE source can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.7.0 makes a stored DDE source-file argument change reproducible without processing the field or starting an application.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-dde-review.html">
+    <title>A DDE source can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A DDE source can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.7.0">Document Change Assurance Benchmark 0.7.0</a></p>
+
+      <p>A Word field can retain its stored result text while its instruction changes. That distinction matters when the instruction identifies material outside the package: text-only review sees the same result, while a static package reviewer can make the stored source boundary explicit without evaluating the field.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.7.0 adds its eighteenth deterministic paired package: <code>external.dde_field_source_retargeted</code>. Both sides retain the same complete <code>w:fldSimple</code> shape, field result, application token, item token, package-member set, and stored <code>w:t</code> sequence. Only <code>word/document.xml</code> changes, and the change is confined to the private source-file argument.</p>
+
+      <h2>Review a stored instruction; do not process it</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/a2c3a25a-1dba-40da-be7a-47cf63c78d55">Word field specification for DDE</a> defines separate application, source-file, and source-item arguments for information linked from another application. DCAB fixes the synthetic application and item arguments, uses a synthetic local-style source string, and changes only that source-file argument.</p>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/security-updates/securityadvisories/2017/4053440">DDE security advisory</a> documents Office controls for processing DDE fields. That makes the stored instruction a useful review surface; it does not turn this corpus into a client-behavior or exploit test. The builder, verifier, scorer, and adapter never resolve a source, update a field, open Word, start an application, invoke DDE, or claim what an Office client will do.</p>
+
+      <h2>A deterministic field-instruction boundary</h2>
+
+      <p>The independent verifier checks the exact fixed field shape and instruction components, deterministic package bytes, stable member set, unchanged stored Word text, and exact one-member pair boundary. The standard <code>python-docx</code> reader opens all 34 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 36 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps the public <code>external_field_inventory_changed</code> evidence while the aggregate DDE-field count remains one. It uses aggregate evidence only, never the source string or a private signature.</p>
+
+      <p>The release passed 14 tests locally, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs, the uploaded GitHub artifacts, and a fresh Hugging Face dataset download each validate the bundled 18-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.7.0/document_change_benchmark-0.7.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.7.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 17 to 18 cases. It does not claim a source exists, is safe, is reachable, was processed, or will be used by any client. It supplies a reproducible static boundary for serious document review.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
