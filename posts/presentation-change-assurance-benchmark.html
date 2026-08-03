@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PCAB 0.1.0 makes static PowerPoint change-review claims reproducible with twelve deterministic paired PresentationML fixtures.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/presentation-change-assurance-benchmark.html">
+    <meta property="og:title" content="A benchmark for reviewing PowerPoint changes, not just rendering them">
+    <meta property="og:description" content="Twelve deterministic paired PresentationML cases make static presentation-review claims scoreable without opening a deck.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/presentation-change-assurance-benchmark.html">
+    <title>A benchmark for reviewing PowerPoint changes, not just rendering them — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/presentation-change-benchmark">PCAB</a><a href="https://github.com/SybilGambleyyu/slidefence">SlideFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A benchmark for reviewing PowerPoint changes, not just rendering them</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/tag/v0.1.0">Presentation Change Assurance Benchmark 0.1.0</a></p>
+
+      <p>A slide can look unchanged while its stored behavior changes. A DrawingML click, hover, or mouse-over declaration can point somewhere new; a macro-category action can be retargeted while its public count remains the same; opaque macro or embedded-object bytes can change without a visible text edit. Those are review surfaces, but a tool’s claim to notice them has been difficult to compare or reproduce.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/presentation-change-benchmark">Presentation Change Assurance Benchmark</a> (PCAB) makes one narrow part of that problem testable. Its first release supplies twelve deterministic baseline/candidate PresentationML pairs, public target-free truth manifests, a structural validator, a portable observation protocol, and a scorer. This is a benchmark for a static review gate—not a deck generator, visual comparison suite, or runtime safety verdict.</p>
+
+      <h2>One stored boundary at a time</h2>
+
+      <p>Every PCAB pair preserves its visible DrawingML text and differs in exactly one ZIP member. The cases cover external hyperlink retargeting; macro, program, external-file, external-presentation, OLE-verb, media, internal-navigation, and reserved actions; a missing action relationship; opaque VBA-project bytes; and opaque embedded-object bytes. The relationship targets use reserved <code>example.invalid</code> endpoints, and the macro and embedded members are deliberately inert marker bytes rather than executable samples.</p>
+
+      <p>The source generator and <code>pcab validate</code> check archive integrity, deterministic bytes, the one-member package boundary, stable visible text, and the bounded action/relationship shape. The public <code>truth.json</code> contract does not disclose action strings, relationship IDs or targets, macro names, slide text, payload bytes, or payload digests. That split gives a benchmark adapter safe facts to match while keeping raw fixture material out of a normal report.</p>
+
+      <h2>A score that does not invent precision</h2>
+
+      <p>Review tools do not need to adopt a shared internal report schema. An adapter writes a small observation document naming an analyzed case, exact public facts it found, and an optional <code>allow</code>, <code>review</code>, or <code>block</code> reference disposition. Unsupported and errored cases are explicit. The scorer reports expected-fact recall, analysis coverage, reference-policy agreement, and complete cases. Because PCAB’s oracle is intentionally targeted, an extra observation stays visible as unrecognized evidence; it is not called a false positive and PCAB does not publish a misleading precision number.</p>
+
+      <p>There is one optional reference adapter today. It invokes <a href="https://github.com/SybilGambleyyu/slidefence/releases/tag/v0.2.0">SlideFence 0.2.0</a> through its public JSON CLI, then accepts a PCAB fact only when the native safe inventories and change category exactly match the generated pair. On PCAB 0.1.0 it completes all 12 cases with matching reference dispositions. That is a reproducible integration result, not a requirement to use SlideFence and not evidence that any declaration executes.</p>
+
+      <h2>What the benchmark does not say</h2>
+
+      <p>PCAB never opens PowerPoint, renders a slide, resolves or fetches a relationship, executes VBA, activates OLE, plays media, parses an opaque payload format, verifies a signature, or predicts a Trust Center, client, or security outcome. It records stored package state only. A changed declaration warrants review; it does not prove that a target is reachable, an object is registered, a macro is valid, or a user can cause an action to happen.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install \
+  https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/download/v0.1.0/presentation_change_benchmark-0.1.0-py3-none-any.whl
+
+pcab validate
+pcab observation-template --output observations.json
+pcab score --observations observations.json --output score.json</code></pre>
+
+      <p>The 0.1.0 release has a passing hosted Python 3.11–3.13 matrix, fresh wheel and source-distribution installation checks, a released-wheel download verification, and a separate SlideFence integration job. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/presentation-change-assurance-benchmark">Hugging Face dataset</a>. Read the <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/tag/v0.1.0">release</a>, <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/blob/v0.1.0/docs/observations.md">observation protocol</a>, and <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/blob/v0.1.0/docs/validation.md">validation contract</a> for the exact limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
