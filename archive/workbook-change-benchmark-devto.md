@@ -6,18 +6,19 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.35.0 contains
-52 deterministic scenarios: 51 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 54 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.36.0 contains
+53 deterministic scenarios: 52 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 55 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.35.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.36.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
-evaluator can identify precisely which fixtures it consumed. The same release
-is mirrored as a [Hugging Face dataset](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
+evaluator can identify precisely which fixtures it consumed. A pair is
+explicitly either a matching `.xlsx` pair or a matching `.xlsm` pair. The same
+release is mirrored as a [Hugging Face dataset](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
 It retains the schema-version-3 truth contract, including an Excel Table
 scope-expansion case: `=SUM(SalesLedger[Amount])` stays unchanged while the
 stored Table range grows from `A1:D4` to `A1:D5`. [Microsoft documents](https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables)
@@ -54,6 +55,23 @@ fixed opaque `xl/model/item.data` payload unchanged. Only the raw Office 2013
 stored declaration and the payload digest only: it does not deserialize a Data
 Model, evaluate DAX, refresh, calculate, render a report, infer model-to-cell
 impact, or claim Excel-client behavior.
+
+Version 0.36.0 adds a stored automatic-macro binding boundary that ordinary
+formula and macro-sheet-content diffs can miss. Microsoft's [Excel 4.0 macro
+guidance](https://support.microsoft.com/en-au/office/working-with-excel-4-0-macros-ba8924d4-e157-4bb2-8d76-2c07ff02e0b8)
+says Excel continues to support XLM macros, and the
+[XlRunAutoMacro reference](https://learn.microsoft.com/en-us/office/vba/api/excel.xlrunautomacro)
+names `Auto_Open`, `Auto_Close`, `Auto_Activate`, and `Auto_Deactivate` as
+automatic macro events. The new fixture is a real macro-enabled `.xlsm` pair:
+one workbook-scoped `_xlnm.Auto_Open` name moves from
+`'Macro Automation'!$A$1` to `'Macro Automation'!$A$2`. Its one very-hidden
+XLM macro-sheet part remains byte-identical and contains only two static
+`HALT()` formula cells. The macro-sheet relationship, content types, ordinary
+`Inputs!B2 → Model!B2 → Dashboard!B4` formula context, calculation properties,
+and every package member except `xl/workbook.xml` remain fixed. WCAB records
+the stored dispatch declaration only: it never opens Excel, enables or executes
+XLM code, parses or emulates macro instructions, resolves a dynamic name,
+inspects macro-security or trust settings, or claims a dispatch result.
 
 Those selector cases are the important addition: formula text remains stable,
 but an input changes either the address text consumed by `INDIRECT` or the
@@ -518,13 +536,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.35.0 passed 239 tests
+so regeneration is byte-for-byte reproducible. Version 0.36.0 passed 248 tests
 locally under Python 3.13, and fresh Python 3.13 wheel and source-distribution
-installations both validated all 52 cases and reproduced the catalogue
+installations both validated all 53 cases and reproduced the catalogue
 byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 53
+making its report schema normative. FormulaFence 0.220.0 recovered all 54
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -626,6 +644,16 @@ stored `DateKey → FiscalDateKey` transition, fixed opaque payload, and
 workbook-XML-only boundary. Neither side deserializes a Data Model, evaluates
 DAX, refreshes it, calculates or renders a report, or infers model-to-cell
 impact. For
+the XLM Auto_Open binding fact, it requires FormulaFence's exact
+high-severity `xlm_automatic_macro_bindings_changed` record and `FF076`, with
+one automatic binding, one `Auto_Open` binding, and no
+close/activate/deactivate binding on either side; only its material-change flag
+may differ. FormulaFence redacts the macro-sheet name, target cells, XML, and
+macro instructions, so WCAB independently verifies the exact stored
+`$A$1 → $A$2` target transition, fixed two-`HALT()` macro sheet, very-hidden
+state, fixed relationship/content types, and workbook-XML-only boundary.
+Neither side opens Excel, enables or executes XLM code, parses or emulates
+macro instructions, or claims client behavior. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -685,7 +713,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 53 of 54 declared facts,
+without inventing review decisions, so its score is 54 of 55 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -708,5 +736,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.35.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.35.0),
+the [v0.36.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.36.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
