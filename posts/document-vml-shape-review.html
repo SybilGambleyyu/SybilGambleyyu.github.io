@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.11.0 adds a deterministic direct legacy VML shape-hyperlink target change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-vml-shape-review.html">
+    <meta property="og:title" content="A legacy shape link can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.11.0 makes a direct VML shape-link target change reproducible without resolving or following the link.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-vml-shape-review.html">
+    <title>A legacy shape link can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A legacy shape link can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.11.0">Document Change Assurance Benchmark 0.11.0</a></p>
+
+      <p>A Word document can carry a direct link on a legacy drawing shape rather than in ordinary hyperlink text or an OOXML relationship. The shape’s destination can change while every stored <code>w:t</code> text node remains unchanged. A serious package review needs to see that markup without pretending that it knows what a renderer displayed or what a user click would do.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.11.0 adds its twenty-second deterministic pair: <code>interaction.vml_shape_hyperlink_target_retargeted</code>. Both packages retain the same members, Word text, direct VML rectangle, shape ID, styling, and target frame. Only <code>word/document.xml</code> changes: the rectangle’s direct <code>href</code> moves between two synthetic <code>example.invalid</code> destinations.</p>
+
+      <h2>Legacy markup is still stored review evidence</h2>
+
+      <p>Microsoft’s Open XML API describes a VML <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.shape?view=openxml-3.0.1"><code>v:shape</code> <code>href</code> as a hyperlink target</a>. Microsoft’s <a href="https://learn.microsoft.com/en-us/office/dev/add-ins/word/create-better-add-ins-for-word-with-office-open-xml">Word OOXML guidance</a> also explains that Word 2007 continued to use legacy VML for shapes and text boxes, while later documents can retain VML fallback markup. The relevant fact is therefore stored in the package even though it is not ordinary Word text.</p>
+
+      <p>This pair deliberately avoids turning that fact into a runtime claim. Its compact <code>w:pict</code>/<code>v:rect</code> marker has no relationship target, embedded payload, macro, or field evaluation. DCAB does not resolve the URL, load a browser, select a drawing branch, simulate a click, open Word, or assert that a client will follow the link. It tests only a direct stored attribute boundary.</p>
+
+      <h2>One direct href boundary</h2>
+
+      <p>The independent verifier checks the VML namespace and rectangle, fixed shape ID, target frame, styling attributes, exact direct <code>href</code>, deterministic package bytes, stable member set, unchanged stored Word text, and the exact one-member boundary. The standard <code>python-docx</code> reader opens all 42 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 44 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps aggregate <code>word_vml_hyperlink_inventory_changed</code> evidence. Both sides retain one VML hyperlink element in one story, one concrete shape, zero groups, zero shape templates, and one target-frame attribute. The adapter detects the private markup fingerprint transition while disclosing none of the direct destination, shape ID, or target-frame value.</p>
+
+      <p>The release passed the full 18-test suite in hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs, the uploaded GitHub artifacts, and a fresh Hugging Face dataset download each validate the bundled 22-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.11.0/document_change_benchmark-0.11.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.11.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 21 to 22 cases. It publishes a narrow static review fact, not a visual-rendering, navigation, deployment, identity, or security-policy claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
