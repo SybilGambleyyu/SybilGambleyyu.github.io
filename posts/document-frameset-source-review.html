@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.14.0 adds a deterministic Word frameset-source case for static package review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-frameset-source-review.html">
+    <meta property="og:title" content="A Word frame source can change outside the document body">
+    <meta property="og:description" content="DCAB 0.14.0 makes a Web Settings frameset source change reproducible without rendering Word or retrieving a source.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-frameset-source-review.html">
+    <title>A Word frame source can change outside the document body — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A Word frame source can change outside the document body</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.14.0">Document Change Assurance Benchmark 0.14.0</a></p>
+
+      <p>A Word document’s visible body is not its whole dependency graph. A frameset stores its frame source in the Web Settings part, then reaches that source through a relationship owned by the Web Settings part. A body-text diff can therefore remain completely quiet while a stored external document dependency changes.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.14.0 adds its twenty-fifth deterministic pair: <code>external.frameset_source_target_retargeted</code>. Both packages retain the same members, ordinary stored <code>w:t</code> values, content types, internal relationship, root frameset layout, frame size/name, and source anchor. Only <code>word/_rels/webSettings.xml.rels</code> changes: one private external frame-source target is retargeted.</p>
+
+      <h2>The relationship lives beside Web Settings</h2>
+
+      <p>Microsoft's <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.sourcefilereference?view=openxml-2.20.0"><code>w:sourceFileName</code> documentation</a> says that the element identifies a source file through a relationship in the Web Settings part and requires the standard <code>frame</code> relationship type. The OOXML <a href="https://ooxml.info/docs/11/11.5/">Framesets contract</a> specifies that a frame target is external.</p>
+
+      <pre><code>word/document.xml.rels
+  rIdWebSettings ──internal──&gt; word/webSettings.xml
+
+word/webSettings.xml
+  w:frameset
+    w:frame
+      w:sourceFileName r:id="rIdFrameSource"
+
+word/_rels/webSettings.xml.rels
+  rIdFrameSource ──frame, External──&gt; private source</code></pre>
+
+      <p>That relationship graph is the review boundary. The fixture fixes the full topology around it, including the content-type override and internal main-document-to-Web-Settings relationship, then changes only the target value in the final relationship. It is a tighter test than merely counting external relationships because it requires a scanner to associate the right external relationship with the frame anchor that names it.</p>
+
+      <h2>Stored text is not a rendering claim</h2>
+
+      <p>A root <code>w:frameset</code> has an important limit: the standard describes the document as a frameset definition, not ordinary rendered document content, while it has child frames. DCAB intentionally preserves the normal stored body text to make the package-level contrast inspectable, but it does not assert what any client displays.</p>
+
+      <p>The generator and verifier require exactly one fixed root frameset, one layout, one frame size/name, one <code>w:sourceFileName</code> anchor, one internal Web Settings relationship, and one external <code>frame</code> relationship. They also require a stable package-member set, stable stored Word text, and the one declared relationship-member boundary. The public truth exposes only the target-free fact category and reference review convention.</p>
+
+      <p>No component opens Word, renders a frame, resolves or retrieves a source, imports a document, authenticates to a target, or claims a client will display the frame. This is static package review evidence only.</p>
+
+      <h2>Aggregate evidence without the destination</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter reports the aggregate <code>external_document_dependency_inventory_changed</code> transition. Both sides retain one frame-source anchor and one frame relationship; the adapter maps that evidence without placing the source, relationship ID, Web Settings path, frame layout/name/size, or document text in DCAB observations.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13, including a separate clean DocFence adapter job. The standard <code>python-docx</code> reader opens all 48 <code>.docx</code> fixtures, while its lower-level OPC reader opens all 50 packages. Rebuilt fixtures, fresh wheel and source-distribution installs, the published GitHub release downloads, and a fresh Hugging Face dataset snapshot each validate the 25-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.14.0/document_change_benchmark-0.14.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.14.0 retains fixture schema version 1 because its public truth and observation envelopes are unchanged. It adds a precise external-document dependency boundary, not a Word renderer, document importer, or runtime security claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
