@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.28 makes Word's stored XSLT-on-single-XML-save configuration reviewable without fetching or executing a transform.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-280.html">
+    <meta property="og:title" content="A Word save transform is a review boundary">
+    <meta property="og:description" content="DocFence 0.28 inventories private XSLT-on-single-XML-save configuration as aggregate local evidence.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-280.html">
+    <title>A Word save transform is a review boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A Word save transform is a review boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.28.0">DocFence 0.28.0</a></p>
+
+      <p>A document can carry instructions for what to do when it is saved as a single XML file. That stored configuration matters in a review even when ordinary document text, the Settings XML anchor, and the rest of the package stay unchanged. It does not, however, make a static reviewer an XSLT host.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.28 adds a private-by-default inventory for that narrow Word configuration: <code>w:useXSLTWhenSaving</code>, <code>w:saveThroughXslt</code>, its standard external <code>transform</code> relationship, and an optional local solution identifier. It gives CI a durable stored-state signal without following a target or executing a transform.</p>
+
+      <h2>The setting is real; the runtime is deliberately out of scope</h2>
+
+      <p>Microsoft’s Open XML SDK documentation for <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.savethroughxslt?view=openxml-3.0.1"><code>SaveThroughXslt</code></a> describes a custom XSL transform used when saving a document as a single XML file. Its <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.usexsltwhensaving?view=openxml-3.0.1"><code>UseXsltWhenSaving</code></a> companion says that the transform is not applied unless the setting is enabled. The OOXML <a href="https://ooxml.info/docs/11/11.9/">Document Settings relationship contract</a> gives the corresponding <code>transform</code> relationship an external target mode.</p>
+
+      <pre><code>word/settings.xml
+  w:useXSLTWhenSaving     explicit enabled or disabled setting
+  w:saveThroughXslt       transform anchor (relationship or local solution ID)
+
+word/_rels/settings.xml.rels
+  transform relationship  external stored target</code></pre>
+
+      <p>DocFence inventories the stored package topology. It does not open Word, invoke a save operation, fetch a transform, parse its source, execute it, or predict the XML a client would emit. Those are different operations with materially different trust and execution boundaries.</p>
+
+      <h2>Useful aggregate evidence, no operational disclosure</h2>
+
+      <p>The public profile reports five aggregate counts: enabled settings, disabled settings, transform anchors, standard transform relationships, and local solution identifiers. JSON, Markdown, and SARIF intentionally omit transform targets, relationship IDs, local solution values, Settings-part paths, and private fingerprints.</p>
+
+      <p>That distinction preserves useful review behavior. A same-count target or solution-ID rewrite changes the private semantic inventory and is visible in a diff; a relationship-ID renumbering with unchanged semantics remains quiet. Orphaned standard transform relationships are also retained as stored evidence rather than silently discarded.</p>
+
+      <h2>Two readable policy choices</h2>
+
+      <p>A clean handoff can reject any persisted XSLT-on-save configuration:</p>
+
+      <pre><code>rules:
+  require_no_save_through_xslt: true</code></pre>
+
+      <p>That candidate-state gate emits <code>DFP069</code>. A controlled template that permits approved configuration can instead protect its baseline:</p>
+
+      <pre><code>rules:
+  no_save_through_xslt_changes: true</code></pre>
+
+      <p><code>DFP070</code> flags a material private-inventory change. Neither rule classifies a transform as safe or unsafe; they make stored configuration reviewable in a policy a team can inspect.</p>
+
+      <h2>Validation that keeps the boundary honest</h2>
+
+      <p>The 54-test release suite covers enabled and disabled settings, external transform relationships, local-solution-only anchors, orphan relationships, strict and transitional namespace forms, malformed relationship and anchor rejection, same-count rewrites, relationship-ID stability, privacy redaction, and JSON/Markdown/SARIF output. Hosted CI passed for both the release commit and tag, and fresh wheel and source-distribution installs passed the package smoke checks.</p>
+
+      <p>The included <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.18.0">Document Change Assurance Benchmark 0.18.0</a> integration demonstrates the boundary with a pair that keeps the enabled Settings markup and relationship ID fixed while changing only a synthetic external transform target. The adapter consumes aggregate evidence only.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.28.0/docfence-0.28.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.28.0">public release</a> includes the wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.28.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.28.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.28.0/docs/validation.md">validation notes</a> define the exact evidence contract and its limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.18.0 adds a deterministic Word XML-save XSLT transform-target change case for static package review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-save-through-xslt-review.html">
+    <meta property="og:title" content="A Word document can change its XML-save transform without changing its text">
+    <meta property="og:description" content="DCAB 0.18 makes a stored XSLT-on-single-XML-save target change reproducible without fetching or executing a transform.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-save-through-xslt-review.html">
+    <title>A Word document can change its XML-save transform without changing its text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A Word document can change its XML-save transform without changing its text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.18.0">Document Change Assurance Benchmark 0.18.0</a></p>
+
+      <p>Not every consequential WordprocessingML change is part of the visible document body. A document can retain every stored text node and its complete Settings markup while changing the external transform configured for a single-XML save. A normal text diff has little reason to surface that boundary; a package-review tool should be able to.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.18.0 adds its twenty-ninth deterministic pair: <code>external.save_through_xslt_target_retargeted</code>. Both sides preserve the package-member set, every stored <code>w:t</code> value, the explicit enabled setting, the transform anchor, the relationship ID, and all Settings XML. Only <code>word/_rels/settings.xml.rels</code> changes, where the synthetic external transform target is retargeted.</p>
+
+      <h2>A complete stored topology, not a loose flag</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.savethroughxslt?view=openxml-3.0.1"><code>SaveThroughXslt</code></a> documentation identifies a custom XSL transform used when a document is saved as a single XML file. Its <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.usexsltwhensaving?view=openxml-3.0.1"><code>UseXsltWhenSaving</code></a> companion controls whether that transform is applied. The OOXML <a href="https://ooxml.info/docs/11/11.9/">Document Settings relationship contract</a> defines the associated <code>transform</code> relationship as external.</p>
+
+      <pre><code>word/settings.xml                         fixed on both sides
+  w:useXSLTWhenSaving true               fixed enabled state
+  w:saveThroughXslt r:id                 fixed transform anchor
+
+word/_rels/settings.xml.rels             only changed package member
+  transform relationship / target         synthetic target retargeted</code></pre>
+
+      <p>The fixture therefore isolates the static review fact rather than inventing a target in an unrelated part. It does not provide an XSLT payload, execute a transformation, save a document through one, open Word, or claim emitted XML or client behavior.</p>
+
+      <h2>A public fact without publishing the target</h2>
+
+      <p>The target-free oracle reports only <code>save_through_xslt_target_changed</code>, its external binding class, the generic XML-transform relationship category, and the Word Settings source. It excludes both targets, the relationship ID, the relationship path, and any local solution identifier. All URI-like fixture targets use the reserved <code>example.invalid</code> domain.</p>
+
+      <p>Structural validation checks the package topology independently: exact settings elements and order, explicit enabled value, transform anchor, standard external relationship type and mode, stable member set, declared one-member boundary, unchanged stored text, reproducible generation, and absence of sensitive fixture material from public truth.</p>
+
+      <h2>One released consumer, still a tool-neutral benchmark</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.28.0">DocFence 0.28.0</a> adapter reaches a strict 29/29 score from aggregate evidence: <code>external_relationships_changed</code>, <code>save_through_xslt_inventory_changed</code>, one enabled setting, one transform anchor, one external transform relationship, and no local solution identifier. It does not consume a target, relationship ID, part path, or private fingerprint.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13 for the main commit and release tag. The standard <code>python-docx</code> reader opens all 56 <code>.docx</code> fixtures, while its lower-level OPC reader opens all 58 packages. Clean wheel and source-distribution installs validate the bundled 29-case corpus, and the public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset mirror</a> was byte-verified against the generated tree.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.18.0/document_change_benchmark-0.18.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.18.0 retains fixture schema version 1 because its public truth and observation envelopes are unchanged. It adds one narrowly defined stored configuration boundary—not a transform engine, client emulator, renderer, or universal security-policy claim.</p>
+
+      <p>The MIT-licensed builder, generated fixtures, verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
