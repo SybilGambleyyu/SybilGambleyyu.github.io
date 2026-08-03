@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.32.0 contains
-47 deterministic scenarios: 46 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 49 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.33.0 contains
+49 deterministic scenarios: 48 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 51 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.32.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.33.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -370,6 +370,32 @@ reads local OOXML only; it does not resolve, open, fetch, authenticate to,
 trust, refresh, calculate, or claim that a client updates a link or returns a
 value.
 
+Version 0.33.0 adds two smaller governance boundaries that ordinary cell diffs
+can miss. Microsoft’s [workbook-link guidance](https://support.microsoft.com/en-us/excel/manage-workbook-links)
+identifies defined names as a location for workbook links, and the Open XML
+[DefinedNames reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.definednames?view=openxml-3.0.1)
+describes the stored workbook-level collection. The first new pair retains
+`Model!B2=ScenarioRate*2` and its direct `Dashboard!B4=Model!$B$2` consumer,
+but its local `ScenarioRate` definition moves from
+`'[WCABApprovedSource.xlsx]Inputs'!$B$2` to
+`'[WCABReviewSource.xlsx]Inputs'!$B$2`. Only `xl/workbook.xml` changes; the
+compact package deliberately has no `externalReferences` declaration and no
+`externalLink` part. WCAB reads local OOXML only: it does not resolve, open,
+fetch, authenticate to, trust, refresh, calculate, or claim that a client
+resolves the name or returns a value.
+
+The second new pair records a protected-sheet permission, not an interaction.
+Microsoft’s [worksheet-protection guidance](https://support.microsoft.com/en-us/excel/protect-a-worksheet)
+lists **Sort** among the actions a protected sheet can permit, while the Open
+XML [SheetProtection reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sheetprotection?view=openxml-3.0.1)
+stores the action controls. The pair retains protected `Controls`,
+`Controls!D2=B2*C2`, its direct `Dashboard!B4=Controls!$D$2` consumer, styles,
+calculation properties, and every other action lock. Only raw
+`sheetProtection/@sort` moves from `1` (locked) to `0` (permitted), leaving
+`xl/worksheets/sheet1.xml` as the sole package difference. WCAB does not test a
+password, authorization, editable range, client sort operation, or resulting
+value.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -462,13 +488,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.32.0 passed 206 tests
-locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30783978522),
+so regeneration is byte-for-byte reproducible. Version 0.33.0 passed 218 tests
+locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30786211484),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 48
+making its report schema normative. FormulaFence 0.220.0 recovered all 50
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -541,6 +567,17 @@ reserved-target transition, external-reference graph, stable formula context,
 and externalLink-relationship-part-only boundary. Its generic
 `external_relationships_changed` / `FF063` diagnostic remains deliberately
 unmapped. For
+the external-defined-name source fact, it requires both the exact
+one-surface `external_workbook_link_surfaces_changed` / `FF081` evidence and
+matching `ScenarioRate` `defined_name_changed` / `FF008` evidence for the two
+generated source expressions; the surface ledger alone is insufficient. WCAB
+independently verifies the local name text, absence of `externalLink` and
+`externalReferences` declarations, and the workbook-XML-only boundary. For the
+sheet-protection sort-permission fact, it requires the exact
+`sheet_protection_changed` / `FF022` profile with every action lock retained
+except `sort`; WCAB independently verifies the raw `1 → 0` transition and
+worksheet-only package difference. Neither mapping opens a source, tests a
+password, performs a sort, or claims a resulting value. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -600,7 +637,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 48 of 49 declared facts,
+without inventing review decisions, so its score is 50 of 51 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -623,5 +660,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.32.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.32.0),
+the [v0.33.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.33.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
