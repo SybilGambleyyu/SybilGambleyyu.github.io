@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.13.0 adds a deterministic fragmented complex Word field case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-complex-field-review.html">
+    <meta property="og:title" content="A Word field can change across three XML runs">
+    <meta property="og:description" content="DCAB 0.13.0 makes a fragmented complex INCLUDETEXT instruction reproducible without opening Word or evaluating a field.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-complex-field-review.html">
+    <title>A Word field can change across three XML runs — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A Word field can change across three XML runs</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.13.0">Document Change Assurance Benchmark 0.13.0</a></p>
+
+      <p>Some Word fields are not one XML attribute. A complete complex field can put its instruction code in several <code>w:instrText</code> runs, with field markers distinguishing the instruction from the stored result. A review tool that scans each run independently can miss an instruction even though every run is present and structurally valid.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.13.0 adds its twenty-fourth deterministic pair: <code>external.complex_include_text_field_target_retargeted</code>. Both packages retain the same members, the same stored <code>w:t</code> values, the same complete field shape, and the same stored result. Only a private external source fragment changes in <code>word/document.xml</code>.</p>
+
+      <h2>Instruction text is a sequence, not a substring search</h2>
+
+      <p>Microsoft's <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.fieldchar?view=openxml-3.0.1"><code>w:fldChar</code> documentation</a> describes the begin and end markers of a complex field and its optional separator. Its <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.fieldcode?view=openxml-3.0.1"><code>w:instrText</code> documentation</a> draws the crucial boundary: instruction text is field code only in the instruction portion of a complex field. Outside that portion, it is ordinary text.</p>
+
+      <p>The new pair fixes one compact field whose keyword crosses a run boundary:</p>
+
+      <pre><code>begin marker
+instrText: " INCLUDE"
+instrText: "TEXT &quot;…"
+instrText: "…&quot; "
+separate marker
+stored result: "DCAB include-text field result"
+end marker</code></pre>
+
+      <p>Every instruction run preserves whitespace explicitly. The field has exactly one begin marker, three instruction runs, one separator, one fixed result run, and one end marker. The keyword is never present in any individual instruction node; a scanner has to join the code runs in order and respect the marker context. That makes the case useful for validating a parser boundary, not just testing an attribute comparison.</p>
+
+      <h2>A narrow static claim</h2>
+
+      <p>This fixture is deliberately not a test of Word behavior. It does not resolve or import a source, open Word, update or evaluate a field, render a result, follow a target, or assert that any client processes the instruction. The synthetic package tests one stored structural fact: a complete complex external-field source changed while its result and ordinary Word text did not.</p>
+
+      <p>The generator and verifier reject incomplete or loose field-code markup. They require the exact marker sequence, preserved-whitespace fragments, stable result text, stable package-member set, one declared changed member, and a target-free public truth assertion. The standard <code>python-docx</code> reader opens all 46 <code>.docx</code> fixtures, while its lower-level OPC reader opens all 48 packages.</p>
+
+      <h2>Aggregate evidence, without publishing the source</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter reconstructs the complete complex instruction through its field parser and maps the change to aggregate <code>external_field_inventory_changed</code> evidence. Both sides retain one <code>INCLUDETEXT</code> field and one field-code record. The adapter does not place the source, instruction fragments, or document text into DCAB observations.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13, including a separate clean DocFence adapter job. Rebuilt fixtures, fresh wheel and source-distribution installs, the published GitHub release downloads, and a fresh Hugging Face dataset snapshot each validate the bundled 24-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.13.0/document_change_benchmark-0.13.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.13.0 retains fixture schema version 1 because its public truth and observation envelopes are unchanged. It adds a precise reconstruction case rather than broadening the benchmark into a renderer, field evaluator, or runtime security claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
