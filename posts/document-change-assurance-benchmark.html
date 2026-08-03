@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.1.0 makes static WordprocessingML change-review claims reproducible with twelve deterministic paired fixtures, target-free truth, and a tool-neutral score.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-change-assurance-benchmark.html">
+    <meta property="og:title" content="A benchmark for reviewing Word changes, not just comparing text">
+    <meta property="og:description" content="Twelve deterministic paired WordprocessingML cases make static document-review claims scoreable without opening Word or disclosing targets and payloads.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-change-assurance-benchmark.html">
+    <title>A benchmark for reviewing Word changes, not just comparing text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A benchmark for reviewing Word changes, not just comparing text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.1.0">Document Change Assurance Benchmark 0.1.0</a></p>
+
+      <p>A Word document can retain ordinary text while its stored review surface changes. A direct hyperlink can point somewhere new. A <code>HYPERLINK</code> or <code>INCLUDETEXT</code> field can retain its displayed result while its private instruction changes. Hidden text, revision markup, editing restrictions, content-control mappings, custom XML, and opaque macro or OLE payloads sit outside a normal prose diff.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) makes a narrow, useful slice of that problem reproducible. Version 0.1.0 supplies twelve deterministic baseline/candidate WordprocessingML pairs, public target-free truth manifests, a structural validator, a portable observation protocol, and a scorer. It evaluates static document-review claims—not Word rendering, macro behavior, field evaluation, or client security outcomes.</p>
+
+      <h2>One stored boundary at a time</h2>
+
+      <p>Each DCAB case preserves its package-member set and the same sequence of stored Word text nodes. The pair changes only declared ZIP members. The initial corpus includes direct Word hyperlink target changes and markup addition; <code>HYPERLINK</code> and <code>INCLUDETEXT</code> field-source retargeting; direct <code>w:vanish</code> and <code>w:ins</code> markup; Track Changes and read-only document-protection settings; content-control binding XPath and custom-XML payload changes; plus inert VBA-project and embedded-OLE payload boundaries.</p>
+
+      <p>These are explicit stored forms, not invented metadata. Microsoft’s Open XML reference documents relationship-backed <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.hyperlink?view=openxml-3.0.1"><code>w:hyperlink</code></a>; its Word documentation describes <a href="https://learn.microsoft.com/en-us/visualstudio/vsto/content-controls?view=visualstudio">content controls bound to custom XML</a>; and the API references expose <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.vanish?view=openxml-3.0.1"><code>w:vanish</code></a>, <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.insertedrun?view=openxml-3.0.1"><code>w:ins</code></a>, and <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.documentprotection?view=openxml-3.0.1"><code>w:documentProtection</code></a>.</p>
+
+      <h2>A public oracle that does not disclose what it is protecting</h2>
+
+      <p>Real document-review output should not need to reveal a target URL, field instruction, XPath, relationship ID, payload digest, or document text just to show that a category changed. DCAB therefore keeps the raw synthetic values inside the generated packages and publishes only a bounded fact such as <code>field_target_changed</code> or <code>hidden_text_run_added</code>. Targets use the reserved <code>example.invalid</code> domain. VBA and OLE package members are inert marker bytes, not runnable samples.</p>
+
+      <p>Its validator checks deterministic source bytes, ZIP integrity, the OPC root relationship, content types, local relationship shape, compact WordprocessingML evidence, unchanged stored text, target-free truth, and exact changed-member boundaries. It deliberately never opens Word, resolves or fetches a target, updates a field, parses an opaque payload, activates OLE, executes code, or states a rendering/runtime result.</p>
+
+      <h2>A score that keeps scope honest</h2>
+
+      <p>DCAB does not impose one private scanner schema. A tool adapter emits an observation document naming the cases it analyzed, exact declared facts it observed, and an optional <code>allow</code>, <code>review</code>, or <code>block</code> reference disposition. Unsupported and errored cases remain explicit. The scorer reports fact recall, analysis coverage, reference-policy agreement, and complete cases. An observation outside the intentionally partial contract stays visible as unrecognized evidence; DCAB does not call it a false positive or manufacture a precision figure.</p>
+
+      <p>The first optional consumer is <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a>. Its local adapter maps public aggregate change categories to DCAB’s facts and reaches a strict 12/12 score. That is a reproducible integration check, not a requirement to use DocFence and not a claim that its normal policy is universal.</p>
+
+      <h2>Compatibility evidence, carefully bounded</h2>
+
+      <p>The test suite opens every ordinary <code>.docx</code> fixture through the independent <code>python-docx</code> reader, then opens every <code>.docx</code> and <code>.docm</code> package through its lower-level OPC reader. Hosted CI repeats the package, source-distribution, and wheel checks on Python 3.11, 3.12, and 3.13, with a separate released-DocFence adapter job.</p>
+
+      <p>That is useful independent-reader evidence. It is not a claim that Word, LibreOffice, an OLE server, a macro host, a field-update engine, or every renderer will behave a particular way. DCAB records static package state only.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install \
+  https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.1.0/document_change_benchmark-0.1.0-py3-none-any.whl
+
+dcab validate
+dcab observation-template --output observations.json
+dcab score --observations observations.json --output score.json</code></pre>
+
+      <p>The source generator, validator, research notes, release artifacts, and reference adapter are open at <a href="https://github.com/SybilGambleyyu/document-change-benchmark">github.com/SybilGambleyyu/document-change-benchmark</a>. The corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
