@@ -14,6 +14,22 @@ manifests, a structural validator, a portable observation protocol, and a
 scorer. It evaluates a static presentation-review gate—not slide generation,
 visual comparison, or runtime behavior.
 
+## Compatibility update: PCAB 0.2.0
+
+After the initial release, I tested the generated packages with the independent
+`python-pptx` reader. It exposed a package-skeleton omission: the compact
+fixtures lacked the OPC root office-document relationship a general
+PresentationML consumer expects. [PCAB 0.2.0](https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/tag/v0.2.0)
+adds that standards-form relationship to every package, validates it directly,
+and loads all 24 baseline/candidate packages through `python-pptx` in CI and
+fresh-wheel verification.
+
+This is a versioned fixture-schema 2 update, not a quiet rewrite of the
+original data. The twelve public facts and cases remain the same, while v0.1.0
+remains immutable. One independent reader loading the packages is useful
+compatibility evidence; it is not a claim that every PowerPoint client, runtime
+action, or rendering feature has been tested.
+
 ## One stored boundary at a time
 
 Every PCAB pair preserves visible DrawingML text and changes exactly one ZIP
@@ -57,14 +73,14 @@ stored package state only.
 
 ```bash
 python -m pip install \
-  https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/download/v0.1.0/presentation_change_benchmark-0.1.0-py3-none-any.whl
+  https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/download/v0.2.0/presentation_change_benchmark-0.2.0-py3-none-any.whl
 
 pcab validate
 pcab observation-template --output observations.json
 pcab score --observations observations.json --output score.json
 ```
 
-PCAB 0.1.0 has a hosted Python 3.11–3.13 matrix, fresh wheel and
+PCAB 0.2.0 has a hosted Python 3.11–3.13 matrix, fresh wheel and
 source-distribution checks, released-wheel verification, and a separate
 SlideFence integration job. The fixture corpus is also mirrored as a public
 [Hugging Face dataset](https://huggingface.co/datasets/SybilGambleyyu/presentation-change-assurance-benchmark).

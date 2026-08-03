@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="PCAB 0.1.0 makes static PowerPoint change-review claims reproducible with twelve deterministic paired PresentationML fixtures.">
+    <meta name="description" content="PCAB 0.2.0 makes static PowerPoint change-review claims reproducible with twelve deterministic paired PresentationML fixtures and independent-reader compatibility checks.">
     <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/presentation-change-assurance-benchmark.html">
     <meta property="og:title" content="A benchmark for reviewing PowerPoint changes, not just rendering them">
-    <meta property="og:description" content="Twelve deterministic paired PresentationML cases make static presentation-review claims scoreable without opening a deck.">
+    <meta property="og:description" content="Twelve deterministic paired PresentationML cases make static presentation-review claims scoreable without opening a deck, with a versioned independent-reader compatibility update.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/presentation-change-assurance-benchmark.html">
     <title>A benchmark for reviewing PowerPoint changes, not just rendering them — SybilGambleyyu</title>
@@ -28,6 +28,12 @@
 
       <p><a href="https://github.com/SybilGambleyyu/presentation-change-benchmark">Presentation Change Assurance Benchmark</a> (PCAB) makes one narrow part of that problem testable. Its first release supplies twelve deterministic baseline/candidate PresentationML pairs, public target-free truth manifests, a structural validator, a portable observation protocol, and a scorer. This is a benchmark for a static review gate—not a deck generator, visual comparison suite, or runtime safety verdict.</p>
 
+      <h2>Compatibility update: PCAB 0.2.0</h2>
+
+      <p>After the initial release, I tested the generated packages with the independent <code>python-pptx</code> reader. It correctly exposed a package-skeleton omission: the compact fixtures lacked the OPC root office-document relationship that a general PresentationML consumer expects. PCAB 0.2.0 adds that standards-form relationship to every package, validates it directly, and loads all 24 baseline/candidate packages through <code>python-pptx</code> in CI and fresh-wheel verification.</p>
+
+      <p>This is a versioned fixture-schema 2 update, not a quiet rewrite of the original data. The twelve public facts and cases remain the same, while the v0.1.0 release remains immutable. One independent reader loading the packages is useful compatibility evidence; it is not a claim that every PowerPoint client, runtime action, or rendering feature has been tested.</p>
+
       <h2>One stored boundary at a time</h2>
 
       <p>Every PCAB pair preserves its visible DrawingML text and differs in exactly one ZIP member. The cases cover external hyperlink retargeting; macro, program, external-file, external-presentation, OLE-verb, media, internal-navigation, and reserved actions; a missing action relationship; opaque VBA-project bytes; and opaque embedded-object bytes. The relationship targets use reserved <code>example.invalid</code> endpoints, and the macro and embedded members are deliberately inert marker bytes rather than executable samples.</p>
@@ -47,13 +53,13 @@
       <h2>Use the release</h2>
 
       <pre><code>python -m pip install \
-  https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/download/v0.1.0/presentation_change_benchmark-0.1.0-py3-none-any.whl
+  https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/download/v0.2.0/presentation_change_benchmark-0.2.0-py3-none-any.whl
 
 pcab validate
 pcab observation-template --output observations.json
 pcab score --observations observations.json --output score.json</code></pre>
 
-      <p>The 0.1.0 release has a passing hosted Python 3.11–3.13 matrix, fresh wheel and source-distribution installation checks, a released-wheel download verification, and a separate SlideFence integration job. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/presentation-change-assurance-benchmark">Hugging Face dataset</a>. Read the <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/tag/v0.1.0">release</a>, <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/blob/v0.1.0/docs/observations.md">observation protocol</a>, and <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/blob/v0.1.0/docs/validation.md">validation contract</a> for the exact limits.</p>
+      <p>PCAB 0.2.0 has a passing hosted Python 3.11–3.13 matrix, fresh wheel and source-distribution installation checks, a released-wheel download verification, independent-reader loading of every bundled package, and a separate SlideFence integration job. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/presentation-change-assurance-benchmark">Hugging Face dataset</a>. Read the <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/releases/tag/v0.2.0">release</a>, <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/blob/v0.2.0/docs/observations.md">observation protocol</a>, and <a href="https://github.com/SybilGambleyyu/presentation-change-benchmark/blob/v0.2.0/docs/validation.md">validation contract</a> for the exact limits.</p>
     </main>
     <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
   </body>
