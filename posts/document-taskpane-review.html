@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.10.0 adds a deterministic task-pane web-extension auto-show setting change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-taskpane-review.html">
+    <meta property="og:title" content="A task pane can be enabled without changing Word text">
+    <meta property="og:description" content="DCAB 0.10.0 makes a stored task-pane auto-show setting change reproducible without asserting that an add-in is installed or a pane opens.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-taskpane-review.html">
+    <title>A task pane can be enabled without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A task pane can be enabled without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.10.0">Document Change Assurance Benchmark 0.10.0</a></p>
+
+      <p>A Word document can carry Office Add-in configuration in package parts that ordinary text comparison never sees. One stored property can change from <code>false</code> to <code>true</code> while every <code>w:t</code> text node remains the same. That is review-relevant configuration evidence—but it is not, by itself, proof that an add-in is installed, trusted, or will run.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.10.0 adds its twenty-first deterministic pair: <code>interaction.taskpane_auto_show_setting_enabled</code>. Both packages retain the same members, Word text, content types, internal relationship chain, task-pane declaration, web-extension reference shape, and property name. Only <code>word/webextensions/webextension1.xml</code> changes: <code>Office.AutoShowTaskpaneWithDocument</code> moves from its stored <code>false</code> value to <code>true</code>.</p>
+
+      <h2>A stored configuration, not an installed add-in</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-owexml/29f59f30-b835-461a-bd8a-ca400a7bc717">Office web-extension XML specification</a> describes the document-borne XML structures used for Office Add-ins. Its <a href="https://learn.microsoft.com/en-us/office/dev/add-ins/develop/automatically-open-a-task-pane-with-a-document">task-pane auto-open guidance</a> specifies a <code>webextension</code> part, a <code>taskpane</code> part, and the property that must be <code>true</code> for this setting.</p>
+
+      <p>Those same Microsoft instructions set the boundary for this fixture. The auto-open setting is ignored if the add-in is not already installed, and, as of March 2, 2026, Microsoft says the feature is supported only for centrally deployed or sideloaded add-ins—not Marketplace-published add-ins. DCAB therefore fixes only syntactic, internal package data. It does not provide a manifest, retrieve content, install or authenticate an add-in, open a Word client, execute code, or claim that a pane opens.</p>
+
+      <h2>One property, a complete internal topology</h2>
+
+      <p>The pair has a main-document relationship to <code>word/webextensions/taskpanes.xml</code>; its invisible, unlocked task pane has one internal reference to <code>webextension1.xml</code>. The web-extension part retains fixed synthetic IDs, an <code>EXCatalog</code> reference shape, one property, no bindings, and an empty snapshot. The baseline and candidate differ only at that property value.</p>
+
+      <p>The independent verifier checks the content-type overrides, both internal relationships, exact XML roots and attributes, fixed extension/reference topology, property shape, deterministic package bytes, stable member set, unchanged stored Word text, and the one-member pair boundary. The standard <code>python-docx</code> reader opens all 40 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 42 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps the aggregate <code>taskpane_web_extension_inventory_changed</code> evidence. It sees one task-pane part, one task pane, one web-extension part, one reference, and one property on each side; visible panes, locked panes, bindings, and bound controls remain zero. Only the auto-show setting count changes from 0 to 1. The adapter relies on counts and private local signatures, not the fixed IDs, store data, or property values.</p>
+
+      <p>The release passed the full 17-test suite in hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs, the uploaded GitHub artifacts, and a fresh Hugging Face dataset download each validate the bundled 21-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.10.0/document_change_benchmark-0.10.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.10.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 20 to 21 cases. It publishes a narrow static review fact, not a deployment, identity, trust, client-behavior, or security-policy claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
