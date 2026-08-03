@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.17.0 adds a deterministic mail-merge recipient-selection state change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-mail-merge-recipient-review.html">
+    <meta property="og:title" content="A mail-merge recipient-selection state can change while the source stays fixed">
+    <meta property="og:description" content="DCAB 0.17.0 makes a stored mail-merge recipient inclusion-state change reproducible without retrieving data or performing a merge.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-mail-merge-recipient-review.html">
+    <title>A mail-merge recipient-selection state can change while the source stays fixed — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A mail-merge recipient-selection state can change while the source stays fixed</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.17.0">Document Change Assurance Benchmark 0.17.0</a></p>
+
+      <p>A Word mail merge has more stored review state than its data-source address. A document can retain the same source and the same recipient record while changing whether that record is selected for the merge. That is a meaningful package-review boundary even when ordinary document text does not change.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.17.0 adds its twenty-eighth deterministic pair: <code>review.mail_merge_recipient_active_state_changed</code>. Both packages keep their members, stored <code>w:t</code> sequence, mail-merge source, settings markup, relationships, recipient-data content type, and recipient-record hash fixed. Only <code>word/recipientData.xml</code> changes: the explicit stored inclusion state moves from <code>false</code> to <code>true</code>.</p>
+
+      <h2>The source and selection are separate stored surfaces</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/af3dc913-8c08-4843-ab40-495a92170b96">Mail Merge Recipient Data Part contract</a> specifies a recipient-data part related internally from Document Settings, with a <code>w:recipients</code> root and no relationships of its own. Its <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/7bbd9fb1-6181-481d-b29c-63842301455d"><code>w:active</code> definition</a> says that a false value prevents the corresponding external record from being used in the merged document.</p>
+
+      <pre><code>word/settings.xml
+  w:mailMerge
+    w:dataSource               fixed source anchor
+    w:odso / w:recipientData   fixed internal selection anchor
+
+word/_rels/settings.xml.rels
+  mailMergeSource relationship fixed
+  recipientData relationship   fixed, internal
+
+word/recipientData.xml
+  w:recipients / w:recipientData
+    w:active false &rarr; true  the only changed state</code></pre>
+
+      <p>The case includes the complete source and recipient-data topology instead of changing a loose setting in isolation. It also deliberately avoids two misleading shortcuts: Microsoft’s compatibility notes say Word <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/205f8efd-0c52-4f1b-8849-1204e86379e4">does not use the <code>w:src</code> ODSO element</a>, and that documents containing <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/6dce24e5-6a19-4a67-98fb-d2f301658523"><code>w:headerSource</code> fail to open</a>.</p>
+
+      <h2>Static evidence, not a merge execution claim</h2>
+
+      <p>The source is synthetic and uses the reserved <code>example.invalid</code> domain. DCAB never retrieves or parses it, identifies a real recipient, computes a record hash, connects to a data provider, performs a merge, opens Word, or claims how any client presents recipient selection. The public oracle names only the narrow fact <code>mail_merge_recipient_active_state_changed</code>; it omits the source target, recipient hash, inclusion value, relationship IDs, and part paths.</p>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter reaches a strict 28/28 score from aggregate evidence: <code>mail_merge_inventory_changed</code>, one mail-merge configuration, one data-source relationship, no header-source relationship, and one internally related recipient-data part. It does not publish the stored source, recipient identity, hash, state, IDs, paths, or private fingerprints.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13 for both the main commit and its release tag. The standard <code>python-docx</code> reader opens all 54 <code>.docx</code> fixtures, while its lower-level OPC reader opens all 56 packages. Rebuilt fixtures, clean wheel and source-distribution installs, release artifacts, and the public Hugging Face dataset mirror validate the 28-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.17.0/document_change_benchmark-0.17.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.17.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged. It adds one stored recipient-selection review boundary—not a mail client, data connector, merge engine, document renderer, or universal security-policy claim.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
