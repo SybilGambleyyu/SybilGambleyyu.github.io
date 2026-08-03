@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.8.0 adds a deterministic persisted document-variable value-change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-variable-review.html">
+    <meta property="og:title" content="A document variable can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.8.0 makes a persisted document-variable value change reproducible without evaluating a field or starting an application.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-variable-review.html">
+    <title>A document variable can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A document variable can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.8.0">Document Change Assurance Benchmark 0.8.0</a></p>
+
+      <p>A Word document can persist a named document-variable value separately from the text stored in its body. A field may refer to that variable while retaining the same stored field result. For a serious reviewer, that is a useful distinction: text-only comparison can miss the state change, while package-level review can report it without trying to evaluate a field.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.8.0 adds its nineteenth deterministic paired package: <code>binding.document_variable_value_changed</code>. Both sides retain the same <code>DOCVARIABLE</code> field reference, field result, variable name, package-member set, and stored <code>w:t</code> sequence. Only <code>word/settings.xml</code> changes, and the change is confined to the persisted value of one synthetic document variable.</p>
+
+      <h2>Stored state, not field execution</h2>
+
+      <p>The Open XML <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.documentvariables?view=openxml-3.0.1">document-variables element</a> belongs in document settings and persists a collection of name/value pairs. Its <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.documentvariable?view=openxml-3.0.1">document-variable child</a> carries the individual name and value. Microsoft’s <a href="https://learn.microsoft.com/en-us/office/vba/api/word.variable">Word Variable documentation</a> also describes document variables as document-stored data that a matching <code>DOCVARIABLE</code> field can expose.</p>
+
+      <p>DCAB fixes the synthetic variable name, fixed field instruction, and fixed stored result. It changes only the synthetic value in <code>w:docVars/w:docVar</code>. The builder, verifier, scorer, and adapter do not update a field, open Word, load a macro, start an application, or claim that a client will display a particular result. This is a narrow static-review case, not a rendering or automation test.</p>
+
+      <h2>A deterministic settings boundary</h2>
+
+      <p>The independent verifier checks the exact variable container, name/value shape, field instruction, deterministic package bytes, stable package-member set, unchanged stored Word text, and exact one-member pair boundary. The standard <code>python-docx</code> reader opens all 36 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 38 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps aggregate <code>word_document_variable_inventory_changed</code> evidence. It also verifies that there is still one stored variable and one literal variable-field reference matching the stored name. The adapter consumes counts and structural matching only; it does not expose the variable name or value.</p>
+
+      <p>The release passed 15 tests locally, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs, the uploaded GitHub artifacts, and a fresh Hugging Face dataset download each validate the bundled 19-case corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.8.0/document_change_benchmark-0.8.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.8.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 18 to 19 cases. It does not claim that a value is safe, sensitive, active, evaluated, synchronized with a field result, or visible in any particular client. It supplies a reproducible static boundary for document review.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
