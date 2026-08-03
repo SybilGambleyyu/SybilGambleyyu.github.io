@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FormulaFence 0.221.0 and WCAB 0.37.0 make a stored Excel web-query source retarget reviewable without leaking or fetching the source.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/external-data-source-review.html">
+    <meta property="og:title" content="A spreadsheet can change where its data comes from without changing a cell">
+    <meta property="og:description" content="A safe, local review boundary for stored Excel web-query source changes.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/external-data-source-review.html">
+    <title>A spreadsheet can change where its data comes from without changing a cell — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a><a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">WCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 2, 2026</p>
+      <h1>A spreadsheet can change where its data comes from without changing a cell</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.221.0">FormulaFence 0.221.0</a> and <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.37.0">WCAB 0.37.0</a></p>
+
+      <p>A workbook can keep its saved imported cell values, ordinary formulas, and dashboard output exactly the same while a stored connection points somewhere new. That is not a theoretical corner: Excel keeps external-data connection material outside worksheet cells, so a cell-by-cell diff can leave the most consequential change invisible.</p>
+
+      <p><a href="https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/69df8d03-b6fd-45cd-a0a0-9b026e50a3d9">Microsoft's external-connection format documentation</a> describes connection material such as providers, servers, authentication, commands, and refresh settings. For a web query, the Open XML <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.webqueryproperties?view=openxml-3.0.0">WebQueryProperties reference</a> identifies the stored URL and request controls. A review system needs to make a source retarget visible—but it should not turn its report into a copy of a sensitive endpoint or connection string.</p>
+
+      <h2>Say what changed, without copying the source</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> 0.221.0 keeps its existing private, comprehensive source-configuration comparison and adds a small safe label when a stable, uniquely identified connection changes. A URL-only retarget emits high-severity <code>FF023</code> evidence with:</p>
+
+      <pre><code>source_configuration_material_changed: true
+source_material_change_categories: ["web_query_url"]</code></pre>
+
+      <p>The report does not include either URL, a connection string, command, parameter, SSO identifier, or fingerprint. Other labels distinguish web-query request/configuration material, database connection/command/configuration material, OLAP and text-import configuration, source or connection files, parameter bindings, and SSO material. They are intentionally conservative: if connection IDs are added, removed, duplicated, or renumbered, FormulaFence keeps the broad source-configuration signal and withholds a category rather than guessing.</p>
+
+      <p>This is an observational boundary, not a refresh engine. FormulaFence does not open a connection, fetch a URL, authenticate, trust a source, refresh data, evaluate a formula, or claim that a client returns a value.</p>
+
+      <h2>A fixture that proves the boundary</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">Workbook Change Assurance Benchmark</a> (WCAB) 0.37.0 adds a deterministic relationship-backed pair for exactly this change. The sole raw difference is <code>xl/connections.xml</code> <code>webPr/@url</code>, moving between two reserved <code>example.invalid</code> endpoints. The pair preserves the connection ID, type, name, refresh controls, workbook relationship, content type, saved <code>ImportedData!B2=100</code> value, and direct <code>ImportedData!B2 → Summary!B2 → Dashboard!B4</code> formula path.</p>
+
+      <p>WCAB's raw validator establishes the local package graph, checks that <code>xl/connections.xml</code> is the only changed member, and compares that part after removing only the selected URL. It does not contact either endpoint. The benchmark therefore tests a narrow, useful claim: a reviewer can see a stored source retarget and its local workbook context without pretending to know whether the source is reachable, trusted, refreshed, or numerically current.</p>
+
+      <h2>Two layers of evidence</h2>
+
+      <p>The optional WCAB adapter accepts the new fact only when FormulaFence emits the exact high-severity <code>external_data_connections_changed</code> record and <code>FF023</code>, with identical safe web-query profiles and exactly the <code>web_query_url</code> category. WCAB independently checks the endpoint text and package boundary that FormulaFence deliberately withholds. Neither layer substitutes a client interaction for stored evidence.</p>
+
+      <p>That split is useful beyond this single fixture. A production review artifact can be safe to share widely, while a deliberately local validator can still establish a narrow package-level claim. It is a better division of responsibility than either silently ignoring the source change or exporting the source itself into a CI log.</p>
+
+      <h2>Evidence before the claim</h2>
+
+      <p>FormulaFence 0.221.0 passed 1,591 tests, hosted CI, package metadata checks, and fresh wheel/source-distribution installs that verified the source category and absence of both synthetic endpoints. WCAB 0.37.0 contains 54 cases and 56 observable facts; its 254 tests, fixture validation, fresh installs, byte-for-byte manifest reproduction, and Python 3.10/3.13 hosted CI all passed. The WCAB dataset mirror is available on <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">Hugging Face</a>.</p>
+
+      <h2>Use the releases</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.221.0/formulafence-0.221.0-py3-none-any.whl
+formulafence diff approved.xlsx candidate.xlsx
+
+git clone https://github.com/SybilGambleyyu/workbook-change-benchmark.git
+cd workbook-change-benchmark
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+wcab validate --fixtures fixtures
+wcab formulafence --fixtures fixtures --strict</code></pre>
+
+      <p>Both projects are MIT-licensed. Read the <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.221.0">FormulaFence release</a>, the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.37.0">WCAB release</a>, or the <a href="/posts/workbook-change-benchmark.html">full benchmark note</a> for the underlying contracts and validation records.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
