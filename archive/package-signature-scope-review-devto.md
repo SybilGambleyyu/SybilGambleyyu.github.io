@@ -5,11 +5,11 @@ declared scope of a package signature changes. That is material review
 evidence, but it is not proof that a signature validates or that a certificate
 is trusted.
 
-[FormulaFence 0.223.0](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.223.0)
-and [WCAB 0.41.0](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.41.0)
-make package-signature scope, stored threaded-comment resolution, and
-shared-workbook revision-log transitions reviewable without exposing private
-material or inventing a cryptographic, trust, identity, or workflow result.
+[FormulaFence 0.224.0](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.224.0)
+and [WCAB 0.42.0](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.42.0)
+make package-signature scope, stored review metadata, and protected-range
+descriptor transitions reviewable without exposing material in CI output or
+inventing a cryptographic, trust, identity, authorization, or workflow result.
 
 ## Two kinds of XMLDSIG reference
 
@@ -25,7 +25,7 @@ claim.
 
 ## Safe aggregate evidence
 
-FormulaFence 0.223.0 reads the bounded structure and reports aggregate counts
+FormulaFence 0.224.0 reads the bounded structure and reports aggregate counts
 for Manifest references, direct parts, relationship selectors, and direct
 workbook, worksheet, VBA-project, and external-data-connection categories.
 For a selector-bearing Relationships Transform, it counts declared scope only
@@ -121,7 +121,32 @@ and `revision_log_material_changed: true`. A recorded revision is not proof of
 provenance, author identity, conflict resolution, review, approval,
 authorization, workflow completion, or Office-client behavior.
 
-FormulaFence 0.223.0 passed 1,596 tests. WCAB 0.41.0 has 58 cases, 60 facts,
-and 273 passing tests. The full canonical note, with validation details and
+## A protected-range descriptor can change without a cell edit
+
+The ISO/IEC SpreadsheetML [protected-range example](https://www.reginfo.gov/public/do/DownloadDocument?objectID=136723002)
+places account descriptors in nested `securityDescriptor` children, and the
+Open XML SDK's [ProtectedRange reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.protectedrange?view=openxml-3.0.1)
+also identifies that child. It is stored review material, not proof that an
+application identified, authenticated, authorized, or permitted an editor.
+
+WCAB 0.42.0 adds a compact standards-form pair. Only one nested
+`protectedRange/securityDescriptor` text node changes in
+`xl/worksheets/sheet1.xml`; the protected sheet, locked `Controls!B2:B2`
+target, range name/reference, legacy verifier, `Controls!D2=B2*C2` formula,
+and direct `Dashboard!B4` consumer stay fixed. The raw validator checks the
+synthetic element and compares the worksheet after erasing only that text. Its
+public fact excludes the descriptor, range name, and verifier; it does not test
+a password, encryption, identity, authentication, authorization, editable-range
+enforcement, client behavior, or a result.
+
+FormulaFence 0.224.0 reports the difference only as high-severity
+`protected_range_permissions_changed` / `FF022` evidence. Its equal redacted
+profiles retain one named range, one legacy verifier, one standard descriptor,
+and no opaque metadata, while `security_descriptor_material_changed: true`
+carries the change. It emits no descriptor, account identity, range name, or
+verifier value.
+
+FormulaFence 0.224.0 passed 1,598 tests. WCAB 0.42.0 has 59 cases, 61 facts,
+and 280 passing tests. The full canonical note, with validation details and
 installation commands, is at
 https://sybilgambleyyu.github.io/posts/package-signature-scope-review.html.
