@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.30.0 contains
-45 deterministic scenarios: 44 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 47 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.31.0 contains
+46 deterministic scenarios: 45 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 48 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.30.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.31.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -341,6 +341,20 @@ from false to true. WCAB does not open a connection, fetch a URL, refresh a
 query, materialize rows, calculate a workbook, or claim that any client
 refreshes successfully.
 
+Version 0.31.0 adds a relationship-backed worksheet cell hyperlink target case
+without changing a visible cell value. Microsoft's
+[Hyperlink.Address reference](https://learn.microsoft.com/en-us/office/vba/api/excel.hyperlink.address)
+defines the target document address, while the [Open XML Hyperlink
+reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.hyperlink?view=openxml-3.0.1)
+identifies worksheet `x:hyperlink/@r:id` as the relationship binding that
+expresses that target. The pair retains `Inputs!B2`'s visible `Open vendor
+portal` text, its worksheet declaration, relationship ID/type/mode, calculation
+properties, and `Inputs!B2 → Summary!B2 → Dashboard!B4` formula context. Only
+the one external relationship `Target` in
+`xl/worksheets/_rels/sheet1.xml.rels` moves between reserved `example.invalid`
+URLs. WCAB reads local OOXML only: it does not resolve, open, fetch, visit,
+execute, calculate, or claim that a client follows either target.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -392,8 +406,9 @@ structured-reference text, an introduced `INDIRECT` reference, unchanged
 `INDIRECT` and `OFFSET` formulas whose selectors change, structural formula
 rewrites, a connection refresh-on-open control, an external-workbook link
 update-on-open policy, a relationship-backed QueryTable refresh-on-open control
-with fixed connection metadata and saved cells, a local PivotTable-cache
-refresh-on-open control, a
+with fixed connection metadata and saved cells, a relationship-backed worksheet
+cell hyperlink whose external target changes while visible text stays fixed, a
+local PivotTable-cache refresh-on-open control, a
 local PivotTable value field whose aggregate changes from Sum to Average while
 its source, cache, and stored report cells remain fixed, a local PivotTable
 Slicer cache whose selected Region item changes while its source, cache, and
@@ -432,13 +447,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.30.0 passed 192 tests
-locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30780392337),
+so regeneration is byte-for-byte reproducible. Version 0.31.0 passed 199 tests
+locally under Python 3.13; [hosted tag CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30782055417),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 46
+making its report schema normative. FormulaFence 0.220.0 recovered all 47
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -495,6 +510,13 @@ and no opaque metadata while only `refresh_on_load` moves from false to true.
 It does not expose an endpoint, OOXML part, or result rows, so WCAB independently
 verifies the local relationship graph, fixed connection-level control, saved
 cells/formulas, and QueryTable-part-only boundary. For
+the cell-hyperlink fact, it requires exact `cell_hyperlink_controls_changed`
+evidence and `FF047`: FormulaFence retains one external worksheet hyperlink
+binding with no location, display, tooltip, or unrecognized declaration while
+its binding, definition material, and relationship material change. It redacts
+the target and relationship ID, so WCAB independently verifies the reserved
+target transition, stable visible text/formulas, and relationship-part-only
+boundary. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -554,7 +576,7 @@ the title, category, and numeric-series source references.
 For the array fact, it requires the exact legacy-CSE-to-dynamic mode transition and
 stored output range
 behind `FF018`. Its normalized export reports those facts
-without inventing review decisions, so its score is 46 of 47 declared facts,
+without inventing review decisions, so its score is 47 of 48 declared facts,
 three of three coverage disclosures, full analyzed coverage, and zero policy
 agreement. The structural rewrite is intentionally left unmapped: it documents
 intent, but does not pretend that a small fixture proves generic Excel semantic
@@ -577,5 +599,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.30.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.30.0),
+the [v0.31.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.31.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
