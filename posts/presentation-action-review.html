@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SlideFence 0.1.0 makes stored PowerPoint click, hover, and mouse-over actions reviewable locally without running a deck or exposing private targets.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/presentation-action-review.html">
+    <meta property="og:title" content="A PowerPoint action can change what it launches without changing visible text">
+    <meta property="og:description" content="A bounded, privacy-safe static review contract for stored PowerPoint interaction actions.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/presentation-action-review.html">
+    <title>A PowerPoint action can change what it launches without changing visible text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/slidefence">SlideFence</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A PowerPoint action can change what it launches without changing visible text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/slidefence/releases/tag/v0.1.0">SlideFence 0.1.0</a></p>
+
+      <p>A presentation can retain identical visible text, images, and layout while a click or hover action changes what it names. A static review should be able to notice that stored boundary without launching a program, invoking a macro, following a link, or sending a confidential deck to a comparison service.</p>
+
+      <p>This matters more now that PowerPoint's built-in Compare and Merge workflow is being retired from the Microsoft 365 Windows app beginning with version 2502; Microsoft also notes that it is unavailable in current Mac and web versions. The gap is not just visual: a slide can carry behavior that a visual comparison does not describe. <a href="https://support.microsoft.com/en-us/powerpoint/track-changes-in-your-presentation">Microsoft's comparison guidance</a> documents both the older workflow and its retirement.</p>
+
+      <h2>The stored action is separate from the visible slide</h2>
+
+      <p>PresentationML uses DrawingML click, hover, and mouse-over declarations such as <code>a:hlinkClick</code>, <code>a:hlinkHover</code>, and <code>a:hlinkMouseOver</code>. They can bind to an OOXML relationship rather than putting a destination into visible text. PowerPoint's documented reserved action vocabulary includes links to external files and presentations, program launch, and macro invocation. The useful review question is therefore not merely “what text changed?” but “what stored interaction declaration changed?”</p>
+
+      <p>Microsoft's <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/7ff3db24-b7b9-4ffe-aa78-3ec47cab2489">OOXML interoperability note for click hyperlinks</a> lists the external-file, external-presentation, macro, and program action forms. Its <a href="https://learn.microsoft.com/en-us/office/open-xml/presentation/how-to-get-all-the-external-hyperlinks-in-a-presentation">Open XML SDK hyperlink example</a> shows the relationship-bound external-target model. Neither source implies every declaration will run in every client or policy context, and neither does SlideFence.</p>
+
+      <h2>Evidence without a new disclosure channel</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/slidefence">SlideFence</a> is a local-only, non-executing CLI for supported PowerPoint OOXML packages. It profiles and diffs stored action declarations, their relationship bindings, package-wide external relationship classes, VBA-project presence, and embedded OLE/package/control evidence. Its public reports contain only counts and fixed categories.</p>
+
+      <p>Raw action strings, macro names, program commands, URLs, file paths, relationship IDs, shape identifiers, slide text, notes, and embedded bytes remain out of public output. Internally, the raw stored state contributes to an in-memory digest, so an assignment or target rewrite remains observable even when the safe public counts are unchanged. That is the important property for an approval baseline: a reviewer learns that the interaction inventory moved without receiving the private operating detail that moved.</p>
+
+      <h2>What the result does not say</h2>
+
+      <p>A stored action is not proof that a macro exists, resolves, is enabled, runs, opens a target, or produces a result. SlideFence does not open PowerPoint, render slides, follow a relationship, invoke a program, execute VBA, load an OLE object, authenticate a user, inspect an endpoint policy, or predict a Trust Center outcome. <a href="https://learn.microsoft.com/en-us/microsoft-365-apps/security/trusted-locations">Microsoft notes</a> that trusted Office locations can enable active content including hyperlinks, media/data links, ActiveX controls, and VBA macros; that makes a static package review valuable, not a substitute for organizational policy.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>git clone https://github.com/SybilGambleyyu/slidefence.git
+cd slidefence
+git checkout v0.1.0
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+
+slidefence profile approved.pptx --format markdown
+slidefence diff approved.pptx candidate.pptx --format json --output report.json
+slidefence init slidefence.yml
+slidefence check approved.pptx candidate.pptx --policy slidefence.yml</code></pre>
+
+      <p>SlideFence 0.1.0 has 12 synthetic adversarial regressions, a passing hosted Python 3.11–3.13 matrix, package checks, and fresh wheel/source-distribution installs against two public <code>python-pptx</code> PresentationML fixtures. The compatibility record includes exact fixture hashes and the observation boundaries. Read the <a href="https://github.com/SybilGambleyyu/slidefence/releases/tag/v0.1.0">0.1.0 release</a>, the <a href="https://github.com/SybilGambleyyu/slidefence/blob/v0.1.0/docs/validation.md">validation record</a>, or the <a href="https://github.com/SybilGambleyyu/slidefence/blob/v0.1.0/docs/threat-model.md">threat model</a> for reproducible details.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
