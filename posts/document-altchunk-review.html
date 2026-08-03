@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.5.0 adds a deterministic alternative-format HTML import payload-change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-altchunk-review.html">
+    <meta property="og:title" content="Imported content can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.5.0 makes an altChunk HTML payload change reproducible without importing or parsing it.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-altchunk-review.html">
+    <title>Imported content can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>Imported content can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.5.0">Document Change Assurance Benchmark 0.5.0</a></p>
+
+      <p>A Word package can retain all of its stored text, an import anchor, and its relationship ID while changing the alternate content that a client may later import. That is a consequential package change a text diff cannot see, and a static reviewer should be able to report it without attempting the import.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.5.0 adds its sixteenth deterministic paired package: <code>import.alternative_format_html_payload_changed</code>. Both sides retain a fixed <code>w:altChunk r:id</code> anchor, a fixed internal <code>afChunk</code> relationship, every package member, and every stored <code>w:t</code> sequence. Only <code>word/afchunk1.html</code> changes.</p>
+
+      <h2>Inspect the payload; do not import it</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.altchunk?view=openxml-3.0.1">Open XML documentation for <code>AltChunk</code></a> describes the anchor as a location for alternate content to be imported through an internal <code>afChunk</code> relationship. DCAB uses a compact inert HTML marker payload, but its builder, structural validator, scorer, and reference adapter never parse HTML, import content, launch Word, or claim what a client will render.</p>
+
+      <p>The public truth declares only <code>alternative_format_import_payload_changed</code>, with an HTML payload kind and the Word altChunk source. It excludes the payload bytes, content, relationship ID, relationship path, and any client-generated WordprocessingML. That keeps the benchmark useful for coverage reporting without making it a vehicle for document content disclosure.</p>
+
+      <h2>An internal relationship with a visible review boundary</h2>
+
+      <p>The generator emits the standard internal relationship and the HTML content-type override only when the import payload exists. The independent verifier checks the <code>w:altChunk</code> anchor, relationship type, internal mode, payload member, deterministic package bytes, stable member set, unchanged Word text, and exact one-member pair boundary. The standard <code>python-docx</code> reader opens all 30 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 32 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps the public alternative-format import inventory change while the anchor, relationship, and payload-part counts remain one. It does not consume the payload or a private signature.</p>
+
+      <p>The release passed 12 tests locally, including that adapter path, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs each validate the bundled corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.5.0/document_change_benchmark-0.5.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.5.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 15 to 16 cases. It does not claim imported HTML is safe, has been processed, yields any particular Word text, or will be handled by a client. It supplies a reproducible static payload boundary for serious document review.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
