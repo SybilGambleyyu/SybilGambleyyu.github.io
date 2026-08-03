@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.6.0 adds a deterministic mail-merge data-source target-change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-mail-merge-review.html">
+    <meta property="og:title" content="A mail-merge source can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.6.0 makes a stored mail-merge source-target change reproducible without connecting to the source.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-mail-merge-review.html">
+    <title>A mail-merge source can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A mail-merge source can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.6.0">Document Change Assurance Benchmark 0.6.0</a></p>
+
+      <p>Mail-merge setup is stored in a Word package’s settings, not necessarily in its visible text. A source document can retain every stored text node, its mail-merge anchor, and its relationship ID while the stored target of its external data-source relationship changes. A text diff will miss that; a static reviewer can report it without making a connection.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.6.0 adds its seventeenth deterministic paired package: <code>external.mail_merge_data_source_target_retargeted</code>. Both sides keep the same <code>w:mailMerge</code>/<code>w:dataSource</code> settings markup, relationship ID, package-member set, and stored <code>w:t</code> sequence. Only <code>word/_rels/settings.xml.rels</code> changes.</p>
+
+      <h2>Review the stored binding; do not connect</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.datasourcereference?view=openxml-3.0.1">Open XML documentation for <code>DataSourceReference</code></a> describes <code>w:dataSource</code> as the relationship to the external source used for a mail merge, and requires the corresponding <code>mailMergeSource</code> relationship. DCAB fixes that anchor and relationship type, using only synthetic <code>example.invalid</code> targets, then changes the target between the two packages.</p>
+
+      <p>The builder, structural verifier, scorer, and reference adapter never resolve the relationship, open Word, connect to a data source, execute a query, parse a connection string, or claim what a client will merge. The public truth declares only <code>mail_merge_data_source_target_changed</code>, an external binding, a mail-merge-source relationship category, and the settings source. It excludes targets, relationship IDs, and stored settings details.</p>
+
+      <h2>A deterministic settings relationship boundary</h2>
+
+      <p>The independent verifier checks the fixed <code>w:mailMerge</code> and <code>w:dataSource</code> structure, its relationship ID, the standard relationship type, external mode, deterministic package bytes, stable member set, unchanged Word text, and exact one-member pair boundary. The standard <code>python-docx</code> reader opens all 32 <code>.docx</code> fixtures, and its lower-level OPC reader opens all 34 packages.</p>
+
+      <p>The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps the public mail-merge inventory change while the configuration and data-source relationship counts remain one and header/recipient-data counts remain zero. It uses aggregate evidence only, not targets or a private signature.</p>
+
+      <p>The release passed 13 tests locally, including that adapter path, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs each validate the bundled corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.6.0/document_change_benchmark-0.6.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.6.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 16 to 17 cases. It does not claim a source is reachable, safe, queried, rendered, or used by a client. It supplies a reproducible static boundary for serious document review.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
