@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.3.0 adds a deterministic DrawingML linked-picture target-change case for static WordprocessingML review.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-linked-picture-review.html">
+    <meta property="og:title" content="A linked picture target can change without changing Word text">
+    <meta property="og:description" content="DCAB 0.3.0 makes a DrawingML linked-picture relationship retarget reproducible without resolving an image.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-linked-picture-review.html">
+    <title>A linked picture target can change without changing Word text — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>A linked picture target can change without changing Word text</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.3.0">Document Change Assurance Benchmark 0.3.0</a></p>
+
+      <p>A Word document can keep every stored text node, every DrawingML picture marker, and every relationship ID fixed while changing the target of a linked picture. That is exactly the kind of change a text diff will miss—and exactly the kind of stored evidence a static reviewer can expose without downloading an image.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.3.0 adds its fourteenth deterministic paired package: <code>external.drawing_linked_picture_target_retargeted</code>. Both sides contain the same <code>a:blip r:link</code> marker and the same package members. Only <code>word/_rels/document.xml.rels</code> changes, retargeting a standard external image relationship.</p>
+
+      <h2>Recognize the marker; do not retrieve the image</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.blip.link?view=openxml-3.0.1">Open XML documentation for <code>Blip.Link</code></a> describes <code>r:link</code> as a linked-picture reference for an image that does not reside in the file. DCAB models that relationship-backed marker, but never resolves its target, opens a document client, renders an image, or makes a claim that an Office client will load it.</p>
+
+      <p>The package target is a synthetic <code>example.invalid</code> value. The target-free public truth declares only <code>drawing_linked_picture_target_changed</code>, with an external binding and image relationship category. It deliberately excludes the target, relationship ID, relationship path, and the marker’s static presentation metadata.</p>
+
+      <h2>A valid package boundary, not a screenshot trick</h2>
+
+      <p>The fixture contains a compact DrawingML inline picture shape with an <code>a:blip r:link</code> attribute and no image payload member. The generator fixes that markup and all Word text, while the candidate changes only the relationship target. The independent verifier checks the marker, absence of <code>r:embed</code>, standard image relationship type, external target mode, deterministic bytes, stable member set, and exact changed-member boundary.</p>
+
+      <p>The standard <code>python-docx</code> reader opens all 26 <code>.docx</code> fixtures, including this pair, and its lower-level OPC reader opens all 28 packages. The optional local <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.27.0">DocFence 0.27.0</a> adapter maps public aggregate evidence—an external-relationship change and a DrawingML linked-picture inventory change—to a complete DCAB observation without consuming a target or private signature.</p>
+
+      <p>The release passed 12 tests locally, including that adapter path, then passed hosted CI on Python 3.11, 3.12, and 3.13 plus a clean DocFence installation. Fresh wheel and source-distribution installs each validate the bundled corpus.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.3.0/document_change_benchmark-0.3.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB 0.3.0 retains fixture schema version 1 because the public truth and observation envelopes are unchanged; it extends the corpus from 13 to 14 cases. It does not claim image safety, a network request, a renderer outcome, client behavior, or a universal policy. It gives review tooling a reproducible static boundary to cover.</p>
+
+      <p>The MIT-licensed source, generated fixtures, structural verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>. The fixture corpus is also mirrored as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
