@@ -6,10 +6,10 @@ evidence, but it is not proof that a signature validates or that a certificate
 is trusted.
 
 [FormulaFence 0.223.0](https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.223.0)
-and [WCAB 0.40.0](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.40.0)
-make package-signature scope and stored threaded-comment resolution transitions
-reviewable without exposing private material or inventing a cryptographic,
-trust, or workflow result.
+and [WCAB 0.41.0](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.41.0)
+make package-signature scope, stored threaded-comment resolution, and
+shared-workbook revision-log transitions reviewable without exposing private
+material or inventing a cryptographic, trust, identity, or workflow result.
 
 ## Two kinds of XMLDSIG reference
 
@@ -99,7 +99,29 @@ without publicizing text, identities, timestamps, cell references, or
 relationship IDs. A stored resolved flag does not prove review, approval,
 notification, identity, authorization, or workflow completion.
 
-FormulaFence 0.223.0 passed 1,596 tests. WCAB 0.40.0 has 57 cases, 59 facts,
-and 267 passing tests. The full canonical note, with validation details and
+## A revision log can change without a cell change
+
+Legacy shared-workbook revision history persists through headers and revision
+logs, as described by Microsoft's [Headers class
+reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.headers?view=openxml-3.0.1).
+WCAB 0.41.0 adds a deterministic pair with one revision-header part, one
+relationship-backed revision-log part, three revision records, and matching
+enabled shared-workbook tracking, retention, and history-protection controls.
+
+Only `xl/revisions/revisionLog1.xml` changes. One synthetic historic old value
+changes inside that log while the graph, content types, controls,
+revision-record shape, ordinary values, formulas, and calculation properties
+stay fixed. The public fact deliberately contains only equal safe aggregate
+counts; it excludes historic values, locations, author data, timestamps, GUIDs,
+and relationship IDs.
+
+FormulaFence exposes this only as high-severity
+`shared_workbook_revisions_changed` / `FF062` evidence with equal safe counts
+and `revision_log_material_changed: true`. A recorded revision is not proof of
+provenance, author identity, conflict resolution, review, approval,
+authorization, workflow completion, or Office-client behavior.
+
+FormulaFence 0.223.0 passed 1,596 tests. WCAB 0.41.0 has 58 cases, 60 facts,
+and 273 passing tests. The full canonical note, with validation details and
 installation commands, is at
 https://sybilgambleyyu.github.io/posts/package-signature-scope-review.html.
