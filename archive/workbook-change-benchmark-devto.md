@@ -6,14 +6,14 @@ changed—what changed, which other formulas can it reach, should it block a
 review, and what could the tool not determine?
 
 [Workbook Change Assurance Benchmark (WCAB)](https://github.com/SybilGambleyyu/workbook-change-benchmark)
-is a small, open way to make those claims testable. Version 0.25.0 contains
-40 deterministic scenarios: 39 baseline/candidate workbook pairs and one
-directory portfolio. Together they declare 42 observable facts, a benchmark
+is a small, open way to make those claims testable. Version 0.26.0 contains
+41 deterministic scenarios: 40 baseline/candidate workbook pairs and one
+directory portfolio. Together they declare 43 observable facts, a benchmark
 review disposition, and—where appropriate—a static dependency-impact lower
 bound. The workbook files are generated from source, not copied from a
 financial model, email archive, or other sensitive corpus.
 
-Version 0.25.0 includes a deterministic, one-row-per-case `manifest.jsonl`
+Version 0.26.0 includes a deterministic, one-row-per-case `manifest.jsonl`
 catalogue. It carries the truth contract alongside exact relative paths, byte
 counts, and SHA-256 digests for every baseline and candidate workbook, so an
 evaluator can identify precisely which fixtures it consumed. The same release
@@ -269,6 +269,20 @@ after removing that attribute. It does not test a password, encryption,
 authentication, authorization, hidden-sheet exposure, or client
 sheet-operation behavior.
 
+Version 0.26.0 adds a relationship-backed saved Excel Named Sheet View case
+without a cell edit. [Microsoft documents Sheet Views](https://support.microsoft.com/en-us/excel/create-and-manage-sheet-views-in-excel)
+as saved customized filter and sort views, and the [MS-XLSX Named Sheet Views
+specification](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/78cf20a1-2551-45c6-86bf-f1e92bd5fc39)
+defines the stored collection as sort/filter settings associated with a
+worksheet AutoFilter. The pair keeps a no-criterion `Report!A1:B5` base
+AutoFilter, rows, `Report!D2=SUBTOTAL(109,B2:B5)`, and
+`Dashboard!B4=Report!$D$2` fixed. A worksheet relationship binds that base
+filter to one Named Sheet View part; only its saved column-0 list value moves
+from `North` to `South`. The validator follows the relationship and filter ID
+and proves that `xl/namedSheetViews/namedSheetView1.xml` is the sole changed
+package member. It does not activate, render, or apply a view; calculate a
+subtotal; infer visible rows; or claim a display or print outcome.
+
 Version 0.19.0 retains the tool-neutral normalized observation protocol.
 An adapter can declare a case analyzed, unsupported, or errored; the scorer then
 reports expected-fact recall, coverage-disclosure recall, analyzed coverage,
@@ -336,7 +350,9 @@ calculation becomes enabled, an unchanged precision-sensitive input and formula
 whose calculation switches to precision as displayed, a saved formula result
 that changes without a formula or input edit, a workbook serial-date-system
 control change without a cell edit, an active AutoFilter criterion change with
-stable `SUBTOTAL` and downstream formulas, an unchanged array formula whose
+stable `SUBTOTAL` and downstream formulas, a relationship-backed saved Named
+Sheet View criterion change with a stable base AutoFilter and formulas, an
+unchanged array formula whose
 mode changes from legacy CSE to dynamic, and a cross-workbook dependency.
 
 That combination is deliberate. A column insertion can rewrite many formulas
@@ -355,13 +371,13 @@ Excel semantics, dynamic-reference resolution, or numerical correctness.
 
 The project ships a validator that reads the generated workbooks and verifies
 the truth contract. It also canonicalizes OOXML ZIP member order and timestamps
-so regeneration is byte-for-byte reproducible. Version 0.25.0 passed 157 tests
-locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30773084149),
+so regeneration is byte-for-byte reproducible. Version 0.26.0 passed 164 tests
+locally under Python 3.13; [hosted CI passed](https://github.com/SybilGambleyyu/workbook-change-benchmark/actions/runs/30774560123),
 and fresh Python 3.13 wheel and source-distribution installations reproduced the
 catalogue byte-for-byte.
 
 An optional local FormulaFence adapter shows one concrete integration without
-making its report schema normative. FormulaFence 0.220.0 recovered all 41
+making its report schema normative. FormulaFence 0.220.0 recovered all 42
 currently mappable facts, all three scoreable dynamic-reference coverage
 declarations, and five targeted lint rules. The driver declarations require
 both its `value_changed` record and candidate `dynamic_reference_cells` profile
@@ -383,6 +399,12 @@ fact, it requires `date1904: false → true`, explicit
 active-filter fact, it requires the matching redacted
 `filter_visibility_controls_changed` record and `FF036`; WCAB's raw validator
 independently establishes the `North → South` values and stable formulas. For
+the saved-Sheet-View fact, it requires exact `named_sheet_views_changed`
+evidence and `FF038`: FormulaFence reports one worksheet, part, view, filter,
+column, and criterion, with no sort rule, sort condition, or unrecognized
+declaration. It redacts the view name, IDs, range, and selected value, so WCAB
+independently verifies the stored `North → South` criterion, base-AutoFilter
+relationship, stable formulas, and Named-Sheet-View-part-only boundary. For
 the PivotCache fact, it requires `pivot_cache_refresh_controls_changed` and
 `FF023`, with only `refresh_on_load: false → true` in FormulaFence's redacted
 cache profile; WCAB independently verifies the source and PivotTable bindings.
@@ -464,5 +486,5 @@ pytest
 Read the [canonical release note](https://sybilgambleyyu.github.io/posts/workbook-change-benchmark.html)
 for the schema, validation record, and release links. WCAB is MIT-licensed and
 available on [GitHub](https://github.com/SybilGambleyyu/workbook-change-benchmark),
-the [v0.25.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.25.0),
+the [v0.26.0 release](https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.26.0),
 and the [dataset mirror](https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark).
