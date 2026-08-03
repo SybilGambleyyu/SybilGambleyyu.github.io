@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FormulaFence 0.222.0 and WCAB 0.38.0 make a changed OPC package-signature Manifest scope reviewable without making a cryptographic or trust claim.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/package-signature-scope-review.html">
+    <meta property="og:title" content="A package signature can change scope without changing a cell">
+    <meta property="og:description" content="A narrow, safe review boundary for OPC signature Manifest declarations.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/package-signature-scope-review.html">
+    <title>A package signature can change scope without changing a cell — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a><a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">WCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 2, 2026</p>
+      <h1>A package signature can change scope without changing a cell</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.222.0">FormulaFence 0.222.0</a> and <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.38.0">WCAB 0.38.0</a></p>
+
+      <p>A workbook can keep every worksheet cell and ordinary formula stable while the declared scope of a package signature changes. That is material review evidence: signature metadata is part of a workbook's integrity and provenance surface. But it is also an area where reports must be precise. A changed declaration is not proof that a signature is valid, that a certificate is trusted, or that a package consumer will accept it.</p>
+
+      <p>The <a href="https://ecma-international.org/wp-content/uploads/ECMA-376-Part-2-5th-edition.pdf">Open Packaging Conventions specification</a> defines package relationships and signature parts. The W3C <a href="https://www.w3.org/TR/xmldsig-core/">XML Signature specification</a> distinguishes the references in <code>SignedInfo</code> from references collected in a <code>Manifest</code>. Those distinctions matter: a <code>SignedInfo</code> reference can identify a local signature object, while an <code>Object/Manifest/Reference</code> can declare a package part. A tool should not mistake the former for the latter.</p>
+
+      <h2>Review the declared scope, not an invented trust result</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/formulafence">FormulaFence</a> 0.222.0 reads the bounded OPC signature structure and reports safe aggregate counts: Manifest references, direct part references, relationship selectors, and direct workbook, worksheet, VBA-project, and external-data-connection categories. When that aggregate changes, it emits high-severity <code>FF050</code> evidence with:</p>
+
+      <pre><code>package_signature_material_changed: true
+package_signature_manifest_coverage_changed: true</code></pre>
+
+      <p>The report intentionally does not serialize a Manifest URI, selector, digest, signature value, certificate, identity, or trust assertion. Malformed or unsafe declarations are handled conservatively. FormulaFence does not calculate a digest, validate a signature or transform, build a certificate chain, check revocation, apply policy, or predict a consumer decision.</p>
+
+      <h2>A deterministic fixture that separates the two reference scopes</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/workbook-change-benchmark">Workbook Change Assurance Benchmark</a> (WCAB) 0.38.0 adds a compact pair for exactly this boundary. The package keeps one root-to-origin relationship, one origin-to-signature relationship, required content types, and a <code>SignedInfo</code> reference to a local <code>#idWCABPackageObject</code> fixed. Its ordinary <code>Controls!B10=12</code> value and <code>Controls!D10=B10*C10</code> formula also remain fixed.</p>
+
+      <p>The only changed archive member is <code>_xmlsignatures/sig1.xml</code>. Inside that part, one <code>Object/Manifest/Reference/@URI</code> moves from the direct workbook part to the first worksheet part. WCAB's raw validator establishes that package shape and compares the signature XML after erasing only that URI. Its digest and signature values are deliberately synthetic: this is a declaration-scope fixture, not a sample valid signature.</p>
+
+      <h2>Two layers, each with a narrower job</h2>
+
+      <p>The optional WCAB adapter accepts the fact only when FormulaFence emits the exact high-severity <code>digital_signature_controls_changed</code> record and matching <code>FF050</code>, with one origin, one XML signature, one Manifest direct-part reference, no certificates/VBA signatures/selectors, and an aggregate transition from one workbook part to one worksheet part. WCAB independently checks its public synthetic URI and the one-member package boundary that FormulaFence deliberately withholds.</p>
+
+      <p>That division lets a production CI artifact describe a meaningful scope transition without becoming a ledger of signature material or a false trust verdict. It also gives a benchmark a concrete way to reject a tool that notices only that a signature part exists while missing what its Manifest now declares.</p>
+
+      <h2>Evidence before the claim</h2>
+
+      <p>FormulaFence 0.222.0 passed 1,593 tests, lint, package checks, fresh-install verification, and hosted CI. WCAB 0.38.0 contains 55 cases and 57 observable facts; its 258 tests, fixture validation, fresh wheel/source installs, byte-for-byte manifest reproduction, and hosted Python 3.10/3.13 CI passed. The WCAB dataset mirror is available on <a href="https://huggingface.co/datasets/SybilGambleyyu/workbook-change-benchmark">Hugging Face</a>.</p>
+
+      <h2>Use the releases</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/formulafence/releases/download/v0.222.0/formulafence-0.222.0-py3-none-any.whl
+formulafence diff approved.xlsx candidate.xlsx
+
+git clone https://github.com/SybilGambleyyu/workbook-change-benchmark.git
+cd workbook-change-benchmark
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+wcab validate --fixtures fixtures
+wcab formulafence --fixtures fixtures --strict</code></pre>
+
+      <p>Both projects are MIT-licensed. Read the <a href="https://github.com/SybilGambleyyu/formulafence/releases/tag/v0.222.0">FormulaFence release</a>, the <a href="https://github.com/SybilGambleyyu/workbook-change-benchmark/releases/tag/v0.38.0">WCAB release</a>, or the <a href="/posts/workbook-change-benchmark.html">full benchmark note</a> for the underlying contracts and validation records.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
