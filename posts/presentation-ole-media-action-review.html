@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SlideFence 0.2.0 makes stored PowerPoint OLE-verb and media actions explicit, privacy-safe review evidence without opening a deck.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/presentation-ole-media-action-review.html">
+    <meta property="og:title" content="PowerPoint’s OLE and media actions should not be an unknown bucket">
+    <meta property="og:description" content="A transparent refinement of PowerPoint action review: explicit OLE-verb and media evidence without runtime claims.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/presentation-ole-media-action-review.html">
+    <title>PowerPoint’s OLE and media actions should not be an unknown bucket — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/slidefence">SlideFence</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 3, 2026</p>
+      <h1>PowerPoint’s OLE and media actions should not be an unknown bucket</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/slidefence/releases/tag/v0.2.0">SlideFence 0.2.0</a></p>
+
+      <p>Not every important PowerPoint interaction is a macro, a program launch, or an external-file link. A stored action can also ask an OLE object to perform a verb or invoke a media action. Those are distinct review surfaces. Treating them only as “some other reserved action” makes a report less useful at exactly the point where a reviewer needs to decide whether a baseline changed.</p>
+
+      <p><a href="https://support.microsoft.com/en-us/powerpoint/add-commands-to-your-presentation-with-action-buttons">Microsoft’s action-button guidance</a> describes object actions for OLE objects and media-related actions alongside slide navigation, links, programs, and macros. The practical lesson is narrow: an OLE or media declaration is stored presentation state worth reviewing. It is not proof that the referenced object will activate or that media will play.</p>
+
+      <h2>A transparent refinement, not a hidden reinterpretation</h2>
+
+      <p>SlideFence 0.1.0 already kept unknown PowerPoint reserved actions visible in a safe aggregate bucket. While validating the public macro-enabled <code>python-pptx</code> action-properties fixture, that bucket contained one <code>ppaction://ole?verb=…</code> declaration and one <code>ppaction://media</code> declaration. Version 0.2.0 refines those two values into explicit redacted categories: <code>ole_verb_action_count</code> and <code>media_action_count</code>.</p>
+
+      <p>The fixture has 15 stored actions in total. The new release identifies one each for macro, program, external file, external presentation, OLE verb, and media, leaving no generic reserved-action remainder. The source fixture, its checksum, and the bounded observation record are public in the <a href="https://github.com/SybilGambleyyu/slidefence/blob/v0.2.0/docs/validation.md">validation record</a>; neither the review report nor this release needs to disclose its action targets or operational identifiers.</p>
+
+      <h2>Two readable policy gates</h2>
+
+      <p>Teams that do not expect either behavior can make the boundary explicit:</p>
+
+      <pre><code>version: 1
+rules:
+  require_no_presentation_ole_verb_actions: true
+  require_no_presentation_media_actions: true
+  no_presentation_interaction_changes: true</code></pre>
+
+      <p>The OLE-verb gate is critical because it records a stored object-action declaration. The media gate is high severity because it records an interaction action without equating it to playback or execution. Both retain the tool’s privacy contract: public output contains counts and fixed classes, never the raw action string, OLE verb, relationship ID, target, URL, shape ID, slide text, or payload bytes.</p>
+
+      <h2>What the result does not say</h2>
+
+      <p>SlideFence does not open PowerPoint, render a deck, follow a relationship, invoke a program, execute VBA, activate an OLE object, play media, authenticate a user, inspect client policy, or predict a Trust Center outcome. A stored action is evidence of a declaration—not evidence that an endpoint, object, codec, macro, or viewer will honor it. The tool is useful precisely because its result stops at the boundary it can establish.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>git clone https://github.com/SybilGambleyyu/slidefence.git
+cd slidefence
+git checkout v0.2.0
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+
+slidefence profile approved.pptm --format markdown
+slidefence diff approved.pptm candidate.pptm --format json --output report.json
+slidefence check approved.pptm candidate.pptm --policy slidefence.yml</code></pre>
+
+      <p>SlideFence 0.2.0 has 15 synthetic adversarial regressions, a passing hosted Python 3.11–3.13 matrix, package checks, fresh wheel/source-distribution installs, and a direct remote-release asset verification against the public action-properties fixture. Read the <a href="https://github.com/SybilGambleyyu/slidefence/releases/tag/v0.2.0">0.2.0 release</a>, the <a href="https://github.com/SybilGambleyyu/slidefence/blob/v0.2.0/docs/policy.md">policy reference</a>, or the <a href="https://github.com/SybilGambleyyu/slidefence/blob/v0.2.0/docs/threat-model.md">threat model</a> for reproducible details and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
