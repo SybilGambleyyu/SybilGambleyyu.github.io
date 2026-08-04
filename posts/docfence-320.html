@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.32 makes Word's stored personal-information-removal-on-save request reviewable without inspecting personal data or claiming a client will remove it.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-320.html">
+    <meta property="og:title" content="A future-save privacy request is a review boundary">
+    <meta property="og:description" content="DocFence 0.32 inventories direct w:removePersonalInformation settings without identifying authors, rewriting a document, or predicting host behavior.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-320.html">
+    <title>A future-save privacy request is a review boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A future-save privacy request is a review boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.32.0">DocFence 0.32.0</a></p>
+
+      <p>A Word document can store a request that a capable host remove authors’ personal information on a later save. That request matters in review, but it is not proof that the current package contains no personal information, that a client will act on it, or that a particular definition of “personal information” applies.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.32 adds a private-by-default inventory for direct <code>w:removePersonalInformation</code> Settings leaves. It gives CI a narrow, reviewable signal for the stored request without identifying an author, inspecting document properties, removing data, saving a document, or opening a document client.</p>
+
+      <h2>One direct leaf, one future-save request</h2>
+
+      <p>Microsoft documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.removepersonalinformation?view=openxml-3.0.1"><code>RemovePersonalInformation</code></a> as a Settings property: when enabled, hosting applications shall remove personal information of document authors when saving. The same contract leaves the definition and extent of that information undefined. DocFence therefore records only the direct stored state.</p>
+
+      <pre><code>word/settings.xml
+  w:removePersonalInformation w:val="true"   stored request for a later save
+
+The scanner records this leaf. It does not inspect or alter the package.</code></pre>
+
+      <p>DocFence accepts one strict <code>CT_OnOff</code> leaf per discovered Settings part in Transitional and Strict Word namespaces. An omitted <code>w:val</code> is enabled; supported enabled and disabled spellings normalize together. Duplicate, malformed, or ambiguous leaves are rejected rather than guessed about.</p>
+
+      <p>The implementation reads stored package bytes only. It never opens or saves Word, identifies authors, parses document-property values for personal information, rewrites properties, removes comments or revisions, follows a relationship, evaluates a field, runs a macro, or claims a host will honor the request.</p>
+
+      <h2>Aggregate evidence, intentionally modest policies</h2>
+
+      <p>Public JSON, Markdown, and SARIF expose only <code>personal_information_removal_on_save_enabled_setting_count</code> and <code>personal_information_removal_on_save_disabled_setting_count</code>. Settings paths, raw XML, and private semantic fingerprints remain local. Equivalent enabled spellings stay quiet at the inventory layer; an enabled/disabled transition does not.</p>
+
+      <pre><code>rules:
+  require_personal_information_removal_on_save: true</code></pre>
+
+      <p>The candidate-state gate emits <code>DFP077</code> only when no enabled stored request is present. It is a positive future-save intent gate, not a current-package cleanliness test. A team that intentionally approves a particular stored state can instead protect a baseline:</p>
+
+      <pre><code>rules:
+  no_personal_information_removal_on_save_changes: true</code></pre>
+
+      <p><code>DFP078</code> flags a material inventory change. Neither rule asserts that a client will remove data, so a review policy stays readable about what it does—and does not—establish.</p>
+
+      <h2>Evidence without privacy theater</h2>
+
+      <p>The release regression suite covers absent, implicit, enabled, disabled, and Strict forms; malformed-leaf rejection; equivalent-spelling stability; privacy redaction; policy behavior; and JSON, Markdown, and SARIF output. Hosted CI passed on the release commit, reproducible wheel and source-archive builds passed metadata checks, and downloaded public artifacts matched their published SHA-256 digests.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.22.0">Document Change Assurance Benchmark 0.22.0</a> supplies the matching deterministic pair. It changes only <code>w:removePersonalInformation</code> from explicit <code>false</code> to <code>true</code>; package members and stored text stay fixed, and the optional adapter reaches a strict 33/33 score from public aggregate evidence only.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.32.0/docfence-0.32.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.32.0">public release</a> includes the wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.32.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.32.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.32.0/docs/validation.md">validation notes</a> define the evidence contract and its limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
