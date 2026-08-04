@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.35 and DCAB 0.25 make stored OOXML Markup Compatibility choice requirements reviewable without selecting a branch or making a rendering claim.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/markup-compatibility-review.html">
+    <meta property="og:title" content="A compatibility branch is a review boundary—not a rendering claim">
+    <meta property="og:description" content="Static review can preserve evidence of an OOXML compatibility-rule rewrite without exposing branch material or predicting what a client will render.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/markup-compatibility-review.html">
+    <title>A compatibility branch is a review boundary—not a rendering claim — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A compatibility branch is a review boundary—not a rendering claim</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.35.0">DocFence 0.35.0</a> · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.25.0">DCAB 0.25.0</a></p>
+
+      <p>A Word package can retain an OOXML Markup Compatibility and Extensibility (MCE) alternative even when its ordinary visible text is unchanged. That stored choice is meaningful review evidence: a different requirement can change which alternative a consumer is eligible to process. It is not, by itself, evidence of what any particular client will select or render.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.35 records that narrow stored boundary without copying a branch into CI output. <a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.25 supplies a deterministic, target-free pair that changes only a Choice requirement. The two releases make the condition testable while holding the semantic limits in plain view.</p>
+
+      <h2>Selection belongs to the consumer</h2>
+
+      <p>Microsoft's <a href="https://learn.microsoft.com/en-us/office/open-xml/general/introduction-to-markup-compatibility">Markup Compatibility introduction</a> describes AlternateContent as alternatives chosen by a consumer according to its supported features and processing settings. The documented preprocessing model can select and remove branches before a package is saved. A static review tool should therefore preserve the fact that stored markup changed without claiming to resolve a feature prefix, select a branch, target a particular Office version, preprocess a document, save it, or predict a client result.</p>
+
+      <pre><code>word/document.xml
+  mc:AlternateContent
+    mc:Choice Requires="private feature prefix"
+      stable stored branch
+    mc:Fallback
+      stable stored fallback</code></pre>
+
+      <p>The requirement value is a prefix, not a rendering instruction. Microsoft's <a href="https://learn.microsoft.com/en-us/openspecs/office_standards/ms-odrawxml/6aaf2ba5-6974-4560-9983-3fcd7fead7cb">WordprocessingML Drawing documentation</a> makes the distinction explicit: a Choice requirement must evaluate to a prefix that resolves to the expected URI, rather than to the URI text itself. That is exactly why this release keeps prefix values out of public reports.</p>
+
+      <h2>Review evidence without a branch side channel</h2>
+
+      <p>DocFence scans stored non-relationship Word XML members using the standard MCE namespace. It reports only aggregate part, AlternateContent, Choice, Fallback, and compatibility-rule token counts. The recognized branch and attribute structure remains inside a private digest, so an equal-count rewrite remains visible as markup_compatibility_inventory_changed without printing branch text, prefix values, qualified names, XML paths, or fingerprints.</p>
+
+      <pre><code>markup_compatibility:
+  markup_compatibility_part_count: 1
+  alternate_content_count: 1
+  choice_count: 1
+  fallback_count: 1
+  choice_requires_prefix_count: 1</code></pre>
+
+      <p>There are two readable policy choices for different handoff boundaries:</p>
+
+      <pre><code>rules:
+  require_no_markup_compatibility: true
+  no_markup_compatibility_changes: true</code></pre>
+
+      <p>The first is a candidate-state gate for a handoff that must retain no recognized MCE markup. The second protects an approved baseline that intentionally retains it. Their findings are DFP082 and DFP083. Neither rule validates MCE conformance or makes a branch-selection or rendering decision.</p>
+
+      <h2>A deterministic, target-free benchmark pair</h2>
+
+      <p>DCAB 0.25 adds its thirty-sixth pair: review.markup_compatibility_choice_requirement_changed. Baseline and candidate retain one AlternateContent, one Choice, one Fallback, the same package-member set, and the same stored Word text. Only the private Choice requirement changes, and word/document.xml is the sole changed package member.</p>
+
+      <pre><code>[Content_Types].xml         byte-identical
+word/_rels/document.xml.rels byte-identical
+word/document.xml           sole changed member
+stored w:t values           stable</code></pre>
+
+      <p>The public truth names only markup_compatibility_choice_requirement_changed. It does not disclose feature-prefix values, branch bodies, qualified names, compatibility-rule values, paths, or fingerprints. The structural verifier regenerates both package copies from source and checks the member and text invariants; it never invokes Word or preprocesses either package.</p>
+
+      <h2>Evidence from an independent package</h2>
+
+      <p>The DocFence release also profiles the public Open XML SDK Strict Word chart <a href="https://github.com/dotnet/Open-XML-SDK/blob/main/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O14ISOStrict/Graphics/2D%20Column-O12-Word-Charts.docx">2D Column-O12-Word-Charts.docx</a>. It finds nine MCE-bearing Word XML parts, three AlternateContent nodes, three Choice nodes, three Fallback nodes, three requirement prefixes, and eight Ignorable prefixes. This is a stored-package smoke test, not a compatibility verdict for any Office client.</p>
+
+      <p>Both hosted CI runs passed. Fresh wheel and source-distribution installs validate the bundled 36-case corpus, and independently installed DocFence 0.35 plus DCAB 0.25 strictly score all 36 cases. The public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset mirror</a> was atomically synchronized with the new target-free fixture, manifest, and release documentation.</p>
+
+      <h2>Use the releases</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.35.0/docfence-0.35.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.25.0/document_change_benchmark-0.25.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.35.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.35.0/docs/threat-model.md">threat model</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.35.0/docs/validation.md">validation notes</a>, and DCAB <a href="https://github.com/SybilGambleyyu/document-change-benchmark/blob/v0.25.0/RESEARCH.md">research notes</a> define the full contract. A compatibility branch is stored evidence worth reviewing when policy says it is—not a client decision and not a rendering claim.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
