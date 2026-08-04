@@ -17,6 +17,12 @@ transform boundary.
 requires that stored Reference shape before it credits bounded static
 package-signature coverage.
 
+**Correction, August 4, 2026:** 0.48 established the direct Reference-child
+and transform-algorithm boundary, but it did not yet reject an XMLDSIG
+<code>ds:XPath</code> element nested inside an otherwise allowed transform.
+[DocFence 0.49](https://sybilgambleyyu.github.io/posts/docfence-490.html)
+closes that separate OPC restriction before static coverage is credited.
+
 ## A URI is only the start
 
 The [XMLDSIG Reference schema](https://www.w3.org/TR/xmldsig-core/#sec-Reference)

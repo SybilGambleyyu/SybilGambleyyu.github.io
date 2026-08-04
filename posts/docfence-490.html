@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.49 rejects an XMLDSIG XPath parameter hidden inside a transform before granting bounded OPC package-signature coverage.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-490.html">
+    <meta property="og:title" content="An allowed transform cannot hide an XPath">
+    <meta property="og:description" content="OPC disallows XPath filtering even where XMLDSIG’s generic Transform schema permits a parameter.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-490.html">
+    <title>An allowed transform cannot hide an XPath — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>An allowed transform cannot hide an XPath</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.49.0">DocFence 0.49.0</a></p>
+
+      <p>A transform URI can look compatible while its stored parameter markup says otherwise. XMLDSIG’s generic <code>Transform</code> schema allows an XPath parameter, but OPC explicitly disallows the <code>ds:XPath</code> element. A bounded package-signature coverage audit should not give that declaration authority merely because the outer algorithm name is canonicalization.</p>
+
+      <h2>OPC narrows a generic XMLDSIG surface</h2>
+
+      <p>The <a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions standard</a> limits package-signature transforms to its canonicalization forms and its Relationships transform. Its XPath rule is even more direct: XPath filtering is not allowed in an OPC signature. XMLDSIG, however, defines <code>ds:Transform</code> as a generic parameter carrier, so a syntactically ordinary canonicalization transform can still contain a nested XPath element.</p>
+
+      <pre><code>ds:Transform Algorithm="OPC C14N"
+  └─ ds:XPath true()</code></pre>
+
+      <p>That is not a valid OPC declaration. The danger for a static parser is subtle: checking only the outer <code>Algorithm</code> attribute would credit the transform without noticing that its nested content crosses the OPC boundary.</p>
+
+      <h2>One narrow rejection rule, three coverage paths</h2>
+
+      <p>DocFence 0.49 now rejects a <code>ds:XPath</code> element anywhere inside a transform that participates in its bounded declaration chain. That applies to the SignedInfo Reference that binds <code>idPackageObject</code>, an ordinary package-part Reference in the bound Manifest, and either transform in a relationship declaration.</p>
+
+      <p>A malformed binding leaves declaration coverage unavailable. A manifest reference carrying XPath remains aggregate unsupported: it cannot lend coverage to a Word part, and a relationship transform cannot lend even partial coverage to an otherwise valid selector. The public report continues to expose only aggregate coverage and unsupported-reference counts; XPath content, selectors, URIs, paths, and digest material remain private.</p>
+
+      <h2>Rejecting syntax is not executing it</h2>
+
+      <p>This is deliberately a stored-structure check. DocFence does not parse or evaluate an XPath expression, execute a transform, recompute a digest, verify XMLDSIG, inspect certificates, establish trust, or predict an Office client. It merely refuses to turn a declaration with an OPC-forbidden element into an assurance signal.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p>DFP092 and DFP093 retain their existing meaning: they gate the bounded stored declaration surface, rather than making a claim about cryptographic validity or trust.</p>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The 69-test suite now covers XPath-bearing binding, part, and relationship transforms. It proves that a valid relationship selector next to an XPath parameter receives no partial coverage, while the existing no-transform and two canonicalization-form cases remain accepted. DCAB’s complete reference adapter also passed against a fresh DocFence wheel.</p>
+
+      <p>A scan of the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a> found no XPath element in their 22 XML signature parts. The signed content-injection and duplicate-document baselines retained full bounded coverage—six Word parts, one root-document relationship, and five Word relationships—while the published content-injection, universal-signature-forgery, duplicate-document, and evil-type variants retained their expected uncovered or unavailable surfaces. This is a compatibility smoke test for stored structure, not a trust or safety verdict.</p>
+
+      <p>Main and tagged CI both passed. Fresh wheel and source-distribution installations produced byte-identical signed-baseline profiles, DCAB passed against the wheel, and the public GitHub release downloads were byte-compared with the verified artifacts.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.49.0/docfence-0.49.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.49.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.49.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.49.0/docs/validation.md">validation notes</a> describe the exact boundary. The important distinction is simple: a permitted transform name does not rescue prohibited transform markup.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

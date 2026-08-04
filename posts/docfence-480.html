@@ -26,6 +26,8 @@
 
       <p>A local URI such as <code>#idPackageObject</code> names an OPC package-specific Object, but a string alone is not an XMLDSIG Reference. The declaration that claims to bind the Object into SignedInfo also has a required child order and transform boundary. A static coverage audit should not credit a carrier when the alleged binding is malformed.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.48 established the direct Reference-child and transform-algorithm boundary, but it did not yet reject an XMLDSIG <code>ds:XPath</code> element nested inside an otherwise allowed transform. <a href="/posts/docfence-490.html">DocFence 0.49</a> closes that separate OPC restriction before static coverage is credited.</p>
+
       <h2>A URI is only the start of a Reference</h2>
 
       <p>The <a href="https://www.w3.org/TR/xmldsig-core/#sec-Reference">XMLDSIG Reference schema</a> fixes the direct sequence: an optional Transforms element, then DigestMethod, then DigestValue. OPC limits package-signature transform algorithms to canonicalization and its Relationships transform; the latter has defined input only under a Manifest. A binding Reference to the package Object can therefore have no transform, or a direct nonempty list of OPC’s two canonicalization forms.</p>
