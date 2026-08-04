@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.23 adds a deterministic unbound custom-XML payload boundary for static Word package review tools.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-unbound-custom-xml-review.html">
+    <meta property="og:title" content="Stored but unbound: custom XML is a document review surface">
+    <meta property="og:description" content="DCAB 0.23 tests a private custom-XML payload change without content-control binding, runtime claims, or public payload data.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-unbound-custom-xml-review.html">
+    <title>Stored but unbound: custom XML is a document review surface — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>Stored but unbound: custom XML is a document review surface</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.23.0">Document Change Assurance Benchmark 0.23.0</a></p>
+
+      <p>A document-review benchmark should not require a visible content control before it can test a stored custom-XML change. A package can carry a conventional custom-XML store without a mapping, and a static reviewer should be able to account for that storage boundary without inventing client-runtime behavior.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.23.0 adds its thirty-fourth deterministic pair: <code>review.unbound_custom_xml_payload_changed</code>. The pair changes only a synthetic custom-XML payload. It is deliberately not a data-binding case.</p>
+
+      <h2>One opaque boundary, stable package topology</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/visualstudio/vsto/custom-xml-parts-overview">Custom XML parts overview</a> describes embedded custom XML parts as package data that Office solutions can create or modify while a document is open or closed. That makes stored presence independently reviewable; it does not establish that a particular document view will surface the data.</p>
+
+      <pre><code>customXml/item1.xml            only changed member
+customXml/itemProps1.xml       byte-identical
+customXml/_rels/item1.xml.rels byte-identical
+word/document.xml              byte-identical
+w:dataBinding                  absent on both sides</code></pre>
+
+      <p>Both files retain the same package-member set, conventional custom-XML data/properties topology, relationships, and sequence of stored <code>w:t</code> values. The builder changes only inert synthetic XML bytes in <code>customXml/item1.xml</code>. It does not parse that payload as application data, resolve a target, open Word, render a document, update a control, or claim that Word displays, uses, or removes it.</p>
+
+      <h2>A target-free truth envelope</h2>
+
+      <p>The public truth says only that the pair represents an unbound custom-XML payload boundary:</p>
+
+      <pre><code>{
+  "kind": "unbound_custom_xml_payload_changed"
+}</code></pre>
+
+      <p>It omits payload values, XML nodes, namespaces, identifiers, and any meaning assigned to the stored data. Structural validation checks the single-member boundary, the absence of a <code>w:dataBinding</code> marker, unchanged relationship and properties parts, stable stored text, ZIP and XML validity, independent reader compatibility, and deterministic regeneration.</p>
+
+      <h2>One released consumer, still a tool-neutral corpus</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.33.0">DocFence 0.33.0</a> adapter reaches a strict 34/34 score with public aggregate evidence only. For this pair it requires a generic custom-XML change, an unchanged two-part custom-XML inventory, and zero data bindings. It never receives the XML payload or a private fingerprint.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13, including a fresh public-DocFence 0.33.0 adapter installation. Fresh wheel and source-distribution installs validate the bundled 34-case corpus. The public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset mirror</a> was atomically synchronized after release; its complete project-file inventory and the new pair’s hashes were compared with the tagged source.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.23.0/document_change_benchmark-0.23.0-py3-none-any.whl
+
+dcab validate
+dcab docfence-observations --executable docfence --output observations
+dcab score --observations observations --strict</code></pre>
+
+      <p>Fixture schema version 1 stays stable because the public truth and observation envelopes are unchanged. DCAB 0.23 contributes one exact static-review fact, not a custom-XML classifier, a document scrubber, a Word client, a renderer, or a promise about application behavior. The MIT-licensed builder, fixtures, verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

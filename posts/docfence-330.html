@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.33 adds an aggregate-only candidate gate for conventional Word custom XML package data, including unbound stores.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-330.html">
+    <meta property="og:title" content="Unbound custom XML is still a handoff boundary">
+    <meta property="og:description" content="DocFence 0.33 can require a clean conventional custom-XML candidate without exposing XML values or predicting Word behavior.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-330.html">
+    <title>Unbound custom XML is still a handoff boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>Unbound custom XML is still a handoff boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.33.0">DocFence 0.33.0</a></p>
+
+      <p>A Word document can carry a conventional custom-XML store even when no visible content control maps to it. That does not prove a client will display, use, or remove the data. It does mean the package retains a stored data surface a handoff policy may need to account for.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.33 adds <code>require_no_custom_xml_data</code>, an optional candidate-state gate for that narrow question. It reports a count only: no XML values, element names, member paths, or fingerprints leave the local scan.</p>
+
+      <h2>Stored package data does not need a visible mapping</h2>
+
+      <p>Microsoft’s <a href="https://learn.microsoft.com/en-us/visualstudio/vsto/custom-xml-parts-overview">Custom XML parts overview</a> describes custom XML parts as package data that Office solutions can create or modify while a document is open or closed. A content-control binding is one way a document can refer to a store; it is not a precondition for the store to be present.</p>
+
+      <pre><code>customXml/
+  item1.xml              conventional stored data
+  itemProps1.xml         associated custom-XML properties
+  _rels/item1.xml.rels   package relationship material</code></pre>
+
+      <p>DocFence counts conventional data and associated-properties parts under <code>customXml/</code>; relationship parts remain a separate structural surface. The count is deliberately modest. The scanner does not expose or interpret XML values, classify a store’s meaning, remove or rewrite anything, or claim what Word will do with it.</p>
+
+      <h2>A clean-candidate gate, not a data classifier</h2>
+
+      <p>Teams that require a candidate with no conventional custom-XML data or properties parts can state that boundary in a readable policy:</p>
+
+      <pre><code>rules:
+  require_no_custom_xml_data: true</code></pre>
+
+      <p>The rule emits <code>DFP079</code> when the candidate contains one or more counted parts. It needs no approved baseline and does not disclose why the store exists or what it contains. A baseline-comparison rule remains useful for a team that permits an approved store but wants to detect a count or payload boundary change; the candidate gate answers the distinct handoff question.</p>
+
+      <p>Public JSON, Markdown, and SARIF contain only <code>custom_xml_part_count</code> for this gate. They do not contain the data payload, XML node names, package member names, targets, paths, or private semantic fingerprints. That keeps a CI failure useful without turning its output into a secondary document-data channel.</p>
+
+      <h2>A reproducible unbound case</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.23.0">Document Change Assurance Benchmark 0.23.0</a> supplies a matching deterministic pair: <code>review.unbound_custom_xml_payload_changed</code>. Baseline and candidate retain the same conventional custom-XML data/properties topology, relationships, package-member set, and stored Word text. Only the synthetic <code>customXml/item1.xml</code> payload changes.</p>
+
+      <pre><code>word/document.xml       byte-identical on both sides
+w:dataBinding           absent on both sides
+customXml/item1.xml     the sole changed package member</code></pre>
+
+      <p>The public oracle names the boundary without publishing or interpreting the payload. DCAB’s optional adapter reaches a strict 34/34 score from DocFence’s public aggregate evidence: a custom-XML change, a stable two-part custom-XML inventory, and zero data bindings. It does not consume raw XML or a private fingerprint.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.33.0/docfence-0.33.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>Hosted CI passed on the release commit. Reproducible wheel and source-archive builds matched their published SHA-256 digests, and the downloaded wheel produced <code>DFP079</code> for the unbound DCAB candidate under this policy. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.33.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.33.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.33.0/docs/validation.md">validation notes</a> define the exact scope.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
