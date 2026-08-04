@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DCAB 0.21 adds a deterministic Word template-style-update-on-open setting transition with fixed attached-template topology.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/document-template-style-update-on-open-review.html">
+    <meta property="og:title" content="A stored template-style update request deserves review">
+    <meta property="og:description" content="DCAB 0.21 makes a stored w:linkStyles transition reproducible without loading a template or opening Word.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/document-template-style-update-on-open-review.html">
+    <title>A stored template-style update request deserves review — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A stored template-style update request deserves review</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.21.0">Document Change Assurance Benchmark 0.21.0</a></p>
+
+      <p>A consequential WordprocessingML change can be one setting even when the attached template, its relationship, the relationship target, package topology, and stored text all stay fixed. A reviewer needs to distinguish a target retargeting from a stored request to update styles from the same template. That distinction is meaningful without ever loading the template or running a document client.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.21.0 adds its thirty-second deterministic pair: <code>review.template_style_update_on_open_enabled</code>. The baseline stores <code>w:linkStyles w:val="false"</code>; the candidate stores <code>w:linkStyles w:val="true"</code>. Only <code>word/settings.xml</code> changes.</p>
+
+      <h2>A fixed external topology around one direct setting</h2>
+
+      <p>Microsoft documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.linkstyles?view=openxml-3.0.1"><code>LinkStyles</code></a> as the WordprocessingML setting for automatically updating styles from an attached template when a document opens. The benchmark stores the setting and constrains its surroundings; it does not simulate or assert the client behavior described by that setting.</p>
+
+      <pre><code>word/settings.xml                         only changed package member
+  w:attachedTemplate r:id="rId…"          fixed direct anchor
+  w:linkStyles w:val="false"              baseline direct leaf
+  w:linkStyles w:val="true"               candidate direct leaf
+
+word/_rels/settings.xml.rels              byte-identical on both sides
+  rId… → synthetic external template       fixed relationship and target</code></pre>
+
+      <p>The pair retains the same package members and stored <code>w:t</code> sequence. Its Settings relationship ID, external relationship type, and reserved-domain synthetic target are fixed. Construction and validation never resolve, retrieve, or load the template; open Word; propagate a style; or claim that a client will make a style change.</p>
+
+      <h2>A target-free fact for static reviewers</h2>
+
+      <p>The public oracle reports one narrow fact:</p>
+
+      <pre><code>{
+  "dependency": "attached_template",
+  "kind": "template_style_update_on_open_enabled",
+  "source": "word_settings"
+}</code></pre>
+
+      <p>It excludes the relationship target, relationship ID, raw Settings serialization, attached-template path, document content outside the fixed synthetic text, and private fingerprints. Independent structural validation checks exact direct-leaf forms, a one-member change boundary, byte-identical Settings relationships, stable template topology, unchanged stored text, and deterministic regeneration.</p>
+
+      <h2>One released consumer, still tool-neutral</h2>
+
+      <p>The optional <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.31.0">DocFence 0.31.0</a> adapter reaches a strict 32/32 score using public aggregate evidence: <code>template_style_update_on_open_inventory_changed</code>, an enabled-count transition from zero to one, a disabled-count transition from one to zero, and stable attached-template anchor and relationship counts. It never consumes the target, relationship identifier, Settings path, raw attribute value, or fingerprint.</p>
+
+      <p>Hosted CI passed on Python 3.11, 3.12, and 3.13 for both the release commit and tag. Clean wheel and source-distribution installs validate the bundled 32-case corpus, and a clean combined install reaches complete public DocFence adapter coverage. The public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face dataset mirror</a> was downloaded, byte-compared with the generated tree, and validated directly after publication.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.21.0/document_change_benchmark-0.21.0-py3-none-any.whl
+dcab validate
+dcab docfence-observations --executable docfence --output observations.json
+dcab score --observations observations.json --strict</code></pre>
+
+      <p>DCAB retains fixture schema version 1 because its public truth and observation envelopes are unchanged. This release adds one exact static-review fact—not a template loader, style resolver, document client, renderer, source retriever, or universal policy claim. The MIT-licensed builder, fixtures, verifier, release artifacts, and research notes are available on <a href="https://github.com/SybilGambleyyu/document-change-benchmark">GitHub</a>.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
