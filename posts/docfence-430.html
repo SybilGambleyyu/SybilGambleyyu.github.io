@@ -24,25 +24,29 @@
       <h1>One relationship part, one transform</h1>
       <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.43.0">DocFence 0.43.0</a></p>
 
-      <p>A relationship transform is not unique merely because it is unique inside one XMLDSIG <code>Reference</code>. A single package signature can bind several Manifest objects, and those Manifests can each point at the same relationships part. OPC says a producer must not specify more than one relationship transform for a particular relationships part; a consumer must treat more than one as an error.</p>
+      <p>A relationship transform is not unique merely because it is unique inside one XMLDSIG <code>Reference</code>. Generic XMLDSIG can bind several Manifest objects, and those Manifests can each point at the same relationships part. OPC says a producer must not specify more than one relationship transform for a particular relationships part; a consumer must treat more than one as an error.</p>
 
       <p><strong>Correction, August 4, 2026:</strong> 0.43 enforced relationship-transform cardinality but did not constrain transform lists on direct non-relationship package-part references. <a href="/posts/docfence-440.html">DocFence 0.44</a> now credits those parts only when the list is absent or a bounded C14N-only form. The 0.43 parser did not claim XMLDSIG validity, but this was a separate structural declaration gap.</p>
+
+      <p><strong>Further correction, August 4, 2026:</strong> the cross-object topology discussed below is not OPC's package-specific signature topology. <a href="/posts/docfence-460.html">DocFence 0.46</a> requires the one <code>idPackageObject</code> with its exact Manifest/SignatureProperties children and one SignedInfo binding, so it no longer combines declarations across arbitrary objects. The within-Manifest duplicate-transform condition remains part of the bounded audit.</p>
 
       <h2>A signature-level rule</h2>
 
       <p>The <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_RelationshipsGroupRe_topic_ID0E6UGK.html">OPC relationships-transform definition</a> gives a relationship transform its selectors, canonicalization successor, and cardinality rule. The selector can name a relationship ID or a relationship type, but duplicating the transform against the same relationships part does not create a second valid declaration.</p>
 
-      <pre><code>XML Signature
+      <pre><code>Pre-0.46 generic XMLDSIG topology
   ├─ bound Manifest A → word relationships part → relationship transform
   └─ bound Manifest B → same word relationships part → relationship transform
 
-Result: unsupported, not two coverage declarations</code></pre>
+Result: unsupported, not two coverage declarations
+
+0.46: rejected before coverage as non-OPC package topology</code></pre>
 
       <p>The two transforms could select the same relationship, two different relationships, or different type groups. That distinction is intentionally not exposed in a DocFence report. The standards constraint comes first: there may be only one transform for that relationships part in that signature.</p>
 
       <h2>What DocFence 0.43 does</h2>
 
-      <p>For each recognized XML signature, DocFence now gathers transform-bearing references from every bound package Manifest before resolving selectors. When more than one relationship transform names the same relationships part, every transform-bearing declaration for that part becomes an aggregate unsupported reference and none of its selectors contributes coverage.</p>
+      <p>Before 0.46, DocFence gathered transform-bearing references from every bound package Manifest before resolving selectors. When more than one relationship transform named the same relationships part, every transform-bearing declaration for that part became an aggregate unsupported reference and none of its selectors contributed coverage. Version 0.46 retains that check inside its one qualifying package-specific Manifest.</p>
 
       <p>That is deliberately fail-closed but still privacy-preserving. Public output can show the aggregate unsupported-reference and uncovered-relationship effects; it does not reveal the relationships-part path, object identifiers, selector values, relationship IDs or types, reference URIs, digest material, certificate data, or private semantic fingerprints.</p>
 
@@ -59,7 +63,7 @@ rules:
 
       <h2>Tested across Manifest objects</h2>
 
-      <p>The regression suite exercises duplicate transforms both within one Manifest and across two separate bound Manifest objects in the same XML signature. In both cases, relationship coverage is removed and the duplicate declarations remain aggregate-only unsupported evidence. The full 67-test suite passed, as did DCAB’s optional DocFence adapter across its 42 deterministic fixtures, including the existing standards-shaped relationship-type reassignment pair.</p>
+      <p>The 0.43 regression suite exercised duplicate transforms both within one Manifest and across two separate bound Manifest objects in the same XML signature. In 0.46, the latter is rejected as non-OPC package topology before coverage; the former remains aggregate-only unsupported evidence. The full 67-test suite passed, as did DCAB’s optional DocFence adapter across its 42 deterministic fixtures, including the existing standards-shaped relationship-type reassignment pair.</p>
 
       <p>The tagged source passed hosted CI on Python 3.11 and 3.13 plus its distribution build. Fresh wheel installation exercised the DCAB package-signature fixture, and the public GitHub wheel and source distribution were downloaded and byte-compared against the verified local builds.</p>
 

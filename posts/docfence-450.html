@@ -26,6 +26,8 @@
 
       <p>A static package-signature coverage declaration is not credible merely because its URI points at a stored part. The XMLDSIG <code>Reference</code> that carries that URI has a required order: optional transforms, then a digest method, then a digest value. If that structure is absent or rearranged, the declaration is not a shape DocFence should credit.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.45 enforced this digest-child shape but still treated a generic directly bound Manifest as a package-specific coverage carrier. <a href="/posts/docfence-460.html">DocFence 0.46</a> now requires OPC's one <code>idPackageObject</code>, its exact Manifest/SignatureProperties direct-child topology, and exactly one SignedInfo binding before any Manifest declaration is credited. The 0.45 parser did not claim XMLDSIG validity, but this was a separate structural declaration gap.</p>
+
       <h2>Structure comes before coverage</h2>
 
       <p>The <a href="https://www.w3.org/TR/xmldsig-core/#sec-Reference">XML Signature Reference model</a> defines the direct sequence as optional <code>Transforms</code>, required <code>DigestMethod</code>, and required <code>DigestValue</code>. That ordering matters even when a tool deliberately stops short of cryptographic validation.</p>

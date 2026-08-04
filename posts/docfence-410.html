@@ -62,7 +62,9 @@ rules:
 
       <h2>Released and checked</h2>
 
-      <p>Both releases passed their hosted CI matrices. DCAB ran source, wheel, source-distribution, and adapter checks on Python 3.11, 3.12, and 3.13 with the released DocFence 0.41 adapter. The tagged GitHub artifacts were downloaded and byte-compared against their verified builds. The 42-case corpus is also mirrored on <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face</a>; its updated catalog, truth file, and paired archives were fetched back anonymously and byte-compared as well.</p>
+      <p>Both releases passed their hosted CI matrices. DCAB ran source, wheel, source-distribution, and adapter checks on Python 3.11, 3.12, and 3.13 with the released DocFence 0.41 adapter. The tagged GitHub artifacts were downloaded and byte-compared against their verified builds.</p>
+
+      <p><strong>Correction, August 4, 2026:</strong> the current 42-case corpus is mirrored on <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-benchmark">Hugging Face</a>. DCAB 0.32 normalizes the private package-specific object identifier in the two XMLDSIG-shaped fixture pairs while retaining the 42 public facts and schema; the current card and paired archives were fetched back after publication.</p>
 
       <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.41.0/docfence-0.41.0-py3-none-any.whl
 python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.31.0/document_change_benchmark-0.31.0-py3-none-any.whl

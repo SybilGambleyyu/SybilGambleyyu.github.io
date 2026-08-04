@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.46 credits static OPC package-signature coverage only from the one required idPackageObject and its one SignedInfo binding.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-460.html">
+    <meta property="og:title" content="A signature declaration needs one home">
+    <meta property="og:description" content="Exact OPC package-object topology before bounded static coverage.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-460.html">
+    <title>A signature declaration needs one home — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A signature declaration needs one home</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.46.0">DocFence 0.46.0</a> · <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.32.0">DCAB 0.32.0</a></p>
+
+      <p>A package signature can contain several XMLDSIG objects, but OPC distinguishes one of them as the package-specific object. A static coverage audit should not select whichever Manifest happens to be reachable and call the result package coverage. Before interpreting any Manifest declarations, it needs to know that it is looking at the one OPC structure those declarations belong to.</p>
+
+      <h2>One special object, one binding</h2>
+
+      <p>OPC fixes the package-specific object identifier to <code>idPackageObject</code> and gives that object a narrow direct-child structure. Its <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Package_Specific_topic_ID0EWFEK.html">package-specific Object rule</a> requires the Manifest and SignatureProperties pair; its <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_SignedInfo_topic_ID0ECHBK.html">SignedInfo rule</a> requires exactly one reference to that object.</p>
+
+      <pre><code>ds:Signature
+  ├─ ds:SignedInfo
+  │    └─ one Reference URI="#idPackageObject"
+  └─ ds:Object Id="idPackageObject"
+       ├─ ds:Manifest
+       └─ ds:SignatureProperties</code></pre>
+
+      <p>DocFence 0.46 now requires that exact direct topology before its bounded declaration audit credits any Word part or relationship. The package object must have no other attributes; its direct children must be exactly one <code>ds:Manifest</code> followed by one <code>ds:SignatureProperties</code>. A nonstandard identifier, a missing or extra child, duplicate package objects, or duplicate binding references leaves static declaration coverage unavailable. Other application-specific objects can still exist; they are not substituted for the package-specific carrier.</p>
+
+      <h2>Topology comes before declaration resolution</h2>
+
+      <p>This closes an ambiguity in the earlier bounded audit. It no longer unions declarations from arbitrary objects or accepts a generic bound Manifest as if it were OPC's package-specific object. Once the topology qualifies, DocFence resolves only that one Manifest with its existing narrow rules for exact part/content-type matches, relationship transforms, canonicalization ordering, digest-child shape, and relationship selectors.</p>
+
+      <p>That sequence makes the public signal easier to interpret. An invalid package-object layout is not counted as a partly successful declaration with a few private references attached; it is a signature without declared package coverage. The aggregate report remains path-free and value-free, while DFP092 and DFP093 can enforce the bounded review contract.</p>
+
+      <h2>Still not signature validation</h2>
+
+      <p>This is deliberately a structural gate, not an XMLDSIG implementation. DocFence uses the binding Reference's direct URI fragment only. It does not parse or validate that Reference's digest or transforms, decode or recompute manifest digests, execute transforms, verify a signature, inspect a certificate, establish trust, or predict an Office client decision.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p>The policy therefore says something specific and useful: a recognized package signature retains a complete declaration over DocFence's bounded Word scope. It does not say the signature is cryptographically valid, trusted, exhaustive, or effective in a particular Office consumer.</p>
+
+      <h2>A corrected public benchmark</h2>
+
+      <p>This change exposed a fixture-quality issue in the package-signature cases of the Document Change Assurance Benchmark. <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.32.0">DCAB 0.32.0</a> normalizes those non-cryptographic XMLDSIG-shaped carriers to <code>idPackageObject</code>. The two pairs retain all 42 cases, public facts, fixture schema, Word text, and review expectations; only their private carrier topology changes. Its independent verifier now pins the standard identifier rather than sharing the builder's choice.</p>
+
+      <p>The complete corpus is also available as a public <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-benchmark">Hugging Face dataset</a>. Its downloaded package-signature fixture was checked after publication to contain both the corrected object and its binding Reference.</p>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The 67-test DocFence suite covers a missing SignatureProperties child, a nonstandard package-object ID, an extra direct child, duplicate package objects, and duplicate bindings, alongside the prior transform and digest-shape cases. DCAB's complete 42-case adapter passes against the released DocFence wheel.</p>
+
+      <p>A fresh wheel and a fresh source-distribution installation both retained complete bounded coverage for the signed content-injection baseline from the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>. The published content-injection, universal-signature-forgery, duplicate-document, and evil-type attacker variants each exposed at least one uncovered or unavailable declaration boundary. This is a compatibility smoke test over stored structures, not a claim that any sample is trusted or safe.</p>
+
+      <p>Both release commits and tags passed hosted CI. Source and wheel artifacts were built twice under their committed timestamps and matched byte-for-byte; fresh installations exercised the signed sample and the DCAB adapter. The public GitHub assets were then downloaded and byte-compared with those verified builds.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.46.0/docfence-0.46.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.46.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.46.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.46.0/docs/validation.md">validation notes</a> define the exact boundary. Good static review starts by refusing to pretend that arbitrary XMLDSIG structure is the OPC declaration it is not.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
