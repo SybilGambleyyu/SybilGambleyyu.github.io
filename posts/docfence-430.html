@@ -26,6 +26,8 @@
 
       <p>A relationship transform is not unique merely because it is unique inside one XMLDSIG <code>Reference</code>. A single package signature can bind several Manifest objects, and those Manifests can each point at the same relationships part. OPC says a producer must not specify more than one relationship transform for a particular relationships part; a consumer must treat more than one as an error.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.43 enforced relationship-transform cardinality but did not constrain transform lists on direct non-relationship package-part references. <a href="/posts/docfence-440.html">DocFence 0.44</a> now credits those parts only when the list is absent or a bounded C14N-only form. The 0.43 parser did not claim XMLDSIG validity, but this was a separate structural declaration gap.</p>
+
       <h2>A signature-level rule</h2>
 
       <p>The <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_RelationshipsGroupRe_topic_ID0E6UGK.html">OPC relationships-transform definition</a> gives a relationship transform its selectors, canonicalization successor, and cardinality rule. The selector can name a relationship ID or a relationship type, but duplicating the transform against the same relationships part does not create a second valid declaration.</p>

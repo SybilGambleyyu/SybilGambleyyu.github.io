@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.44 fails closed when a direct OPC package-part Manifest reference carries an empty, duplicate, relationship, or unknown transform list.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-440.html">
+    <meta property="og:title" content="A part reference is not transform-agnostic">
+    <meta property="og:description" content="A narrow static boundary for XMLDSIG transforms on direct OPC package-part references.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-440.html">
+    <title>A part reference is not transform-agnostic — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A part reference is not transform-agnostic</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.44.0">DocFence 0.44.0</a></p>
+
+      <p>A package Manifest can reference an ordinary stored Word part directly, without selecting a relationship subset. That does not make its XMLDSIG <code>Transforms</code> list irrelevant. OPC permits only canonicalization and relationship transforms in Manifest references; an arbitrary transform cannot be silently ignored while still being credited as static part coverage.</p>
+
+      <h2>A different input deserves a different transform boundary</h2>
+
+      <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">digital-signature requirements</a> require a consumer to treat transforms other than XML Canonicalization and the package-specific relationships transform as errors. A relationships transform operates on a Relationships part; it is not a substitute for a transform declaration on an ordinary package part.</p>
+
+      <pre><code>Manifest Reference → word/document.xml
+
+accepted: no transform list
+accepted: one nonempty C14N-only list
+rejected: relationship, unknown, empty, or duplicate list</code></pre>
+
+      <p>DocFence 0.44 checks that narrow structural condition before crediting a direct package-part reference. It accepts no <code>ds:Transforms</code> element, or exactly one direct nonempty list whose children are XMLDSIG <code>Transform</code> elements using XML Canonicalization or XML Canonicalization with Comments. It refuses a relationship transform, any unknown algorithm, an empty list, or multiple lists.</p>
+
+      <h2>Refusing to credit is not executing a transform</h2>
+
+      <p>The release does not calculate a canonical form, recompute a digest, validate an XML signature, inspect a certificate, establish trust, or predict an Office client decision. It asks only whether the static transform declaration stays inside the small OPC subset the coverage audit is prepared to recognize.</p>
+
+      <p>An unsupported declaration is reported as aggregate evidence and does not cover the part. Public output keeps the part path, reference URI, transform algorithm, digest material, certificate data, and private semantic fingerprint out of the report.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p><code>DFP092</code> and <code>DFP093</code> remain bounded review gates, not signature-validity or trust claims.</p>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The regression suite now tests direct Word-part references with both accepted C14N forms, plus unknown, relationship, empty, and duplicate transform-list cases. The full 67-test suite passed. DCAB’s optional DocFence adapter also passed across its 42 deterministic fixtures, including its existing standards-shaped package-signature relationship-type reassignment case.</p>
+
+      <p>The tagged source passed hosted CI on Python 3.11 and 3.13 plus the distribution build. Fresh wheel installation exercised the DCAB fixture, and both public GitHub release files were downloaded and byte-compared against the verified local builds.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.44.0/docfence-0.44.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.44.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.44.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.44.0/docs/validation.md">validation notes</a> set out the exact boundary. Static coverage becomes more useful when it is explicit about the transform declarations it declines to interpret.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
