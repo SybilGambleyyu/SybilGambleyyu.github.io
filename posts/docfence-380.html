@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.38 makes a direct Word thumbnail-on-save request review-visible without treating it as proof that an image exists.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-380.html">
+    <meta property="og:title" content="A thumbnail request is not a thumbnail">
+    <meta property="og:description" content="DocFence 0.38 separates a stored Word preview-thumbnail request from a thumbnail image already in an OOXML package.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-380.html">
+    <title>A thumbnail request is not a thumbnail — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A thumbnail request is not a thumbnail</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.38.0">DocFence 0.38.0</a></p>
+
+      <p>A Word document can store an instruction asking a supporting application to make a preview thumbnail on a later save. That instruction matters in a handoff review. It is not proof that an image exists now, that any client will make one, or that an existing image depicts the document.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.38 makes that narrow stored declaration review-visible: the direct Word Settings <code>w:savePreviewPicture</code> leaf. The result is local, aggregate-only evidence kept deliberately separate from the existing relationship-bound OPC package-thumbnail inventory.</p>
+
+      <h2>Two different package facts</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.savepreviewpicture?view=openxml-3.0.1"><code>SavePreviewPicture</code></a> as a request to generate a thumbnail for the first page when a supporting application saves a document. It also says that omission does not force applications to avoid thumbnails. That makes a direct setting a configuration fact, not an image-inspection result.</p>
+
+      <p>DocFence already recognizes an actual thumbnail only through the standard package relationship, an internal image target, and a valid content type. That separate inventory never decodes or renders pixels. Version 0.38 adds no shortcut from a filename or a direct Settings leaf to an image claim.</p>
+
+      <p>For every discovered Word Settings part, DocFence accepts at most one direct declaration in Transitional or Strict syntax. It validates the leaf shape and optional Word-namespace Boolean value. Public output contains only enabled and explicitly disabled setting counts; settings paths, raw serialization, and fingerprints stay private. Omitted values, <code>on</code>, and <code>true</code> canonicalize to the same enabled state, while enabled-to-disabled changes remain review-visible.</p>
+
+      <h2>Two policy choices, both bounded</h2>
+
+      <p>A clean-handoff policy can reject an explicitly enabled request:</p>
+
+      <pre><code>rules:
+  require_no_save_preview_picture: true</code></pre>
+
+      <p>This emits <code>DFP088</code>. A controlled template can instead protect an approved stored state:</p>
+
+      <pre><code>rules:
+  no_save_preview_picture_changes: true</code></pre>
+
+      <p><code>DFP089</code> reports a material inventory change. Neither rule proves a thumbnail is absent, prevents a host from choosing one, creates an image, opens Word, saves a document, or predicts a client.</p>
+
+      <h2>Paired package evidence</h2>
+
+      <p>The release is accompanied by <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.28.0">DCAB 0.28.0</a>, an open 39-case WordprocessingML change-review corpus. Its new synthetic pair holds the package-member set and all stored Word text fixed while only <code>word/settings.xml</code> changes from <code>w:savePreviewPicture w:val="false"</code> to <code>w:savePreviewPicture w:val="true"</code>.</p>
+
+      <p>Neither side has a thumbnail relationship or thumbnail image part. The structural verifier checks that boundary, deterministic regeneration, and an independent DOCX/OPC-reader path. The optional DocFence adapter reports the target-free public aggregate transition; the 39-case dataset mirror is available on <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face</a>.</p>
+
+      <h2>Released and verified</h2>
+
+      <p>Tagged GitHub CI passed for DocFence and DCAB, including the benchmark adapter installed from the DocFence tag. Fresh wheel installs detected the transition and validated the bundled 39-case corpus. The public GitHub release downloads were byte-compared with builds from fresh tagged checkouts, and the public dataset mirror was checked for its 39-case manifest and matching fixture hash.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.38.0/docfence-0.38.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.38.0">public release</a> includes a wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.38.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.38.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.38.0/docs/validation.md">validation notes</a> define the exact behavior and privacy limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
