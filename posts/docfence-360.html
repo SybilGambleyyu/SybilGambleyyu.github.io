@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.36 makes direct stored DrawingML nonvisual visibility declarations review-visible without exposing object metadata or predicting client rendering.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-360.html">
+    <meta property="og:title" content="When hidden is just a stored DrawingML declaration">
+    <meta property="og:description" content="DocFence 0.36 adds a bounded, privacy-safe review inventory for direct DrawingML nonvisual hidden declarations.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-360.html">
+    <title>When hidden is just a stored DrawingML declaration — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>When hidden is just a stored DrawingML declaration</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.36.0">DocFence 0.36.0</a></p>
+
+      <p>A document diff can show that a drawing changed, yet fail to state the narrow fact a reviewer actually needs: did a stored nonvisual declaration change from explicitly shown to hidden? That question is useful in controlled document handoffs. It is not the same as asking what Word, another Office client, or a rendering engine will put on screen.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.36 adds a privacy-safe inventory for direct stored DrawingML nonvisual hidden declarations in supported Word stories. It makes the marker review-visible locally, without uploading document material or turning a package parser into a visibility or layout engine.</p>
+
+      <h2>One stored attribute, deliberately bounded</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.nonvisualdrawingproperties.hidden?view=openxml-3.0.1">NonVisualDrawingProperties.Hidden</a> as a state in which a DrawingML object can remain present but hidden; omission is shown by default. DocFence follows only direct, unqualified <code>hidden</code> attributes on a fixed set of standard DrawingML nonvisual-property elements: main, picture, and WordprocessingDrawing forms in Transitional and Strict packages, plus Word 2010 w14, wpg, and wps forms.</p>
+
+      <p>The scanner retains every recognized stored declaration, including duplicates and declarations inside Markup Compatibility branches. It treats XML Boolean <code>true</code> and <code>1</code> as the same hidden state, and <code>false</code> and <code>0</code> as the same explicitly shown state. Invalid values remain a separately counted review signal. Other elements coincidentally named cNvPr, inferred visibility, object identity, and arbitrary DrawingML markup stay outside this boundary.</p>
+
+      <h2>Useful output without object metadata</h2>
+
+      <p>Public JSON, Markdown, and SARIF reports contain only declaration and story counts plus hidden, explicitly shown, and invalid-value counts. Object names, descriptions, titles, IDs, exact attribute spellings, story paths, and fingerprints remain private. A same-count hidden-to-shown rewrite is still review-visible through the private inventory signature; a rewrite limited to object metadata does not create a visibility-inventory change.</p>
+
+      <p>A handoff that allows no stored hidden or malformed declaration can say so directly:</p>
+
+      <pre><code>rules:
+  require_no_hidden_drawing_objects: true</code></pre>
+
+      <p>This candidate-state gate emits <code>DFP084</code>. A controlled template that intentionally contains approved visibility declarations can protect its private baseline instead:</p>
+
+      <pre><code>rules:
+  no_drawing_object_visibility_changes: true</code></pre>
+
+      <p><code>DFP085</code> detects a material inventory change. Neither rule claims that a client will hide, show, select, or otherwise render an object.</p>
+
+      <h2>Paired evidence instead of a visual claim</h2>
+
+      <p>The release is paired with <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.26.0">DCAB 0.26.0</a>, an open 37-case WordprocessingML change-review corpus. Its new synthetic pair keeps one compact inline DrawingML carrier, package topology, and every stored Word text value stable while changing only <code>wp:docPr/@hidden</code> from <code>false</code> to <code>true</code>. The corpus verifies the package structure and an independent reader boundary; it does not make a visual or runtime assertion.</p>
+
+      <p>The DocFence suite covers standard Transitional and Strict forms, Word 2010 forms, duplicate markers, MCE-branch scanning, invalid values, Boolean canonicalization, same-count state swaps, metadata-only rewrites, policy results, and redaction across JSON, Markdown, and SARIF. Hosted CI passed for the tagged release. Freshly rebuilt release artifacts were metadata-checked, their public downloads matched the built hashes, and an isolated installation validated all 37 DCAB cases while reporting the new visibility-inventory change.</p>
+
+      <p>DocFence does not validate full DrawingML conformance, choose an MCE branch, resolve a drawing object, calculate effective visibility, apply layout, render a document, or predict Office client behavior. Use it as a bounded local review signal alongside any rendering, accessibility, security, and domain-specific checks your workflow requires.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.36.0/docfence-0.36.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.36.0">public release</a> includes a wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.36.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.36.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.36.0/docs/validation.md">validation notes</a> define the exact behavior, privacy contract, and limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
