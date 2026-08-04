@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.41 and DCAB 0.31 distinguish the standard OPC relationship-ID and relationship-type signature selectors, making a same-count reassignment review-visible without claiming cryptographic validity.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-410.html">
+    <meta property="og:title" content="A type selector is not an attribute">
+    <meta property="og:description" content="A standards-correct static review boundary for OPC package-signature relationship selectors.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-410.html">
+    <title>A type selector is not an attribute — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A type selector is not an attribute</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.41.0">DocFence 0.41.0</a> and <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.31.0">DCAB 0.31.0</a></p>
+
+      <p>Package-signature review has a small but important XML distinction. In an OPC relationships transform, an individual relationship is selected with <code>RelationshipReference/@SourceId</code>. A relationship type is selected with the separate <code>RelationshipsGroupReference/@SourceType</code> element. Treating those as interchangeable accepts a shape the format does not define.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.41 corrects that boundary, and <a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.31 adds an independently generated test case for it. The change is intentionally narrow: it makes one standards-defined static declaration auditable. It does not turn a declaration into cryptographic validation or a client-trust decision.</p>
+
+      <h2>The two selector forms</h2>
+
+      <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Relationships_topic_ID0EMCHK.html">Relationships Transform Algorithm</a> filters stored relationship elements when their <code>@Id</code> matches a declared <code>@SourceId</code> or their <code>@Type</code> matches a declared <code>@SourceType</code>; both comparisons are case-sensitive. The accompanying digital-signature markup defines two distinct selector elements:</p>
+
+      <ul>
+        <li><code>opc:RelationshipReference SourceId="…"</code> for one relationship ID.</li>
+        <li><code>opc:RelationshipsGroupReference SourceType="…"</code> for all matching relationship types.</li>
+      </ul>
+
+      <p>DocFence now accepts exactly those bounded forms in its static declaration audit. A <code>SourceType</code> attribute placed on <code>RelationshipReference</code> is not credited with coverage; it is reported only as an unsupported reference. This preserves a fail-closed result without silently inventing a selector rule.</p>
+
+      <h2>Why equal counts can still hide a change</h2>
+
+      <p>DCAB 0.31 adds <code>review.package_signature_relationship_type_coverage_reassigned</code>, the corpus’s 42nd deterministic pair. Its baseline and candidate have the same package-member set, the same Word text, the same signature-origin topology, and the same public declaration-coverage counts. Each standard type selector matches one stored Word relationship. Only the private type selection in <code>_xmlsignatures/sig1.xml</code> changes.</p>
+
+      <p>A count-only check therefore sees no transition. DocFence’s private semantic comparison still emits <code>package_signature_coverage_changed</code>, while its public report keeps selector values, relationship IDs and types, reference URIs, package paths, object identifiers, and digest material out of the output. DCAB’s target-free truth file names only the fact category and review convention.</p>
+
+      <h2>Static declaration, not signature validity</h2>
+
+      <p>The fixture uses fixed XMLDSIG-shaped placeholder values. Neither DCAB nor this DocFence boundary recomputes a digest or canonicalization, validates a signature value, inspects a certificate, establishes trust, checks revocation or timestamps, or predicts what an Office client will accept. Those are separate processes with separate inputs and policies.</p>
+
+      <p>Teams can use the static gate to require complete bounded declaration coverage, or preserve an approved declaration baseline:</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p><code>DFP092</code> and <code>DFP093</code> remain structural review controls, not trust assertions. The exact boundary is documented in the tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.41.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.41.0/docs/threat-model.md">threat model</a>.</p>
+
+      <h2>Released and checked</h2>
+
+      <p>Both releases passed their hosted CI matrices. DCAB ran source, wheel, source-distribution, and adapter checks on Python 3.11, 3.12, and 3.13 with the released DocFence 0.41 adapter. The tagged GitHub artifacts were downloaded and byte-compared against their verified builds. The 42-case corpus is also mirrored on <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face</a>; its updated catalog, truth file, and paired archives were fetched back anonymously and byte-compared as well.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.41.0/docfence-0.41.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.31.0/document_change_benchmark-0.31.0-py3-none-any.whl
+
+docfence diff approved.docx candidate.docx --format markdown
+dcab validate</code></pre>
+
+      <p>The useful discipline is simple: give a standards-defined declaration change the attention it deserves, while refusing to represent that change as proof of cryptographic validity or trust.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

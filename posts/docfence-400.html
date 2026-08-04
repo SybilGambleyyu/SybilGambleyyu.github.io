@@ -28,6 +28,8 @@
 
       <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.40 exposes this narrow static boundary, and <a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.30 makes it independently reproducible. Both releases take the distinction seriously: they review what the package declares, not a cryptographic or client-side result they did not compute.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> the 0.40 implementation did not recognize the standard relationship-type selector element correctly. <a href="/posts/docfence-410.html">DocFence 0.41 and DCAB 0.31</a> correct that exact form: <code>RelationshipReference/@SourceId</code> selects an individual relationship, while <code>RelationshipsGroupReference/@SourceType</code> selects relationship types. The earlier parser failed closed on the standard type form rather than crediting it, but this post's original selector wording was too broad.</p>
+
       <h2>Three questions that must stay separate</h2>
 
       <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">digital-signature rules</a> define an origin part related from the package root, XML Signature parts related from that origin, and a package-specific signature object with a Manifest. A Manifest can name package parts directly or select individual relationships through the OPC Relationships Transform.</p>
@@ -42,9 +44,9 @@
 
       <p>The first two can be useful static observations. The third needs digest calculation, canonicalization, XMLDSIG validation, certificate and revocation handling, signing policy, and ultimately a consumer-specific decision. Treating a Manifest declaration as an answer to that third question produces a false assurance.</p>
 
-      <h2>What DocFence 0.40 actually resolves</h2>
+      <h2>What the corrected static audit resolves</h2>
 
-      <p>DocFence follows a deliberately small declaration chain. For each recognized XML signature, it requires a direct local-fragment <code>SignedInfo</code> reference to a direct <code>ds:Object</code> with exactly one direct package <code>ds:Manifest</code>. It then resolves exact local part URI and case-sensitive content-type declarations, plus standard relationships-transform <code>SourceId</code> and <code>SourceType</code> selectors.</p>
+      <p>DocFence follows a deliberately small declaration chain. For each recognized XML signature, it requires a direct local-fragment <code>SignedInfo</code> reference to a direct <code>ds:Object</code> with exactly one direct package <code>ds:Manifest</code>. It then resolves exact local part URI and case-sensitive content-type declarations, plus standard relationships-transform <code>RelationshipReference/@SourceId</code> and <code>RelationshipsGroupReference/@SourceType</code> selectors.</p>
 
       <p>Public reports contain aggregate counts only: signatures with and without a usable declaration chain; covered and uncovered Word parts; covered and uncovered root office-document relationships; covered and uncovered relationships sourced by Word parts; and unresolved or unsupported manifest references. They do not disclose package paths, object identifiers, Manifest URIs, relationship IDs or types, selectors, digest material, certificate data, or fingerprints. A private semantic comparison still lets a same-count reassignment become review-visible.</p>
 
@@ -60,7 +62,7 @@ rules:
 rules:
   no_package_signature_coverage_changes: true</code></pre>
 
-      <p><code>DFP093</code> catches a material declaration change, including a same-count selector reassignment. Neither rule recomputes a digest or canonicalization, executes arbitrary transforms, verifies XMLDSIG, validates a certificate chain, checks revocation or timestamps, establishes signer identity, or predicts a client’s trust decision. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.40.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.40.0/docs/threat-model.md">threat model</a> define the exact boundary.</p>
+      <p><code>DFP093</code> catches a material declaration change, including a same-count selector reassignment. Neither rule recomputes a digest or canonicalization, executes arbitrary transforms, verifies XMLDSIG, validates a certificate chain, checks revocation or timestamps, establishes signer identity, or predicts a client’s trust decision. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.41.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.41.0/docs/threat-model.md">threat model</a> define the exact corrected boundary.</p>
 
       <h2>A 41st deterministic DCAB pair</h2>
 
