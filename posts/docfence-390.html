@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.39 makes direct Word content-control lock declarations review-visible without claiming that a client enforces them.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-390.html">
+    <meta property="og:title" content="A lock declaration is not an effective lock">
+    <meta property="og:description" content="DocFence 0.39 inventories direct Word content-control lock markup as static evidence, with privacy-preserving review policies.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-390.html">
+    <title>A lock declaration is not an effective lock — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A lock declaration is not an effective lock</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.39.0">DocFence 0.39.0</a></p>
+
+      <p>Word content controls can carry a direct stored lock declaration. That is useful evidence during a document handoff: it says what the package declares. It does not prove that a particular client will honor it, that a user cannot alter the control, or that an absent declaration means an unlocked effective state.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.39 makes this narrow stored fact review-visible. It inventories only the direct <code>w:sdtPr/w:lock</code> child of each supported Word story's content control, and it keeps the output aggregate-only: no content-control text, tag, numeric ID, XML path, or raw lock value is emitted.</p>
+
+      <h2>Read the declaration, preserve the uncertainty</h2>
+
+      <p>The Open XML SDK defines <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.lock?view=openxml-3.0.1"><code>w:lock</code></a> as the content-control lock element and exposes four <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.lockingvalues?view=openxml-3.0.1">schema values</a>: <code>unlocked</code>, <code>sdtLocked</code>, <code>contentLocked</code>, and <code>sdtContentLocked</code>. DocFence validates that exact direct shape and reports five counts:</p>
+
+      <ul>
+        <li>controls with no direct lock declaration;</li>
+        <li>the four explicit schema states.</li>
+      </ul>
+
+      <p>That first category matters. An omitted leaf is not silently recast as <code>unlocked</code>; the underlying contract has control-type-specific behavior. The inventory is a static package observation, not an interpretation of a client or a security guarantee.</p>
+
+      <p>When the count totals are unchanged but control assignments are exchanged, DocFence still reports <code>content_control_lock_inventory_changed</code>. The comparison uses private local references only to preserve that review signal; those references never become public report fields.</p>
+
+      <h2>Policies with an explicit scope</h2>
+
+      <p>A clean-handoff policy can require every discovered content control to carry an explicit, non-<code>unlocked</code> declaration:</p>
+
+      <pre><code>rules:
+  require_content_control_locks: true</code></pre>
+
+      <p>This candidate-state check emits <code>DFP090</code>. A controlled template can instead reject any material inventory change from an approved baseline:</p>
+
+      <pre><code>rules:
+  no_content_control_lock_changes: true</code></pre>
+
+      <p><code>DFP091</code> reports the baseline-to-candidate change. Neither rule opens Word, applies protection, authenticates an editor, renders a document, or predicts what a client will enforce.</p>
+
+      <h2>A paired static-review case</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.29.0">DCAB 0.29.0</a> adds its 40th deterministic paired-WordprocessingML case. The new synthetic pair keeps the package-member set, content-control ID, tag, and stored text fixed. Only the direct declaration changes from <code>w:lock w:val="unlocked"</code> to <code>w:lock w:val="sdtContentLocked"</code>.</p>
+
+      <p>The independent fixture validator checks the fixed carrier and exact legal declaration states without using DocFence. The optional adapter then recognizes only DocFence's public aggregate transition. The <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">40-case dataset mirror</a> carries the same manifest and fixture bytes.</p>
+
+      <h2>Released and verified</h2>
+
+      <p>Tagged CI passed for DocFence and DCAB, including the benchmark adapter installed from the DocFence tag. A full 40/40 benchmark run reached complete fact and reference-policy agreement. Fresh wheel and source builds from the tags passed package validation, and public GitHub downloads were byte-compared against those builds. The updated dataset manifest and new fixture files were downloaded and byte-compared as well.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.39.0/docfence-0.39.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.39.0">public release</a> includes a wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.39.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.39.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.39.0/docs/validation.md">validation notes</a> define the exact behavior and privacy limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
