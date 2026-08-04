@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.48 credits static OPC package-signature coverage only when the SignedInfo binding Reference has XMLDSIG’s required stored shape.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-480.html">
+    <meta property="og:title" content="A package binding needs a real Reference">
+    <meta property="og:description" content="Exact XMLDSIG Reference structure before a bound OPC package object can lend static coverage.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-480.html">
+    <title>A package binding needs a real Reference — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A package binding needs a real Reference</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.48.0">DocFence 0.48.0</a></p>
+
+      <p>A local URI such as <code>#idPackageObject</code> names an OPC package-specific Object, but a string alone is not an XMLDSIG Reference. The declaration that claims to bind the Object into SignedInfo also has a required child order and transform boundary. A static coverage audit should not credit a carrier when the alleged binding is malformed.</p>
+
+      <h2>A URI is only the start of a Reference</h2>
+
+      <p>The <a href="https://www.w3.org/TR/xmldsig-core/#sec-Reference">XMLDSIG Reference schema</a> fixes the direct sequence: an optional Transforms element, then DigestMethod, then DigestValue. OPC limits package-signature transform algorithms to canonicalization and its Relationships transform; the latter has defined input only under a Manifest. A binding Reference to the package Object can therefore have no transform, or a direct nonempty list of OPC’s two canonicalization forms.</p>
+
+      <pre><code>ds:SignedInfo
+  └─ ds:Reference URI="#idPackageObject"
+       ├─ optional ds:Transforms
+       │    └─ ds:Transform Algorithm="OPC C14N"
+       ├─ ds:DigestMethod Algorithm="…"
+       └─ ds:DigestValue (plain, nonempty)</code></pre>
+
+      <p>DocFence 0.48 requires that exact stored binding shape before it resolves the bound Manifest. The direct DigestValue must remain plain, attribute-free, child-free, and nonempty; DigestMethod needs a nonblank Algorithm. A present Transforms list must be direct, nonempty, and contain only normal or comment-preserving XML Canonicalization transforms.</p>
+
+      <h2>Bound does not mean verified</h2>
+
+      <p>An unknown, relationship, empty, or duplicate transform list—and a missing, reordered, malformed, nested, extra, or text-bearing digest child—leaves static declaration coverage unavailable. That is deliberately stricter than treating a local URI as a successful binding, but it is still not XMLDSIG validation.</p>
+
+      <p>DocFence does not decode or recompute a digest, execute a transform, verify a signature, inspect a certificate, establish trust, or predict an Office client. It checks only whether the stored declaration has the small standard shape necessary for the bounded coverage interpretation it reports.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p>DFP092 and DFP093 are unchanged: they remain review gates over the declared package scope, not claims that an XML signature is valid or trusted.</p>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The 69-test suite covers a binding with no transforms and both permitted canonicalization forms. It rejects unsupported, relationship, empty, and duplicate transform lists plus missing, misordered, malformed, nested, extra, and text-bearing digest children. DCAB’s complete reference adapter also passed against a fresh DocFence wheel.</p>
+
+      <p>A signed baseline from the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a> retained complete bounded declaration coverage: six Word parts, one root-document relationship, and five Word relationships. The published content-injection, universal-signature-forgery, duplicate-document, and evil-type variants continue to expose uncovered or unavailable declaration surfaces. This is a stored-structure compatibility smoke test, never a trust or safety verdict.</p>
+
+      <p>Main and tagged CI both passed. Source and wheel artifacts were independently rebuilt under the commit timestamp and matched byte-for-byte; fresh wheel and source installations profiled the signed baseline, and the public GitHub release downloads were byte-compared with those verified artifacts.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.48.0/docfence-0.48.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.48.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.48.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.48.0/docs/validation.md">validation notes</a> define the exact boundary. Reliable static coverage starts by demanding that the standard’s binding is actually present, while being candid about all the cryptographic work it does not perform.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

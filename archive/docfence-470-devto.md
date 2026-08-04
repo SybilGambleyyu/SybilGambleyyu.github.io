@@ -17,6 +17,12 @@ malformed, unrelated, or internally inconsistent.
 now treats that timestamp-property shape as a prerequisite for bounded static
 package-signature coverage.
 
+**Correction, August 4, 2026:** 0.47 established the required timestamp-
+property shape, but it did not yet validate the XMLDSIG child order and
+transform boundary of the <code>SignedInfo</code> Reference binding the package
+Object. [DocFence 0.48](https://sybilgambleyyu.github.io/posts/docfence-480.html)
+closes that separate declaration gap before static coverage is credited.
+
 ## One fixed property
 
 The current [ECMA-376 Part 2](https://ecma-international.org/publications-and-standards/standards/ecma-376/)

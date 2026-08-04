@@ -26,6 +26,8 @@
 
       <p>An OPC package signature carries a claimed signing time in a very specific place. Once a static review tool treats the package-specific Object as the carrier of coverage declarations, it should not treat a malformed, unrelated, or internally inconsistent time property as if that carrier were conforming. The timestamp is not proof of time or trust—but its stored structure is part of the standard declaration.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.47 established the required timestamp-property shape, but it did not yet validate the XMLDSIG child order and transform boundary of the <code>SignedInfo</code> Reference binding the package Object. <a href="/posts/docfence-480.html">DocFence 0.48</a> closes that separate declaration gap before static coverage is credited.</p>
+
       <h2>One fixed property below the package object</h2>
 
       <p>The current <a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Part 2</a> rules require a SignatureProperty below the OPC-specific Object to use the fixed <code>idSignatureTime</code> ID, point either nowhere or to the root Signature ID, and contain a SignatureTime element and no other elements. The accompanying <a href="https://ecma-international.org/wp-content/uploads/ECMA-376-2_5th_edition_december_2021.zip">official schema bundle</a> fixes SignatureTime to an ordered Format/Value pair.</p>
