@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.37 makes a stored Word form-data-only-save request review-visible without reading form values or simulating a save.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-370.html">
+    <meta property="og:title" content="A Word save setting can change the handoff contract">
+    <meta property="og:description" content="DocFence 0.37 adds an aggregate-only review signal for direct w:saveFormsData declarations.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-370.html">
+    <title>A Word save setting can change the handoff contract — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 2, 2026</p>
+      <h1>A Word save setting can change the handoff contract</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.37.0">DocFence 0.37.0</a></p>
+
+      <p>A document can retain the same text and still carry a stored instruction that changes the meaning of a later save. That is a useful handoff fact. It is not evidence that a form was exported, that a field was evaluated, or that a particular Word client will do anything.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.37 makes one such declaration review-visible: the direct Word Settings <code>w:saveFormsData</code> leaf. The result is local, aggregate-only evidence that stays distinct from form-field parsing, document automation, and runtime behavior.</p>
+
+      <h2>Stored configuration, not an attempted export</h2>
+
+      <p>The Open XML SDK documents <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.saveformsdata?view=openxml-3.0.1"><code>SaveFormsData</code></a> as a direct Settings declaration for saving form-field content only. Office documentation differs in how it describes the resulting delimiter, which is a good reason not to turn a static scanner into an export predictor.</p>
+
+      <p>DocFence accepts at most one direct declaration in every discovered Word Settings part, including Transitional and Strict packages. It validates the leaf shape and the optional Word-namespace Boolean value, canonicalizing omitted values, <code>on</code>, and <code>true</code> as enabled while preserving an enabled-to-disabled transition for review. Public output contains only enabled and explicitly disabled setting counts; settings paths and fingerprints stay private.</p>
+
+      <p>It does not look for legacy form fields, read or evaluate a field value, open Word, save a document, emit a record, infer a delimiter, or claim that a host honors the request.</p>
+
+      <h2>Two policy choices, both explicit</h2>
+
+      <p>A clean-handoff policy can reject a candidate that stores the enabled request:</p>
+
+      <pre><code>rules:
+  require_no_save_forms_data: true</code></pre>
+
+      <p>This emits <code>DFP086</code>. A controlled workflow that intentionally retains a known stored state can instead protect its baseline:</p>
+
+      <pre><code>rules:
+  no_save_forms_data_changes: true</code></pre>
+
+      <p><code>DFP087</code> reports a material inventory change, including a same-count enabled-to-disabled swap. Neither rule turns a document review into a save engine.</p>
+
+      <h2>Paired package evidence</h2>
+
+      <p>The release is accompanied by <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.27.0">DCAB 0.27.0</a>, an open 38-case WordprocessingML change-review corpus. Its new synthetic pair keeps a complete legacy <code>FORMTEXT</code> carrier, every package member, and every stored Word text value fixed while only <code>word/settings.xml</code> changes from <code>w:saveFormsData w:val="false"</code> to <code>w:saveFormsData w:val="true"</code>.</p>
+
+      <p>The pair validates exact stored XML and package boundaries, deterministic regeneration, and an independent DOCX/OPC-reader boundary. It does not claim an export result. The optional DocFence adapter reports the new fact using only the public aggregate transition, and the 38-case dataset mirror is available on <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face</a>.</p>
+
+      <h2>Released and verified</h2>
+
+      <p>Tagged GitHub CI passed for DocFence and DCAB. Fresh wheel and source-distribution installs validate the bundled corpus and detect this setting transition. The public GitHub release downloads were byte-compared with the tagged builds, and the public dataset mirror was checked for its 38-case manifest and matching fixture hash.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.37.0/docfence-0.37.0-py3-none-any.whl
+
+docfence profile candidate.docx --format markdown
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.37.0">public release</a> includes a wheel and source archive. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.37.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.37.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.37.0/docs/validation.md">validation notes</a> define the exact behavior and privacy limits.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
