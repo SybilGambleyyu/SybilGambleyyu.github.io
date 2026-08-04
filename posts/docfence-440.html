@@ -26,6 +26,8 @@
 
       <p>A package Manifest can reference an ordinary stored Word part directly, without selecting a relationship subset. That does not make its XMLDSIG <code>Transforms</code> list irrelevant. OPC permits only canonicalization and relationship transforms in Manifest references; an arbitrary transform cannot be silently ignored while still being credited as static part coverage.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.44 constrained transform lists on direct package-part references but did not require the ordered XMLDSIG <code>DigestMethod</code>/<code>DigestValue</code> child shape before crediting a bound Manifest reference. <a href="/posts/docfence-450.html">DocFence 0.45</a> now keeps missing, misordered, malformed, or extra digest children as aggregate unsupported evidence. The 0.44 parser did not claim XMLDSIG validity, but this was a separate structural declaration gap.</p>
+
       <h2>A different input deserves a different transform boundary</h2>
 
       <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">digital-signature requirements</a> require a consumer to treat transforms other than XML Canonicalization and the package-specific relationships transform as errors. A relationships transform operates on a Relationships part; it is not a substitute for a transform declaration on an ordinary package part.</p>

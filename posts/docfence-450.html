@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.45 fails closed when a bound OPC Manifest reference does not retain the ordered XMLDSIG DigestMethod and DigestValue shape.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-450.html">
+    <meta property="og:title" content="A coverage declaration needs its digest shape">
+    <meta property="og:description" content="A bounded XMLDSIG Reference-shape check for static OPC package-signature coverage.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-450.html">
+    <title>A coverage declaration needs its digest shape — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A coverage declaration needs its digest shape</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.45.0">DocFence 0.45.0</a></p>
+
+      <p>A static package-signature coverage declaration is not credible merely because its URI points at a stored part. The XMLDSIG <code>Reference</code> that carries that URI has a required order: optional transforms, then a digest method, then a digest value. If that structure is absent or rearranged, the declaration is not a shape DocFence should credit.</p>
+
+      <h2>Structure comes before coverage</h2>
+
+      <p>The <a href="https://www.w3.org/TR/xmldsig-core/#sec-Reference">XML Signature Reference model</a> defines the direct sequence as optional <code>Transforms</code>, required <code>DigestMethod</code>, and required <code>DigestValue</code>. That ordering matters even when a tool deliberately stops short of cryptographic validation.</p>
+
+      <pre><code>&lt;ds:Reference URI="/word/document.xml?ContentType=…"&gt;
+  &lt;ds:Transforms&gt;…&lt;/ds:Transforms&gt;  &lt;!-- optional --&gt;
+  &lt;ds:DigestMethod Algorithm="…"/&gt;
+  &lt;ds:DigestValue&gt;…&lt;/ds:DigestValue&gt;
+&lt;/ds:Reference&gt;</code></pre>
+
+      <p>DocFence 0.45 requires that bounded direct-child shape before any bound Manifest reference can contribute coverage. The method needs a nonblank <code>Algorithm</code>. The value must be direct, attribute-free, child-free, and nonempty. Non-whitespace text directly inside the <code>Reference</code> also causes the declaration to remain unsupported.</p>
+
+      <h2>Fail closed without claiming validation</h2>
+
+      <p>This condition sits before the existing narrow OPC transform rules. A relationships reference still needs its one relationship transform followed immediately by C14N; an ordinary part reference still accepts no transform list or one bounded C14N-only list. But a missing digest value, reversed digest children, an empty method algorithm, a nested value, an unexpected value attribute, extra direct children, or direct stray text is not silently treated as coverage.</p>
+
+      <pre><code>Manifest Reference
+  ├─ optional bounded transform declaration
+  ├─ DigestMethod Algorithm="…"
+  └─ plain DigestValue
+
+anything else → aggregate unsupported, no coverage credit</code></pre>
+
+      <p>The release does not parse or decode a digest value, recompute a digest or canonical form, execute a transform, verify an XML signature, inspect a certificate, establish trust, or predict an Office client decision. It enforces only the small declaration shape it is prepared to report.</p>
+
+      <h2>Review signal, not secret material</h2>
+
+      <p>An unsupported declaration changes aggregate unsupported-reference and uncovered-scope evidence. It never copies the part path, reference URI, method algorithm, digest material, certificate data, selectors, or private semantic fingerprint into public JSON, Markdown, or SARIF output.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p><code>DFP092</code> and <code>DFP093</code> remain bounded review gates. They do not turn stored XML into a claim that a signature is valid or trusted.</p>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The regression suite covers missing and misordered digest children, a missing method algorithm, unexpected digest-value attributes and nested markup, extra direct children, and unexpected direct reference text. The full 67-test suite passed. DCAB’s optional DocFence adapter also passed across its 42 deterministic fixtures, including the existing standards-shaped package-signature relationship-type reassignment case.</p>
+
+      <p>The tagged source passed hosted CI on Python 3.11 and 3.13 plus the distribution build. Final source and wheel artifacts were built twice under the committed timestamp and matched byte-for-byte; a fresh wheel installation exercised the DCAB fixture. Both public GitHub release files were then downloaded and byte-compared against those verified artifacts.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.45.0/docfence-0.45.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.45.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.45.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.45.0/docs/validation.md">validation notes</a> define the boundary. Useful static coverage is explicit both about the pieces it recognizes and the cryptographic work it intentionally leaves undone.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
