@@ -26,6 +26,8 @@
 
       <p>A relationship selector is meaningful only as part of the OPC transform sequence that processes it. The prior DocFence release corrected the selector element itself; 0.42 closes the adjacent sequencing gap. A static coverage audit now credits a relationship declaration only when its relationship transform is immediately followed by a supported XML Canonicalization transform.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.42 required a valid transform sequence for each reference, but did not count duplicate relationship transforms for the same relationships part across bound Manifests in one XML signature. <a href="/posts/docfence-430.html">DocFence 0.43</a> now rejects those duplicate declarations as unsupported. The 0.42 parser did not claim XMLDSIG validity, but its static audit did not yet enforce this separate OPC cardinality rule.</p>
+
       <h2>The sequence is part of the declaration</h2>
 
       <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">digital-signature requirements</a> require a producer to follow a relationships transform with canonicalization, and require a consumer to treat a missing successor as an error. They permit XML Canonicalization and XML Canonicalization with Comments alongside the package-specific relationship transform. The transform filters and orders relationship XML; canonicalization gives the resulting XML the byte representation a digest can consume.</p>

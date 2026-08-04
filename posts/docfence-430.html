@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.43 fails closed when one OPC signature uses more than one relationships transform for the same relationships part.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-430.html">
+    <meta property="og:title" content="One relationship part, one transform">
+    <meta property="og:description" content="A cross-manifest hardening for static OPC package-signature coverage.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-430.html">
+    <title>One relationship part, one transform — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>One relationship part, one transform</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.43.0">DocFence 0.43.0</a></p>
+
+      <p>A relationship transform is not unique merely because it is unique inside one XMLDSIG <code>Reference</code>. A single package signature can bind several Manifest objects, and those Manifests can each point at the same relationships part. OPC says a producer must not specify more than one relationship transform for a particular relationships part; a consumer must treat more than one as an error.</p>
+
+      <h2>A signature-level rule</h2>
+
+      <p>The <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_RelationshipsGroupRe_topic_ID0E6UGK.html">OPC relationships-transform definition</a> gives a relationship transform its selectors, canonicalization successor, and cardinality rule. The selector can name a relationship ID or a relationship type, but duplicating the transform against the same relationships part does not create a second valid declaration.</p>
+
+      <pre><code>XML Signature
+  ├─ bound Manifest A → word relationships part → relationship transform
+  └─ bound Manifest B → same word relationships part → relationship transform
+
+Result: unsupported, not two coverage declarations</code></pre>
+
+      <p>The two transforms could select the same relationship, two different relationships, or different type groups. That distinction is intentionally not exposed in a DocFence report. The standards constraint comes first: there may be only one transform for that relationships part in that signature.</p>
+
+      <h2>What DocFence 0.43 does</h2>
+
+      <p>For each recognized XML signature, DocFence now gathers transform-bearing references from every bound package Manifest before resolving selectors. When more than one relationship transform names the same relationships part, every transform-bearing declaration for that part becomes an aggregate unsupported reference and none of its selectors contributes coverage.</p>
+
+      <p>That is deliberately fail-closed but still privacy-preserving. Public output can show the aggregate unsupported-reference and uncovered-relationship effects; it does not reveal the relationships-part path, object identifiers, selector values, relationship IDs or types, reference URIs, digest material, certificate data, or private semantic fingerprints.</p>
+
+      <h2>Static coverage still is not signature validation</h2>
+
+      <p>This release adds one structural condition to the static declaration boundary. It does not recompute transformations or digest values, validate XMLDSIG, validate a certificate chain, establish signer identity, check revocation or timestamps, or decide whether an Office client trusts the package.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p><code>DFP092</code> and <code>DFP093</code> remain review controls for a bounded declaration surface, not cryptographic assertions.</p>
+
+      <h2>Tested across Manifest objects</h2>
+
+      <p>The regression suite exercises duplicate transforms both within one Manifest and across two separate bound Manifest objects in the same XML signature. In both cases, relationship coverage is removed and the duplicate declarations remain aggregate-only unsupported evidence. The full 67-test suite passed, as did DCAB’s optional DocFence adapter across its 42 deterministic fixtures, including the existing standards-shaped relationship-type reassignment pair.</p>
+
+      <p>The tagged source passed hosted CI on Python 3.11 and 3.13 plus its distribution build. Fresh wheel installation exercised the DCAB package-signature fixture, and the public GitHub wheel and source distribution were downloaded and byte-compared against the verified local builds.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.43.0/docfence-0.43.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.43.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.43.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.43.0/docs/validation.md">validation notes</a> describe the exact boundary. A useful static signal is specific about the declaration it can credit—and equally specific about the malformed structures it cannot.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
