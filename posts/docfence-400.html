@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.40 and DCAB 0.30 make static OPC package-signature declaration coverage review-visible without claiming cryptographic validity or client trust.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-400.html">
+    <meta property="og:title" content="Declared coverage is not signature validity">
+    <meta property="og:description" content="A narrowly scoped review boundary for OPC package-signature manifests, with aggregate evidence and a deterministic WordprocessingML benchmark case.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-400.html">
+    <title>Declared coverage is not signature validity — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>Declared coverage is not signature validity</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.40.0">DocFence 0.40.0</a> and <a href="https://github.com/SybilGambleyyu/document-change-benchmark/releases/tag/v0.30.0">DCAB 0.30.0</a></p>
+
+      <p>A Word package can keep its document text and ordinary package structure stable while a package signature’s declared coverage changes. That is useful handoff evidence: a Manifest can stop naming a Word part or a selected relationship. It is not evidence that a signature verifies, that a certificate is trusted, that every package surface is effectively protected, or that an Office client will accept the file.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.40 exposes this narrow static boundary, and <a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.30 makes it independently reproducible. Both releases take the distinction seriously: they review what the package declares, not a cryptographic or client-side result they did not compute.</p>
+
+      <h2>Three questions that must stay separate</h2>
+
+      <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">digital-signature rules</a> define an origin part related from the package root, XML Signature parts related from that origin, and a package-specific signature object with a Manifest. A Manifest can name package parts directly or select individual relationships through the OPC Relationships Transform.</p>
+
+      <p>That gives a reviewer three different questions:</p>
+
+      <ol>
+        <li>What package-signature material is stored?</li>
+        <li>Which bounded Word parts and relationships does its Manifest declare?</li>
+        <li>Does the signature cryptographically validate and meet a consumer’s trust policy?</li>
+      </ol>
+
+      <p>The first two can be useful static observations. The third needs digest calculation, canonicalization, XMLDSIG validation, certificate and revocation handling, signing policy, and ultimately a consumer-specific decision. Treating a Manifest declaration as an answer to that third question produces a false assurance.</p>
+
+      <h2>What DocFence 0.40 actually resolves</h2>
+
+      <p>DocFence follows a deliberately small declaration chain. For each recognized XML signature, it requires a direct local-fragment <code>SignedInfo</code> reference to a direct <code>ds:Object</code> with exactly one direct package <code>ds:Manifest</code>. It then resolves exact local part URI and case-sensitive content-type declarations, plus standard relationships-transform <code>SourceId</code> and <code>SourceType</code> selectors.</p>
+
+      <p>Public reports contain aggregate counts only: signatures with and without a usable declaration chain; covered and uncovered Word parts; covered and uncovered root office-document relationships; covered and uncovered relationships sourced by Word parts; and unresolved or unsupported manifest references. They do not disclose package paths, object identifiers, Manifest URIs, relationship IDs or types, selectors, digest material, certificate data, or fingerprints. A private semantic comparison still lets a same-count reassignment become review-visible.</p>
+
+      <p>The candidate-state gate covers the union of all bound Manifests, while requiring every recognized signature to provide a bound Manifest. It is intentionally not a claim about all package content or every possible client input:</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true</code></pre>
+
+      <p>This emits <code>DFP092</code> when the bounded declaration scope is incomplete, unresolvable, or unsupported. A controlled workflow can instead preserve an approved declaration baseline:</p>
+
+      <pre><code>version: 1
+rules:
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p><code>DFP093</code> catches a material declaration change, including a same-count selector reassignment. Neither rule recomputes a digest or canonicalization, executes arbitrary transforms, verifies XMLDSIG, validates a certificate chain, checks revocation or timestamps, establishes signer identity, or predicts a client’s trust decision. The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.40.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.40.0/docs/threat-model.md">threat model</a> define the exact boundary.</p>
+
+      <h2>A 41st deterministic DCAB pair</h2>
+
+      <p>DCAB 0.30 adds <code>review.package_signature_declared_coverage_changed</code>. Its baseline and candidate retain the same package-member set, signature-origin topology, every non-signature package byte, and the same sequence of stored Word text. Only one synthetic XMLDSIG-shaped signature member differs: the candidate omits one private relationship-selection declaration from an otherwise fixed Manifest.</p>
+
+      <p>The pair is intentionally non-cryptographic. Its digest and signature values are deterministic placeholders, not a sample valid signature. DCAB’s independent structural verifier checks the origin/signature topology, Manifest shape, transform ordering, exact one-member boundary, deterministic regeneration, and target-free truth. Its independent reader check establishes that the packages can be opened as OPC/WordprocessingML inputs; it makes no rendering or runtime claim.</p>
+
+      <p>The optional adapter recognizes only DocFence’s public <code>package_signature_coverage_changed</code> evidence and exact aggregate counts. Raw selectors, reference URIs, part paths, object IDs, and synthetic signature values remain in the fixture contract rather than its public oracle. The 41-case corpus is mirrored on <a href="https://huggingface.co/datasets/SybilGambleyyu/document-change-assurance-benchmark">Hugging Face</a>.</p>
+
+      <h2>Released and verified</h2>
+
+      <p>Both tagged releases passed hosted CI. DCAB 0.30 ran its full source, distribution, and adapter matrix on Python 3.11, 3.12, and 3.13 with the released DocFence 0.40 adapter. Fresh tag checkouts produced validated wheel and source artifacts; their public GitHub downloads were byte-compared against those builds. The dataset mirror’s manifest, new truth file, and pair archives were downloaded and byte-compared as well.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.40.0/docfence-0.40.0-py3-none-any.whl
+python -m pip install https://github.com/SybilGambleyyu/document-change-benchmark/releases/download/v0.30.0/document_change_benchmark-0.30.0-py3-none-any.whl
+
+docfence diff approved.docx candidate.docx --format markdown
+dcab validate</code></pre>
+
+      <p>Use this evidence as a disciplined review signal: a declared coverage change deserves attention, but it remains a declared coverage change until a separate cryptographic and consumer-specific validation process establishes more.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
