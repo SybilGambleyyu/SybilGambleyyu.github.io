@@ -26,6 +26,8 @@
 
       <p>A package signature can contain several XMLDSIG objects, but OPC distinguishes one of them as the package-specific object. A static coverage audit should not select whichever Manifest happens to be reachable and call the result package coverage. Before interpreting any Manifest declarations, it needs to know that it is looking at the one OPC structure those declarations belong to.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.46 established the required package-object and binding topology, but it did not yet validate the required OPC <code>idSignatureTime</code> property inside that object. <a href="/posts/docfence-470.html">DocFence 0.47</a> closes that separate declaration gap by requiring the fixed property ID, target, SignatureTime child shape, and Format/Value lexical agreement before coverage is credited.</p>
+
       <h2>One special object, one binding</h2>
 
       <p>OPC fixes the package-specific object identifier to <code>idPackageObject</code> and gives that object a narrow direct-child structure. Its <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Package_Specific_topic_ID0EWFEK.html">package-specific Object rule</a> requires the Manifest and SignatureProperties pair; its <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_SignedInfo_topic_ID0ECHBK.html">SignedInfo rule</a> requires exactly one reference to that object.</p>

@@ -18,6 +18,14 @@ content.
 now treats that topology as a prerequisite for bounded static
 package-signature coverage.
 
+**Correction, August 4, 2026:** 0.46 established the required package-object
+and binding topology, but it did not yet validate the required OPC
+<code>idSignatureTime</code> property inside that object.
+[DocFence 0.47](https://sybilgambleyyu.github.io/posts/docfence-470.html)
+closes that separate declaration gap by requiring the fixed property ID,
+target, SignatureTime child shape, and Format/Value lexical agreement before
+coverage is credited.
+
 ## One special object, one binding
 
 OPC fixes the package-specific object identifier to <code>idPackageObject</code>.

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.47 credits static OPC package-signature coverage only when the required idSignatureTime declaration has its exact stored shape.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-470.html">
+    <meta property="og:title" content="A timestamp declaration needs its shape">
+    <meta property="og:description" content="Exact OPC signature-time structure before bounded static coverage is credited.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-470.html">
+    <title>A timestamp declaration needs its shape — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A timestamp declaration needs its shape</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.47.0">DocFence 0.47.0</a></p>
+
+      <p>An OPC package signature carries a claimed signing time in a very specific place. Once a static review tool treats the package-specific Object as the carrier of coverage declarations, it should not treat a malformed, unrelated, or internally inconsistent time property as if that carrier were conforming. The timestamp is not proof of time or trust—but its stored structure is part of the standard declaration.</p>
+
+      <h2>One fixed property below the package object</h2>
+
+      <p>The current <a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Part 2</a> rules require a SignatureProperty below the OPC-specific Object to use the fixed <code>idSignatureTime</code> ID, point either nowhere or to the root Signature ID, and contain a SignatureTime element and no other elements. The accompanying <a href="https://ecma-international.org/wp-content/uploads/ECMA-376-2_5th_edition_december_2021.zip">official schema bundle</a> fixes SignatureTime to an ordered Format/Value pair.</p>
+
+      <pre><code>ds:Object Id="idPackageObject"
+  └─ ds:SignatureProperties
+       └─ ds:SignatureProperty
+            Id="idSignatureTime"
+            Target="" or "#&lt;root Signature Id&gt;"
+            └─ opc:SignatureTime
+                 ├─ opc:Format
+                 └─ opc:Value</code></pre>
+
+      <p>DocFence 0.47 accepts coverage only after that direct shape holds: one property, no unexpected attributes, an empty or exact root-signature fragment target, one attribute-free SignatureTime child, then attribute-free Format and Value leaves. It recognizes every OPC schema precision—year, month, date, minute, second, and one decimal-second digit—and requires the stored Value to match the declared Format.</p>
+
+      <h2>Fail closed on a malformed claim</h2>
+
+      <p>A missing timestamp property, a different ID, an absent or misdirected target, duplicate properties, unexpected attributes or children, an unknown Format, or a Value that does not match its Format now leaves static package coverage unavailable. No Manifest references are combined or partly credited after that failure.</p>
+
+      <p>This is intentionally narrow. DocFence does not decide whether a claimed time is accurate, validate a timestamp authority, recompute a digest, execute a transform, verify XMLDSIG, inspect a certificate, establish trust, or predict an Office client. It recognizes the stored OPC declaration it is prepared to report—and says no more.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p>DFP092 and DFP093 therefore remain bounded review controls. They are useful precisely because they do not recast a static declaration check as a security verdict.</p>
+
+      <h2>Compatibility was part of the change</h2>
+
+      <p>The 68-test suite now exercises all six accepted time formats and the permitted empty Target form, alongside missing, duplicate, misidentified, mis-targeted, attribute-bearing, missing-child, extra-child, nonstandard-format, and format/value-mismatched declarations. DCAB’s full adapter suite also passed against a fresh DocFence wheel.</p>
+
+      <p>A signed baseline from the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a> retained its complete bounded declaration: six Word parts, one root-document relationship, and five Word relationships. The published content-injection, universal-signature-forgery, duplicate-document, and evil-type variants still expose uncovered or unavailable declaration surfaces. This tests stored compatibility only; it is not a trust or safety verdict about any sample.</p>
+
+      <p>Main and tagged CI both passed. Wheel and source archives were independently rebuilt under the commit timestamp and matched byte-for-byte; fresh wheel and source installations profiled the signed baseline, and the public GitHub release downloads were byte-compared with those verified artifacts.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.47.0/docfence-0.47.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.47.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.47.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.47.0/docs/validation.md">validation notes</a> define the exact boundary. Useful static review is not about making every package look trustworthy; it is about refusing to call a declaration complete when its required structure is not there.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
