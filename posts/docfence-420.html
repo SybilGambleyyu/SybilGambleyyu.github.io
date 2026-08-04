@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.42 hardens static OPC package-signature coverage: a relationships transform must be immediately followed by XML Canonicalization.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-420.html">
+    <meta property="og:title" content="A selector needs its canonicalization">
+    <meta property="og:description" content="A narrower, fail-closed static boundary for OPC relationship-transform declarations.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-420.html">
+    <title>A selector needs its canonicalization — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 4, 2026</p>
+      <h1>A selector needs its canonicalization</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.42.0">DocFence 0.42.0</a></p>
+
+      <p>A relationship selector is meaningful only as part of the OPC transform sequence that processes it. The prior DocFence release corrected the selector element itself; 0.42 closes the adjacent sequencing gap. A static coverage audit now credits a relationship declaration only when its relationship transform is immediately followed by a supported XML Canonicalization transform.</p>
+
+      <h2>The sequence is part of the declaration</h2>
+
+      <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">digital-signature requirements</a> require a producer to follow a relationships transform with canonicalization, and require a consumer to treat a missing successor as an error. They permit XML Canonicalization and XML Canonicalization with Comments alongside the package-specific relationship transform. The transform filters and orders relationship XML; canonicalization gives the resulting XML the byte representation a digest can consume.</p>
+
+      <pre><code>&lt;ds:Transforms&gt;
+  &lt;ds:Transform Algorithm="…/RelationshipTransform"&gt;
+    &lt;opc:RelationshipReference SourceId="…"/&gt;
+  &lt;/ds:Transform&gt;
+  &lt;ds:Transform Algorithm="…/REC-xml-c14n-20010315"/&gt;
+&lt;/ds:Transforms&gt;</code></pre>
+
+      <p>That does not make DocFence an XMLDSIG validator. It is a narrow condition on when the tool will treat a stored selector as a static coverage declaration. Without it, a malformed transform chain could look like coverage even though an OPC signature consumer must reject the sequence.</p>
+
+      <h2>What 0.42 accepts</h2>
+
+      <p>For a manifest reference to a relationships part, DocFence now requires one direct <code>ds:Transforms</code> list whose direct children are XMLDSIG <code>Transform</code> elements using only the OPC relationship algorithm or either OPC-supported C14N algorithm. It requires exactly one relationship transform and checks that its next sibling is C14N. The standard <code>RelationshipReference/@SourceId</code> and <code>RelationshipsGroupReference/@SourceType</code> selectors are then resolved case-sensitively.</p>
+
+      <p>A missing successor, reversed order, duplicate <code>ds:Transforms</code> list, or unsupported trailing transform is kept as one aggregate unsupported manifest reference. No selector, relationship ID or type, URI, part path, digest material, certificate data, or private semantic fingerprint enters the public report.</p>
+
+      <h2>Useful static evidence has a boundary</h2>
+
+      <p>The two policy controls remain unchanged:</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p><code>DFP092</code> can require complete coverage in DocFence’s bounded Word scope, while <code>DFP093</code> preserves an approved static-declaration baseline. Neither recomputes transformations or digests, verifies an XML signature, validates a certificate or trust chain, checks revocation, establishes signer identity, or predicts an Office client’s decision.</p>
+
+      <h2>An existing independent fixture already uses the sequence</h2>
+
+      <p>DCAB 0.31’s relationship-type reassignment case already writes the required relationship-transform-then-C14N sequence and independently validates that exact order. A fresh DocFence 0.42 installation still recognizes its same-count <code>package_signature_coverage_changed</code> boundary across the 42-case corpus. The fixture remains deliberately non-cryptographic: it tests static declaration handling, not signature validity.</p>
+
+      <h2>Released and checked</h2>
+
+      <p>The tagged source passed hosted CI on Python 3.11 and 3.13, including build and distribution metadata checks. Fresh wheel installation exercised the DCAB relationship-type fixture, and the public GitHub wheel and source distribution were downloaded and byte-compared against the verified local builds.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.42.0/docfence-0.42.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.42.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.42.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.42.0/docs/validation.md">validation notes</a> define the exact boundary. A static signal gains trust by narrowing what it credits—not by silently implying the rest of signature validation.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>

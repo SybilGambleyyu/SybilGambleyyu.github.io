@@ -28,6 +28,8 @@
 
       <p><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a> 0.41 corrects that boundary, and <a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> (DCAB) 0.31 adds an independently generated test case for it. The change is intentionally narrow: it makes one standards-defined static declaration auditable. It does not turn a declaration into cryptographic validation or a client-trust decision.</p>
 
+      <p><strong>Correction, August 4, 2026:</strong> 0.41 corrected the selector-element form but did not require the standard canonicalization transform immediately after a relationship transform. <a href="/posts/docfence-420.html">DocFence 0.42</a> now treats missing, misordered, duplicate-list, or otherwise unsupported transform sequences as unsupported rather than crediting coverage. The 0.41 parser did not claim to verify a signature, but its selector audit was broader than this OPC sequencing requirement.</p>
+
       <h2>The two selector forms</h2>
 
       <p>The OPC <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Relationships_topic_ID0EMCHK.html">Relationships Transform Algorithm</a> filters stored relationship elements when their <code>@Id</code> matches a declared <code>@SourceId</code> or their <code>@Type</code> matches a declared <code>@SourceType</code>; both comparisons are case-sensitive. The accompanying digital-signature markup defines two distinct selector elements:</p>
