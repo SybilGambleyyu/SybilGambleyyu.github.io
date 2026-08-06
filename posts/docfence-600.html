@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.60 validates the direct XMLDSIG Signature and SignedInfo child sequences in recognized OPC signatures.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-600.html">
+    <meta property="og:title" content="A signature has an order">
+    <meta property="og:description" content="DocFence 0.60 enforces the direct XMLDSIG Signature and SignedInfo grammar needed for its bounded signature inventory.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-600.html">
+    <title>A signature has an order — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A signature has an order</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.60.0">DocFence 0.60.0</a></p>
+
+      <p>An XML package signature is not a bag of familiar element names. Its core grammar fixes the direct order of the elements that give a signature its meaning. DocFence 0.60 makes that order part of the recognized OPC signature boundary before it records package-signature or declared-coverage evidence.</p>
+
+      <h2>The direct grammar matters</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.1 requires a Digital Signature XML Signature part to be schema-valid against the XMLDSIG and OPC signature schemas. The XMLDSIG core schema begins a signature with this direct sequence:</p>
+
+      <pre><code>ds:Signature
+  ds:SignedInfo
+  ds:SignatureValue
+  ds:KeyInfo?       # optional
+  ds:Object*        # zero or more</code></pre>
+
+      <p>Its <code>SignedInfo</code> child has an equally fixed sequence:</p>
+
+      <pre><code>ds:SignedInfo
+  ds:CanonicalizationMethod
+  ds:SignatureMethod
+  ds:Reference+</code></pre>
+
+      <p>Before 0.60, DocFence counted the required elements but did not insist on their direct sequence. A reordered or stray element could therefore retain a recognizable-looking inventory even though it was not the XMLDSIG structure that OPC requires.</p>
+
+      <h2>A bounded grammar check</h2>
+
+      <p>DocFence now requires those two direct sequences. At this boundary <code>SignedInfo</code> and <code>SignatureValue</code> may carry only their optional <code>Id</code> attribute; <code>SignatureValue</code> cannot contain child XML; and <code>SignatureMethod/@Algorithm</code> must be present and nonblank.</p>
+
+      <p>This remains intentionally smaller than full schema validation. DocFence does not validate base64 lexical content, method parameters, <code>KeyInfo</code> or application-defined <code>Object</code> payloads, reference digests, XMLDSIG cryptography, certificates, revocation, signer identity, or trust. It checks the stored grammar needed before a bounded inventory can say that it recognized a signature part.</p>
+
+      <pre><code>version: 1
+rules:
+  require_no_package_digital_signatures: true
+  no_package_digital_signature_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 70-test suite covers a missing <code>SignatureMethod/@Algorithm</code>, reordering and unexpected direct <code>Signature</code> and <code>SignedInfo</code> children, nested and extra-attribute <code>SignatureValue</code> markup, plus permitted <code>Id</code> attributes. Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, all 21 parseable XML signature roots use these sequences; their public profiles remain identical to 0.59.</p>
+
+      <p>Main and tagged CI passed. Two independent epoch-fixed builds were byte-identical; anonymous downloads of the published wheel and source distribution matched those artifacts byte-for-byte. SHA-256: wheel <code>e1431e08fcffb9ce84cdb624ca741d0d0a81c52523063546c9dade0afbcd9571</code>; source distribution <code>4b8dd4141a4573d450de9e69e9c56c5122289979eaa93a123d68b05b9f1a28cd</code>.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.60.0/docfence-0.60.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.60.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.60.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.60.0/docs/validation.md">validation notes</a> explain the direct grammar and its limits. Recognition should begin with the structure a signature actually declares.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
