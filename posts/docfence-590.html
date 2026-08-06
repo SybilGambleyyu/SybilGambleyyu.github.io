@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.59 makes static OPC relationship-signature coverage follow ASCII-case-insensitive selector matching.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-590.html">
+    <meta property="og:title" content="A relationship match is not case-sensitive">
+    <meta property="og:description" content="DocFence 0.59 follows OPC's ASCII-case-insensitive relationship selector matching rule.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-590.html">
+    <title>A relationship match is not case-sensitive — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A relationship match is not case-sensitive</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.59.0">DocFence 0.59.0</a></p>
+
+      <p>A relationship selector's placement and attributes are syntax. Once that syntax is valid, the OPC Relationships Transform defines exactly which stored relationships the selector chooses. <a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.6 says that matching is ASCII case-insensitive. DocFence 0.59 now applies that rule in its bounded static coverage audit.</p>
+
+      <h2>Selection is an algorithm, not a string lookup</h2>
+
+      <p>Consider a stored relationship and a well-shaped selector:</p>
+
+      <pre><code>&lt;Relationship Id="rIdStyles"
+  Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
+  Target="styles.xml"/&gt;
+
+&lt;opc:RelationshipReference SourceId="RIDSTYLES"/&gt;</code></pre>
+
+      <p>Those two ID values differ only in ASCII letter case. The transform selects the relationship. The same rule applies to a <code>RelationshipsGroupReference/@SourceType</code> and a stored relationship <code>Type</code>. If several stored IDs differ only by ASCII case, every matching relationship is selected.</p>
+
+      <p>Earlier DocFence coverage resolution used exact string equality. A standards-shaped declaration with a case-only difference could therefore look unresolved or uncovered even though the OPC transform would select it. That is a correctness gap in an audit meant to state what stored declarations cover.</p>
+
+      <h2>A deliberately narrow correction</h2>
+
+      <p>0.59 folds only ASCII <code>A</code>–<code>Z</code> when comparing selector values with stored relationship IDs and types. It does not apply broad Unicode normalization, rewrite package content, widen the selector syntax accepted in 0.58, execute a transform, canonicalize XML, recompute a digest, verify XMLDSIG, or make a trust decision.</p>
+
+      <p>The global boundary remains strict: selectors must be direct, child-free children of a Relationship Transform with exactly their required attribute. The change occurs only after that syntax passes, when DocFence reports bounded declared package-signature coverage.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 70-test suite now covers case-insensitive <code>SourceId</code> matching, case-insensitive <code>SourceType</code> matching, and a selector that must select multiple case-colliding IDs. Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, 21 XML signature parts parse successfully. Their 38 Relationship Transforms contain 106 direct selectors; none has a case-only stored match or a folded-ID collision, so their public profiles remain identical to 0.58.</p>
+
+      <p>Main and tagged CI passed. Two independent epoch-fixed builds were byte-identical; anonymous downloads of the published wheel and source distribution matched those artifacts byte-for-byte. SHA-256: wheel <code>94aca4b08950ba5f9e586c65424361620a654db53d87029522aa2b8ce787a625</code>; source distribution <code>31ca90d4c5fb8131b1df0bb960d2ac78344667b923e9c0c402391aac4e5ccdee</code>.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.59.0/docfence-0.59.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.59.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.59.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.59.0/docs/validation.md">validation notes</a> describe the exact scope. A coverage statement should follow the transform it is describing—no more, and no less.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
