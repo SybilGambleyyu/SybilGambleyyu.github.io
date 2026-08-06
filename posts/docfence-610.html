@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.61 matches OPC manifest ContentType values case-insensitively in its bounded signature-coverage audit.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-610.html">
+    <meta property="og:title" content="A content type is not case-sensitive">
+    <meta property="og:description" content="DocFence 0.61 makes bounded OPC manifest coverage follow the standard's case-insensitive ContentType rule.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-610.html">
+    <title>A content type is not case-sensitive — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A content type is not case-sensitive</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.61.0">DocFence 0.61.0</a></p>
+
+      <p>An OPC package-signature manifest identifies a stored part with a local URI and a <code>ContentType</code> query value. Those are not the same kind of comparison. The part name is exact; the query value is a media type. DocFence 0.61 now keeps that distinction in its bounded declaration-coverage audit.</p>
+
+      <h2>The value after <code>ContentType=</code> is a media type</h2>
+
+      <p>A declaration can look like this:</p>
+
+      <pre><code>&lt;ds:Reference URI="/word/styles.xml?ContentType=APPLICATION/XML"&gt;
+  ...
+&lt;/ds:Reference&gt;</code></pre>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.7.3 defines the value after <code>ContentType=</code> as the case-insensitive media type of the target part. <code>APPLICATION/XML</code> and <code>application/xml</code> therefore name the same type. Earlier DocFence releases used exact string equality here, so a standards-shaped declaration with only an ASCII case difference could look unresolved.</p>
+
+      <h2>One rule, three bounded paths</h2>
+
+      <p>0.61 folds only ASCII <code>A</code>–<code>Z</code> when it compares a manifest ContentType value. It applies that rule to ordinary part references, relationship-part references, and the global local-context check that validates an OPC Relationship Transform. The local URI grammar, the <code>ContentType</code> query key, and stored part names remain exact.</p>
+
+      <p>This is not a new MIME parser or a broader signature validator. DocFence does not strip parameters, normalize arbitrary Unicode, rewrite a package, execute a transform, canonicalize XML, recompute a digest, verify XMLDSIG, validate a certificate, or make a trust decision. It corrects the one comparison that determines whether its static declaration inventory can credit a standards-shaped reference.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 71-test suite now includes a case-varied ordinary-part media type and a case-varied relationship-part media type. The latter exercises both the manifest resolver and the Relationship Transform local-context boundary. A genuinely different relationship content type remains rejected.</p>
+
+      <p>Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, 21 XML signature parts parse successfully. They contain 152 package-manifest references; 133 are resolvable and all 133 already use the exact stored ContentType spelling. No corpus profile changes from 0.60. Main and tagged CI passed, and the independent <a href="https://github.com/SybilGambleyyu/document-change-benchmark">Document Change Assurance Benchmark</a> adapter passed against the tagged wheel.</p>
+
+      <p>Two independent epoch-fixed builds were byte-identical. Public downloads of the published wheel and source distribution matched those artifacts byte-for-byte. SHA-256: wheel <code>ae079b409cda0dfe6c033d5e16c5e17fa5ae35dfe0359b2969fb88ab7bc72d6b</code>; source distribution <code>230692c46bfcc69d229b273f8305fd23a5cec1fd48b330a368d584a4c5e924d2</code>.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.61.0/docfence-0.61.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.61.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.61.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.61.0/docs/validation.md">validation notes</a> define the boundary. A coverage statement should use the comparison rule the package format actually specifies.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
