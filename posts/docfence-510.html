@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.51 accepts only OPC’s two permitted SignedInfo canonicalization methods before recognizing a package XML signature.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-510.html">
+    <meta property="og:title" content="A canonicalization method has a boundary">
+    <meta property="og:description" content="OPC permits exactly two SignedInfo canonicalization methods; DocFence now treats that as a structural signature boundary.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-510.html">
+    <title>A canonicalization method has a boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A canonicalization method has a boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.51.0">DocFence 0.51.0</a></p>
+
+      <p>A structure-only package-signature audit still has to distinguish a declared OPC signature from generic XMLDSIG-shaped markup. In <code>SignedInfo</code>, OPC makes that distinction explicit: the canonicalization method has exactly two permitted Algorithm URIs. Counting the element without reading that declaration makes the boundary looser than the package format itself.</p>
+
+      <h2>OPC permits two methods</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.5 says that packages shall use only XML Canonicalization or XML Canonicalization with Comments. Their Algorithm values are:</p>
+
+      <pre><code>http://www.w3.org/TR/2001/REC-xml-c14n-20010315
+http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments</code></pre>
+
+      <p>That is deliberately different from the neighboring SignatureMethod guidance, which uses recommendations and permits other algorithms. A parser can enforce this exact package-format requirement without pretending to decide cryptographic strength, signature validity, or trust.</p>
+
+      <h2>What DocFence 0.51 changes</h2>
+
+      <p>A recognized package XML signature must now contain one direct <code>SignedInfo/CanonicalizationMethod</code> whose <code>Algorithm</code> is exactly one of those two URIs. A missing attribute or another URI fails the recognized XML-signature shape closed. Both standard C14N and the comments-preserving form remain accepted.</p>
+
+      <p>This is intentionally upstream of the bounded declaration-coverage inventory. It prevents generic or malformed XMLDSIG markup from being reported as an OPC package signature in the first place; it does not expand DFP092 or DFP093 into a cryptographic policy.</p>
+
+      <h2>No canonicalization is performed</h2>
+
+      <p>DocFence reads the stored Algorithm URI only. It does not execute canonicalization, evaluate transforms, decode or recompute a digest, validate a SignatureMethod, verify XMLDSIG, inspect certificates, establish trust, or predict what an Office client will accept. Algorithm values, reference URIs, selectors, paths, digest material, and document contents stay out of public reports.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <p>Those remain bounded stored-declaration gates, not a substitute for a verifier and a trust policy.</p>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The 69-test suite now covers ordinary C14N, C14N with comments, a missing Algorithm attribute, and an unsupported Algorithm. The public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a> contain 22 XML signature parts: all 21 parseable declarations use standard C14N, while the remaining attacker part is empty and already fails XML parsing.</p>
+
+      <p>Aggregate DocFence profiles for all 29 DOCX fixtures are identical between 0.50 and 0.51. Main and tagged CI passed, and an isolated wheel accepts both permitted methods while rejecting a targeted unsupported mutation. The public wheel and source archive were then byte-compared with the reproducible release build.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.51.0/docfence-0.51.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.51.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.51.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.51.0/docs/validation.md">validation notes</a> define the contract. An exact conformance declaration is useful precisely because it says less than a trust verdict—and can be tested reliably.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
