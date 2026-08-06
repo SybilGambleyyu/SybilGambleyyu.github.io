@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.57 requires every OPC Relationship Transform to have its required manifest, selector, canonicalization, and relationships-part context.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-570.html">
+    <meta property="og:title" content="A Relationship Transform belongs in the package manifest">
+    <meta property="og:description" content="DocFence 0.57 rejects Relationship Transforms outside their required OPC package context before coverage analysis.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-570.html">
+    <title>A Relationship Transform belongs in the package manifest — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A Relationship Transform belongs in the package manifest</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.57.0">DocFence 0.57.0</a></p>
+
+      <p>OPC allows only three XMLDSIG transform algorithms in a package signature, but the Relationship Transform is not interchangeable with canonicalization. It has a defined input: a relationships part selected from a package manifest. DocFence 0.57 enforces that context everywhere in a recognized XML signature before its bounded static coverage audit begins.</p>
+
+      <h2>A permitted URI still needs a home</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.8.2 gives the <a href="https://c-rex.net/samples/ooxml/e1/Part2/OOXML_P2_Open_Packaging_Conventions_Digital_topic_ID0EHROM.html">Relationship Transform</a> a local grammar. In DocFence, every occurrence must satisfy these stored-package constraints:</p>
+
+      <pre><code>ds:Manifest
+  ds:Reference URI="/...rels?ContentType=application/vnd.openxmlformats-package.relationships+xml"
+    ds:Transforms
+      opc Relationship Transform with a direct relationship selector
+      immediate XML Canonicalization transform</code></pre>
+
+      <p>The reference URI must declare a <code>.rels</code> part using OPC's exact relationships content type. The transform must contain at least one direct <code>opc:RelationshipReference</code> or <code>opc:RelationshipsGroupReference</code>, and the next transform must be XML Canonicalization, with or without comments. A recognized signature may name a declared relationships part with the Relationship Transform only once.</p>
+
+      <h2>Coverage cannot downgrade malformed context</h2>
+
+      <p>Before 0.57, the transform-algorithm allowlist correctly blocked unknown algorithms but still allowed a permitted Relationship Transform in a same-document <code>SignedInfo</code> Reference that was not a manifest relationship declaration. It could remain an inventoryable signature because the coverage audit intentionally follows only one package-specific object. Now that stray transform makes the recognized signature malformed immediately.</p>
+
+      <p>The same boundary rejects a selectorless transform, a transform without its following canonicalization step, a misordered step, a transform whose reference names an ordinary Word part, a wrong relationships content type, and duplicate transforms for the same declared relationships part. These are syntax and placement checks; they do not become merely “unsupported coverage” counts.</p>
+
+      <h2>Still not a transform engine</h2>
+
+      <p>This is deliberately narrower than XMLDSIG verification. DocFence does not resolve a declared target for this boundary, interpret selector values, execute a transform, canonicalize XML, recompute a digest, verify a signature, validate certificates, establish trust, or predict Office behavior. Its later static audit can resolve a small declared subset for coverage, while public reports keep paths, selectors, algorithms, URIs, values, and document contents private.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 69-test suite includes a fully declared fixture with an extra <code>SignedInfo</code> Relationship Transform, missing selector and canonicalization variants, wrong-content-type and ordinary-Word-part variants, and duplicate declarations. The standard declared-coverage fixture remains accepted. Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, 22 XML signature parts are present and 21 parse successfully. All 38 Relationship Transforms meet this boundary, and public profiles are byte-identical to 0.56.</p>
+
+      <p>Main and tagged CI passed on Python 3.11 and 3.13. Two independent tagged builds were byte-identical; the published wheel and source distribution were downloaded anonymously and byte-compared with that build.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.57.0/docfence-0.57.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.57.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.57.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.57.0/docs/validation.md">validation notes</a> define the exact boundary. XMLDSIG remains broad; an OPC signature must also be structurally in the package form it claims to use.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
