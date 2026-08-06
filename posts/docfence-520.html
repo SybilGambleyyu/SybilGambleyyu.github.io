@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.52 rejects non-local SignedInfo Reference URIs before recognizing an OPC package XML signature.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-520.html">
+    <meta property="og:title" content="A signature reference cannot leave its document">
+    <meta property="og:description" content="OPC keeps SignedInfo references inside the same Signature; DocFence now treats that as a fail-closed structural boundary.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-520.html">
+    <title>A signature reference cannot leave its document — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A signature reference cannot leave its document</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.52.0">DocFence 0.52.0</a></p>
+
+      <p>Generic XMLDSIG can describe detached signatures over other resources. OPC package signatures cannot use that flexibility inside <code>SignedInfo</code>: every Reference there must point only within the same <code>Signature</code> element. A parser that inventories package signatures should establish that location boundary before reporting generic XMLDSIG markup as OPC evidence.</p>
+
+      <h2>Same document means an explicit URI form</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.7.2 requires <code>SignedInfo</code> References to reference elements only in the same Signature. XMLDSIG defines its same-document URI forms as either an empty URI or a URI beginning with a fragment:</p>
+
+      <pre><code>&lt;Reference URI=""&gt;…&lt;/Reference&gt;
+&lt;Reference URI="#idPackageObject"&gt;…&lt;/Reference&gt;</code></pre>
+
+      <p>Those forms identify the XML document that contains the Signature or an element in it. In contrast, a missing URI leaves object identity to application context, and a package-relative or absolute URI names something outside that XML Signature document.</p>
+
+      <h2>What DocFence 0.52 rejects</h2>
+
+      <p>Every direct <code>SignedInfo/Reference</code> must now carry either the explicit empty URI or a nonempty local fragment beginning with <code>#</code>. An omitted URI, a package path such as <code>/word/document.xml</code>, or an absolute URI fails the recognized XML-signature shape closed.</p>
+
+      <p>This runs before package-signature inventory and static declaration coverage. It prevents a foreign detached-signature model from borrowing OPC-looking relationships and content types; it does not change the meaning of a valid coverage declaration or turn DFP092 and DFP093 into signature verification.</p>
+
+      <h2>No URI is followed</h2>
+
+      <p>DocFence does not dereference a URI, resolve a fragment or XPointer, perform canonicalization, evaluate transforms, recompute a digest, verify XMLDSIG, inspect certificates, establish trust, or predict an Office client. The rule classifies only the stored URI location syntax. Public reports still withhold reference URIs, selectors, paths, digest material, and document contents.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and compatibility</h2>
+
+      <p>The 69-test suite covers both accepted forms—an empty URI and a local fragment—plus missing, package-relative, and absolute URIs. The public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a> contain 29 DOCX fixtures. Compared with 0.51, exactly one profile changes: a published universal-signature-forgery attacker package has eight ODF-style package-file References in <code>SignedInfo</code> and now fails structurally rather than being inventoried as an OPC signature. The other 28 profiles are unchanged.</p>
+
+      <p>Main and tagged CI passed. Fresh wheel and source-distribution installations accept a valid signed OPC baseline and reject that real foreign-reference fixture. The public GitHub release downloads were byte-compared with the reproducible build.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.52.0/docfence-0.52.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.52.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.52.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.52.0/docs/validation.md">validation notes</a> define the boundary. A structural scanner is most useful when it can say exactly where stored package syntax stops supporting the claim it is being asked to inventory.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
