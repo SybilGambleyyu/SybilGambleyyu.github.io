@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.64 rejects undeclared XMLDSIG CanonicalizationMethod and SignatureMethod attributes in recognized OPC package signatures.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-640.html">
+    <meta property="og:title" content="A method has an attribute boundary">
+    <meta property="og:description" content="DocFence 0.64 closes an XMLDSIG SignedInfo method-attribute gap before static OPC signature inventory.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-640.html">
+    <title>A method has an attribute boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A method has an attribute boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.64.0">DocFence 0.64.0</a></p>
+
+      <p>XMLDSIG's two direct <code>SignedInfo</code> method declarations each have one required attribute: <code>Algorithm</code>. DocFence 0.64 now enforces that small attribute grammar before treating a recognized OPC package signature as structurally valid.</p>
+
+      <h2>Parameters are children, not attributes</h2>
+
+      <p>XMLDSIG's <a href="https://www.w3.org/TR/xmldsig-core/#sec-CanonicalizationMethod"><code>CanonicalizationMethodType</code></a> and <a href="https://www.w3.org/TR/xmldsig-core/#sec-SignatureMethod"><code>SignatureMethodType</code></a> require <code>Algorithm</code> and declare no other attributes. Their schemas do permit parameter elements, so DocFence keeps that distinction explicit:</p>
+
+      <pre><code>&lt;ds:CanonicalizationMethod
+    Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"&gt;
+  &lt;method:Parameter xmlns:method="urn:example"/&gt;
+&lt;/ds:CanonicalizationMethod&gt;
+
+&lt;ds:SignatureMethod
+    Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"&gt;
+  &lt;method:Parameter xmlns:method="urn:example"/&gt;
+&lt;/ds:SignatureMethod&gt;</code></pre>
+
+      <p>In 0.64, an extra or missing attribute closes the recognized signature shape. Parameter child markup remains outside this bounded check; DocFence does not parse a parameter, execute canonicalization, recompute a digest, or verify XMLDSIG.</p>
+
+      <h2>A small rule at the right boundary</h2>
+
+      <p>The check belongs where DocFence already requires the fixed direct <code>SignedInfo</code> order: <code>CanonicalizationMethod</code>, <code>SignatureMethod</code>, then one or more references. The canonicalization URI must still be one of OPC's two permitted forms, and the signature-method URI must still be nonblank. This addition prevents unrecognized method attributes from being treated as ordinary metadata without broadening the tool into a general XMLDSIG validator.</p>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 73-test suite now rejects an extra attribute on either method while accepting schema-permitted parameter children. Across the 29 DOCX files in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, all 21 parseable signature parts use only <code>Algorithm</code> on both method kinds. Every captured profile outcome matches 0.63 byte-for-byte.</p>
+
+      <p>Two independent epoch-fixed builds were byte-identical. SHA-256: wheel <code>b5ae20ee7164ce323a77776d42d8568e71b1b7ea7a0d31694e84bb6cb7b7ad42</code>; source distribution <code>a4a23e70d3e0ee419ebedfc57f3f4b447f72e55541bcd61f841480db1ba1a8ba</code>.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.64.0/docfence-0.64.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.64.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.64.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.64.0/docs/validation.md">validation notes</a> define the boundary. A static assurance tool should distinguish an allowed method parameter from undeclared direct method metadata.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
