@@ -17,6 +17,12 @@ authority merely because the outer algorithm name is canonicalization.
 [DocFence 0.49.0](https://github.com/SybilGambleyyu/docfence/releases/tag/v0.49.0)
 now rejects that forbidden parameter throughout its bounded declaration chain.
 
+**Correction, August 6, 2026:** 0.49 closes the XPath-parameter gap, but it did
+not yet apply OPC's explicit <code>DigestMethod</code> MD5 prohibition to the
+declaration chain. [DocFence 0.50](https://sybilgambleyyu.github.io/posts/docfence-500.html)
+closes that separate digest-method boundary without turning SHA-1 guidance into
+a broader cryptographic policy.
+
 ## OPC narrows a generic XMLDSIG surface
 
 The [ECMA-376 Open Packaging Conventions standard](https://ecma-international.org/publications-and-standards/standards/ecma-376/)

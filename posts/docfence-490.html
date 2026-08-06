@@ -26,6 +26,8 @@
 
       <p>A transform URI can look compatible while its stored parameter markup says otherwise. XMLDSIG’s generic <code>Transform</code> schema allows an XPath parameter, but OPC explicitly disallows the <code>ds:XPath</code> element. A bounded package-signature coverage audit should not give that declaration authority merely because the outer algorithm name is canonicalization.</p>
 
+      <p><strong>Correction, August 6, 2026:</strong> 0.49 closes the XPath-parameter gap, but it did not yet apply OPC’s explicit <code>DigestMethod</code> MD5 prohibition to the declaration chain. <a href="/posts/docfence-500.html">DocFence 0.50</a> closes that separate digest-method boundary without turning SHA-1 guidance into a broader cryptographic policy.</p>
+
       <h2>OPC narrows a generic XMLDSIG surface</h2>
 
       <p>The <a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions standard</a> limits package-signature transforms to its canonicalization forms and its Relationships transform. Its XPath rule is even more direct: XPath filtering is not allowed in an OPC signature. XMLDSIG, however, defines <code>ds:Transform</code> as a generic parameter carrier, so a syntactically ordinary canonicalization transform can still contain a nested XPath element.</p>
