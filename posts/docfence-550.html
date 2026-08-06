@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.55 rejects Markup Compatibility namespace markup inside recognized OPC package signatures.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-550.html">
+    <meta property="og:title" content="Markup Compatibility cannot live inside an OPC signature">
+    <meta property="og:description" content="DocFence applies OPC's MCE namespace prohibition to every recognized package XML signature.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-550.html">
+    <title>Markup Compatibility cannot live inside an OPC signature — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>Markup Compatibility cannot live inside an OPC signature</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.55.0">DocFence 0.55.0</a></p>
+
+      <p>OOXML Markup Compatibility (MCE) is useful in ordinary document markup: it can retain alternatives for consumers with different feature support. An OPC package XML signature is a different boundary. The package-signature rules prohibit MCE-namespace elements and attributes in the Signature itself. A static review tool should enforce that rule over the whole recognized signature, not mistake compatibility markup for a normal branch to inventory.</p>
+
+      <h2>Two scopes, deliberately separate</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.2 applies a namespace-level restriction to a Digital Signature XML Signature part. DocFence 0.55 rejects any MCE-namespace element or attribute anywhere in a recognized package XML signature.</p>
+
+      <pre><code>&lt;ds:Signature … mc:Ignorable="w14"&gt;
+  …
+&lt;/ds:Signature&gt;
+
+&lt;ds:Signature …&gt;
+  …
+  &lt;mc:AlternateContent&gt;…&lt;/mc:AlternateContent&gt;
+&lt;/ds:Signature&gt;</code></pre>
+
+      <p>This does not change DocFence's existing MCE inventory. That inventory deliberately scans stored non-relationship <code>word/*.xml</code> members and retains branch and compatibility-rule evidence privately while reporting only aggregate counts. It does not validate MCE conformance, resolve a feature prefix, choose a branch, preprocess a package, or predict an Office client.</p>
+
+      <p>Signature parts do not enter that Word-part inventory. Once an OPC signature is recognized through its declared package topology and basic XMLDSIG shape, MCE markup there is malformed signature syntax. The check is structural: it does not interpret the markup that caused rejection.</p>
+
+      <h2>Coverage cannot hide the grammar violation</h2>
+
+      <p>The regression starts from a fully declared synthetic package signature. It adds either one MCE attribute on the Signature root or one MCE element in the Signature subtree. Version 0.54 accepted both fixtures and reported one signature with complete declared package coverage. Version 0.55 rejects both with a document-format error.</p>
+
+      <p>That comparison matters because static declared coverage is intentionally narrow. It follows only a bounded package-object and manifest declaration chain; the OPC signature grammar applies before that audit. A signature cannot retain disallowed MCE markup merely because the bounded declaration chain is otherwise complete.</p>
+
+      <h2>No branch processing, no trust claim</h2>
+
+      <p>DocFence does not select or evaluate an <code>AlternateContent</code> branch, parse compatibility-rule tokens in a signature, canonicalize XML, execute transforms, recompute a digest, verify XMLDSIG, validate certificates, establish trust, or predict an Office client's behavior. The public report still withholds signature markup, identifiers, URIs, algorithms, digest material, and document contents.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 69-test suite now includes fully declared signature fixtures for both MCE attributes and MCE elements. Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, 22 XML signature parts are present, 21 parse successfully, and none contains an MCE-namespace element or attribute. Every aggregate profile is byte-identical to 0.54.</p>
+
+      <p>Main and tagged CI passed on Python 3.11 and 3.13. Fresh wheel and source-distribution installations reject both probes. Two independent builds from the tag were byte-identical, and the public release downloads were byte-compared with that tagged build.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.55.0/docfence-0.55.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.55.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.55.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.55.0/docs/validation.md">validation notes</a> define the precise boundary. A review result is more trustworthy when a strict package grammar rule stays strict at its intended scope.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
