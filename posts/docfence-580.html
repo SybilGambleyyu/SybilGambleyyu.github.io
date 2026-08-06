@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.58 requires OPC relationship selectors to be direct, schema-shaped children of a Relationship Transform.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-580.html">
+    <meta property="og:title" content="A relationship selector cannot float free">
+    <meta property="og:description" content="DocFence 0.58 rejects standalone and malformed OPC relationship selectors before signature coverage analysis.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-580.html">
+    <title>A relationship selector cannot float free — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A relationship selector cannot float free</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.58.0">DocFence 0.58.0</a></p>
+
+      <p>A Relationship Transform has to live in a package manifest, but its selector elements have rules of their own. They identify the relationships that the transform selects. DocFence 0.58 makes that selector shape a global recognized-signature boundary, rather than allowing malformed selectors to be reduced to an aggregate coverage result.</p>
+
+      <h2>Selectors belong directly inside the transform</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §§10.5.9–10.5.10 say that <code>opc:RelationshipReference</code> and <code>opc:RelationshipsGroupReference</code> occur only as children of a Relationship Transform. The accompanying OPC schema gives each a single required attribute and simple content:</p>
+
+      <pre><code>ds:Transform Algorithm=".../RelationshipTransform"
+  opc:RelationshipReference SourceId="rId..."
+
+or
+
+ds:Transform Algorithm=".../RelationshipTransform"
+  opc:RelationshipsGroupReference SourceType="relationship-type-URI"</code></pre>
+
+      <p>DocFence now requires the selector to be a direct child of that transform. A <code>RelationshipReference</code> must have exactly <code>SourceId</code>; a <code>RelationshipsGroupReference</code> must have exactly <code>SourceType</code>; neither can contain child XML. A standalone selector, a selector under another transform, a missing, wrong, or extra attribute, or nested markup makes the recognized package signature malformed.</p>
+
+      <h2>Shape first, value later</h2>
+
+      <p>This rule deliberately separates XML structure from relationship resolution. DocFence does not interpret a selector value, require it to identify a stored relationship at the global boundary, execute a transform, canonicalize XML, recompute a digest, verify XMLDSIG, or make a trust decision. The bounded static coverage audit still reports a well-shaped selector that cannot cover a stored relationship as unresolved or unsupported evidence.</p>
+
+      <p>That distinction closes an important ambiguity from 0.57: malformed selectors could be accepted as a recognized signature and only contribute an unsupported coverage count. In 0.58, their syntax cannot quietly remain in a signature merely because the audit does not use that declaration.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 69-test suite covers standalone selectors, missing, wrong, and extra attributes, nested markup, a wrong selector kind, and a standards-shaped positive selector. A present but empty selector value is also tested as the intentional narrower case: it remains a coverage concern, not a selector-shape error. Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, 21 XML signature parts parse successfully. Their 38 Relationship Transforms contain 106 direct selectors with the expected parent, attribute, and child-free shape; public profiles are byte-identical to 0.57.</p>
+
+      <p>Main and tagged CI passed on Python 3.11 and 3.13. Two independent tagged builds were byte-identical, and anonymous downloads of the published wheel and source distribution were byte-compared with that build.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.58.0/docfence-0.58.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.58.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.58.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.58.0/docs/validation.md">validation notes</a> define the exact boundary. Structural clarity matters before any tool can make a bounded coverage statement.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
