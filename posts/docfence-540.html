@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DocFence 0.54 rejects XMLDSIG XPath elements anywhere in a recognized OPC package signature.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/docfence-540.html">
+    <meta property="og:title" content="XPath is forbidden everywhere in an OPC signature">
+    <meta property="og:description" content="DocFence applies OPC's global XPath prohibition before inventory or static coverage analysis.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/docfence-540.html">
+    <title>XPath is forbidden everywhere in an OPC signature — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/docfence">DocFence</a><a href="https://github.com/SybilGambleyyu/document-change-benchmark">DCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>XPath is forbidden everywhere in an OPC signature</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/docfence/releases/tag/v0.54.0">DocFence 0.54.0</a></p>
+
+      <p>XMLDSIG permits transform parameters that a generic signature processor may interpret. OPC is more restrictive: its package-signature rules say that the XMLDSIG XPath element must not be present. That is a rule about the stored Signature as a whole, not only the small declaration chain used to report package coverage.</p>
+
+      <h2>A global grammar boundary</h2>
+
+      <p><a href="https://ecma-international.org/publications-and-standards/standards/ecma-376/">ECMA-376 Open Packaging Conventions</a> §10.5.18 prohibits the XMLDSIG <code>XPath</code> element. The rule does not ask a package inspector to parse the expression, choose a context, or apply a transform:</p>
+
+      <pre><code>&lt;ds:Transform Algorithm="…"&gt;
+  &lt;ds:XPath&gt;…&lt;/ds:XPath&gt;
+&lt;/ds:Transform&gt;</code></pre>
+
+      <p>DocFence 0.54 therefore scans every XMLDSIG <code>ds:XPath</code> element in a recognized package Signature before inventory or static declaration coverage. It rejects the signature shape closed whether the element is in a coverage reference, an application object, or another stored Signature subtree.</p>
+
+      <h2>Coverage is not the whole grammar</h2>
+
+      <p>DocFence 0.49 already withheld coverage when an XPath parameter appeared in the bounded package-object binding or manifest-reference chain. That was useful, but a <code>SignedInfo</code> element can contain another same-document Reference outside that chain.</p>
+
+      <p>The regression starts with a fully declared synthetic package and adds only one same-document Reference with a standard canonicalization transform and an XPath parameter. Version 0.53 accepted that package and still reported complete declared coverage; 0.54 rejects it structurally. Neither result recalculates a digest or asserts that the synthetic signature is cryptographically valid.</p>
+
+      <h2>No XPath runs</h2>
+
+      <p>This is a stored-markup check, not an XPath engine. DocFence does not parse or evaluate XPath, resolve namespaces, canonicalize XML, execute transforms, recompute a digest, verify XMLDSIG, inspect certificates, establish trust, or predict an Office client. The public report continues to withhold expressions, reference URIs, selectors, paths, digest material, and document contents.</p>
+
+      <pre><code>version: 1
+rules:
+  require_complete_package_signature_coverage: true
+  no_package_signature_coverage_changes: true</code></pre>
+
+      <h2>Evidence and use</h2>
+
+      <p>The 69-test suite now covers XPath in the package-object binding, a manifest relationship transform, a manifest part transform, and an additional non-coverage <code>SignedInfo</code> Reference. Across the 29 DOCX fixtures in the public <a href="https://github.com/RUB-NDS/OOXML_Signature_Security">OOXML Signature Security artifacts</a>, 22 XML signature parts are present, 21 parse successfully, and none contain an XPath element. Every aggregate profile is byte-identical to 0.53.</p>
+
+      <p>Main and tagged CI passed. Fresh wheel and source-distribution installations accept the compatible SHA-1 probe while rejecting both the already-forbidden MD5 probe and the new XPath probe. The public release downloads were byte-compared with the reproducible tagged build.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/docfence/releases/download/v0.54.0/docfence-0.54.0-py3-none-any.whl
+
+docfence check approved.docx candidate.docx --policy docfence.yml --format sarif --output docfence.sarif</code></pre>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.54.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.54.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/docfence/blob/v0.54.0/docs/validation.md">validation notes</a> define the boundary. A static review result is clearer when a mandatory package grammar rule is enforced at its stated scope.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
