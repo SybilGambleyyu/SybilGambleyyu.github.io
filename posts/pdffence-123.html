@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.23 requires the final linked PDF revision footer to be terminal before crediting a historical signature ByteRange.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-123.html">
+    <meta property="og:title" content="A signature revision footer must be the PDF's terminal footer">
+    <meta property="og:description" content="PDFFence 1.23 makes historical signature ByteRange evidence fail closed when raw bytes follow the final linked PDF footer.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-123.html">
+    <title>A signature revision footer must be the PDF's terminal footer — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 7, 2026</p>
+      <h1>A signature revision footer must be the PDF's terminal footer</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.23.0">PDFFence 1.23.0</a></p>
+
+      <p>A historical PDF signature should not be treated as broken merely because a later incremental update exists. Its <code>/ByteRange</code> normally stops at the <code>%%EOF</code> that closed the revision which added that signature—not at the file's current end. But there is an equally important converse: that claimed final revision footer must actually be terminal. A parser accepting arbitrary bytes after it is not evidence of a later revision.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.23.0">PDFFence 1.23.0</a> hardens the existing PFP013 and PFP014 static review evidence around that distinction. It never turns a stored-layout observation into a claim that a signature is valid, trusted, permitted, or safe.</p>
+
+      <h2>The missing terminal condition</h2>
+
+      <p>The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause07.html">PDF 2.0 syntax errata</a> require the last line of a file to contain <code>%%EOF</code>. The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause12.html">signature errata</a> describe a multiple-signature ByteRange as ending at the marker that terminates the incremental update containing the signature dictionary, with a possible optional line ending.</p>
+
+      <p>Those statements leave room for normal incremental updates: an older revision footer is followed by the next real revision, with linked cross-reference data, <code>startxref</code>, and a terminal footer. They do not make an arbitrary tail a revision. Error-tolerant PDF consumers may ignore such bytes, which is exactly why positive review evidence must be stricter than parser acceptance.</p>
+
+      <h2>What PDFFence now credits</h2>
+
+      <p>For catalog-reachable AcroForm and catalog <code>/Perms</code> signature roots, PDFFence follows a confirmed <code>/Prev</code>-linked xref chain and identifies one bounded, unambiguous footer per linked revision. The final footer must end the physical source at <code>%%EOF</code> or its one optional EOL before any signature earns own-revision credit.</p>
+
+      <p>That rule preserves the useful historical case: an older signature can still pass after a valid later update. It fails closed if the chain is unavailable, ambiguous, malformed, over limit, or followed by unlinked bytes. PFP013 therefore remains the policy gate for whether a well-formed semantic ByteRange reaches its own revision. PFP014 continues to add its narrower requirement that a two-pair range omit exactly its own direct hexadecimal <code>/Contents</code> value.</p>
+
+      <pre><code>version: 1
+rules:
+  require_signature_byte_range_own_revision_coverage: true
+  require_contents_bound_own_revision_signature_coverage: true</code></pre>
+
+      <p>The public result contains aggregate counts and generic findings only. It does not disclose offsets, object references, footer locations, ranges, signature bytes, digests, certificates, transforms, or trust decisions.</p>
+
+      <h2>A benchmark that isolates the tail</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.23.0">PDF Change Assurance Benchmark 1.23.0</a> adds its 160th deterministic pair for this condition. Both PDFs contain a semantic signature followed by a valid later incremental update. Both ByteRanges remain well formed, reach their original signing footer, and are stale relative to the current physical file end.</p>
+
+      <p>Only the candidate then adds raw, unlinked bytes after the final PDF footer. The expected result is <code>signature_own_revision_coverage_inventory_changed</code>, PFP013, and generic stored-byte evidence. PFP014 has no redundant separate diff event: its endpoint prerequisite changed, and PFP013 already owns that fact. The held 1.22 release reports only stored-byte evidence for this new pair.</p>
+
+      <h2>Evidence from a normal signed document</h2>
+
+      <p>An isolated pyHanko exercise generated a self-signed signature and an ordinary incremental update. PDFFence retained the historical signature's own-revision and own-<code>/Contents</code> counts after the valid update. Appending raw bytes after the final footer preserved the parser's confirmed revision count but reduced both positive aggregates to zero. That is the intended separation: tolerant parsing is not positive terminal-footer evidence.</p>
+
+      <p>PDFFence 1.23 passed 260 tests, Ruff, and bytecode compilation; PDFCAB passed 90 tests and Ruff. The public process-bound score is 160/160. Both packages built byte-for-byte reproducibly with fixed timestamps, passed Twine checks, and passed clean paired wheel installs on Python 3.12 and 3.13 plus a Python 3.12 source-archive install. The released assets were re-downloaded, checksum-verified, and installed in a fresh Python 3.13 environment for another 160/160 score.</p>
+
+      <h2>What this still does not establish</h2>
+
+      <p>This is static boundary evidence, not cryptographic validation. PDFFence does not calculate a signed digest, validate <code>/Contents</code>, certificates, trust chains, transforms, permissions, or viewer behavior. It does not decide whether an update is authentic, authorized, benign, or malicious; use a conforming validator and the surrounding review process for those decisions.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.23.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.23.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.23.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.23.0/pdffence-1.23.0-py3-none-any.whl
+
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
