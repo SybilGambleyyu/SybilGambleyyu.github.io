@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.24 adds PFP015: a fail-closed terminal PDF revision-footer policy for signed, unsigned, and encrypted PDFs.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-124.html">
+    <meta property="og:title" content="A PDF's terminal footer is a review boundary">
+    <meta property="og:description" content="PDFFence 1.24 distinguishes valid linked PDF revisions from unlinked bytes after a final footer.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-124.html">
+    <title>A PDF's terminal footer is a review boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 7, 2026</p>
+      <h1>A PDF's terminal footer is a review boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.24.0">PDFFence 1.24.0</a></p>
+
+      <p>A PDF parser accepting a file is not the same as a review system having positive structural evidence about that file. In particular, a parser can tolerate raw bytes after a final <code>%%EOF</code> marker. Those bytes are not automatically a valid PDF revision—and they should not disappear into a generic byte-difference result when a team needs to decide whether a handoff has a clean structural end.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.24.0">PDFFence 1.24.0</a> adds PFP015, <code>require_terminal_revision_footer</code>: a privacy-safe, fail-closed policy for that condition. It is a stored-layout review boundary, not PDF conformance or signature validation.</p>
+
+      <h2>What terminal means</h2>
+
+      <p>The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause07.html">PDF 2.0 syntax errata</a> describe the last line of a file as <code>%%EOF</code>. PDFFence follows the structurally confirmed <code>/Prev</code>-linked cross-reference chain and maps one bounded, unambiguous footer for each linked revision. It then exposes exactly one redacted status:</p>
+
+      <ul>
+        <li><code>terminal</code>: the map is established and the final linked footer ends the physical source, apart from its optional EOL;</li>
+        <li><code>nonterminal</code>: the map is established, but raw bytes follow the final linked footer; or</li>
+        <li><code>unavailable</code>: the bounded footer map cannot be established.</li>
+      </ul>
+
+      <p>The public diff event is <code>revision_terminal_footer_changed</code>. It contains only those status labels—never a footer location, offset, object reference, source bytes, or a hash.</p>
+
+      <h2>Independent from “one revision only”</h2>
+
+      <p>PFP015 intentionally does not mean “reject all incremental PDFs.” A normal later update with linked cross-reference data can have two or more revisions and still be terminal. Conversely, a PDF with one confirmed revision can have unlinked trailing bytes. That is why the new policy is distinct from PFP006, <code>require_single_revision</code>.</p>
+
+      <pre><code>version: 1
+rules:
+  require_terminal_revision_footer: true</code></pre>
+
+      <p>This is useful for teams that accept normal PDF history but require every submitted source to end at a structurally linked footer. The check also runs on the structural information available before an encrypted document is left uninspected; it neither decrypts the source nor needs a signature to be present.</p>
+
+      <h2>Why this also matters for signatures</h2>
+
+      <p>The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause12.html">PDF 2.0 signature errata</a> describe a historical signature's ByteRange as ending at the footer of the update that added its signature dictionary. PDFFence's existing PFP013 and PFP014 evidence already needs a terminal footer map before granting own-revision credit. PFP015 makes that prerequisite independently visible for every PDF, including unsigned ones.</p>
+
+      <p>This preserves the useful historical case: a correctly bounded older signature can pass after a valid later incremental update. But an arbitrary tail after the final linked footer cannot preserve positive own-revision evidence merely because a tolerant parser accepts it.</p>
+
+      <h2>A 161-pair benchmark contract</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.24.0">PDF Change Assurance Benchmark 1.24.0</a> adds an unsigned terminal-footer control. Its baseline is a normal one-revision PDF; the candidate appends unlinked bytes after the final footer without adding objects, a cross-reference section, or a trailer. Both revision counts remain confirmed at one. The expected result is only <code>revision_terminal_footer_changed</code>, stored-byte evidence, and PFP015.</p>
+
+      <p>The existing semantic-signature tail control now expects that same general event alongside <code>signature_own_revision_coverage_inventory_changed</code>, while retaining its focused PFP013 policy contract. This keeps the general source-boundary signal separate from the signature-specific coverage signal.</p>
+
+      <p>PDFFence passed 264 tests, Ruff, and bytecode compilation; PDFCAB passed 91 tests and Ruff. The public process-bound score is 161/161. Both packages built byte-for-byte reproducibly with fixed timestamps, passed Twine checks, and passed clean paired wheel installs on Python 3.12 and 3.13 plus a Python 3.12 source-archive install. The released assets were re-downloaded, checksum-verified, and installed in a fresh Python 3.13 environment for another 161/161 score.</p>
+
+      <h2>Evidence, not a security verdict</h2>
+
+      <p>PFP015 does not authenticate a revision, validate a signature, calculate a digest, inspect <code>/Contents</code>, validate certificates or trust chains, evaluate transforms or permissions, establish PDF conformance, or predict viewer behavior. It does not decide whether a linked update is authorized, benign, or malicious. Use a conforming validator and the surrounding review process for those decisions.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.24.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.24.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.24.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.24.0/pdffence-1.24.0-py3-none-any.whl
+
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
