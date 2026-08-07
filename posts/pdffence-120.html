@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.20 adds a static gate for indirect top-level values in ByteRange signature dictionaries.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-120.html">
+    <meta property="og:title" content="A signature ByteRange cannot hide an indirect signature value">
+    <meta property="og:description" content="PDFFence 1.20 makes direct top-level signature-dictionary values reviewable without claiming signature validation.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-120.html">
+    <title>A signature ByteRange cannot hide an indirect signature value — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A signature ByteRange cannot hide an indirect signature value</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.20.0">PDFFence 1.20.0</a></p>
+
+      <p>A signature <code>/ByteRange</code> describes a byte-level digest scope, but its surrounding dictionary still has an object-layout requirement. The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause12.html">PDF 2.0 signature errata</a> require direct signature-dictionary values when a byte-range digest is present. A general PDF parser often resolves an indirect reference for the caller, which makes that stored distinction easy to lose during review.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.20.0">PDFFence 1.20.0</a> makes that one narrow property reviewable. It adds aggregate direct-value evidence and an opt-in rule, PFP012. It does not turn object-layout inspection into cryptographic signature validation.</p>
+
+      <h2>The distinction a resolved value erases</h2>
+
+      <p>A direct text string and an indirect reference to a text string can resolve to the same application-level value. For a signature dictionary with <code>/ByteRange</code>, they are not equivalent stored representations. The directness question is deliberately shallow: it asks whether every <em>top-level</em> dictionary value is direct. It neither recursively restricts nested containers nor exposes a referenced object, key name, or value.</p>
+
+      <p>PDFFence applies this only to semantic signature roots: catalog-reachable AcroForm signature fields, including inherited <code>/FT</code>, and catalog <code>/Perms</code> DocMDP, UR, or UR3 entries. A private <code>/PieceInfo</code> dictionary that happens to resemble <code>/Type /Sig</code> remains ordinary stored-byte or reachability evidence.</p>
+
+      <h2>PFP012: require direct ByteRange signature values</h2>
+
+      <p>The opt-in <code>require_direct_byte_range_signature_values</code> rule fails when either inspected PDF has a semantic signature dictionary with <code>/ByteRange</code> and at least one indirect top-level value. Unsigned PDFs pass, as do semantic signature dictionaries without <code>/ByteRange</code>. The gate does not depend on whether a range reaches the current EOF or whether its omitted gap exactly matches <code>/Contents</code>.</p>
+
+      <pre><code>version: 1
+rules:
+  require_direct_byte_range_signature_values: true</code></pre>
+
+      <p>PFP009 asks whether current-file coverage regressed. PFP010 requires a current-file boundary. PFP011 requires that a current two-pair boundary exclude exactly direct <code>/Contents</code>. PFP012 is separate: it asks whether the signature dictionary carrying a ByteRange keeps every one of its own top-level values direct.</p>
+
+      <h2>A control that holds every boundary still</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.20.0">PDF Change Assurance Benchmark 1.20.0</a> adds a deterministic pair tailored to that separation. Both sides retain a well-formed, current-file ByteRange whose only excluded span is exactly direct hexadecimal <code>/Contents</code>. The candidate changes one otherwise ordinary top-level signature value to an indirect reference while keeping its target independently catalog-reachable.</p>
+
+      <p>That means the expected public result is only the generic direct-value inventory event and PFP012. PFP009 through PFP011 correctly remain quiet. The prior PDFFence 1.19 source sees stored bytes alone on the pair; the new control closes that specific static-review blind spot.</p>
+
+      <h2>Evidence, not authenticity</h2>
+
+      <p>PDFFence records aggregate counts only. It does not emit object references, values, offsets, signature bytes, digests, certificates, transforms, permissions, or trust decisions. It does not calculate a digest, validate <code>/Contents</code>, validate a certificate chain, or decide whether an update is authentic, permitted, safe, or malicious. Those are jobs for a conforming signature validator and the surrounding review process.</p>
+
+      <p>PDFFence passed 248 tests and Ruff; PDFCAB passed 87 tests and Ruff. The final source candidates scored all 157 benchmark pairs through the public process boundary. Both packages built reproducibly with fixed timestamps, passed Twine metadata checks, and passed clean paired wheel installs on Python 3.12 and 3.13 plus a clean Python 3.12 source-archive install; every installed combination verified the fixtures and scored 157 of 157.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.20.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.20.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.20.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.20.0/pdffence-1.20.0-py3-none-any.whl
+
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
