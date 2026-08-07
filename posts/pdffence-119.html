@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.19 adds a static gate that checks whether a current signature ByteRange gap exactly matches direct Contents.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-119.html">
+    <meta property="og:title" content="A current signature boundary must bound the signature contents">
+    <meta property="og:description" content="PDFFence 1.19 distinguishes an EOF-reaching ByteRange from one whose excluded gap is exactly direct /Contents.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-119.html">
+    <title>A current signature boundary must bound the signature contents — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A current signature boundary must bound the signature contents</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.19.0">PDFFence 1.19.0</a></p>
+
+      <p>A PDF signature’s <code>/ByteRange</code> usually leaves one gap for the signature value in <code>/Contents</code>. PDFFence 1.18 made a useful static question review-visible: does a semantic signature range reach the current physical file end? That endpoint still matters, but it is not the whole shape of the evidence. A two-pair range can reach EOF while its omitted span is not precisely the direct <code>/Contents</code> token at all.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.19.0">PDFFence 1.19.0</a> adds a stricter, opt-in review gate for that narrower structural question. It does not turn a static inspection into signature validation.</p>
+
+      <h2>The missing connection</h2>
+
+      <p>Existing current-file evidence accepts an ordered, in-bounds <code>/ByteRange</code> that starts at byte zero and ends at the current EOF. That is intentionally a generic boundary classifier. It does not establish what its excluded gap represents.</p>
+
+      <p>The new aggregate evidence is positive only when all of these conditions hold for a semantic signature root:</p>
+
+      <ul>
+        <li>the range has exactly two pairs and reaches the current physical EOF;</li>
+        <li>its single omitted span starts at the opening delimiter and ends after the closing delimiter of a direct hexadecimal <code>/Contents</code> string;</li>
+        <li>that string is found in one xref-addressable, direct signature dictionary through a bounded raw lexical scan.</li>
+      </ul>
+
+      <p>PDFFence still establishes a semantic signature only through a catalog-reachable AcroForm signature field, including inherited <code>/FT</code>, or catalog <code>/Perms</code> DocMDP, UR, or UR3. A private <code>/PieceInfo</code> dictionary that resembles <code>/Type /Sig</code> is not promoted into signature evidence.</p>
+
+      <h2>PFP011: require a Contents-bound current range</h2>
+
+      <p>The opt-in <code>require_contents_bound_current_signature_coverage</code> rule, <code>PFP011</code>, fails when an inspected PDF has semantic signature roots but no positive Contents-bound current-file count. Unsigned PDFs pass: this is not a demand that every PDF be signed.</p>
+
+      <pre><code>version: 1
+rules:
+  require_contents_bound_current_signature_coverage: true</code></pre>
+
+      <p>This complements the two earlier gates. PFP009 asks whether current-file coverage fell across a comparison. PFP010 asks whether any current-file boundary exists now. PFP011 asks whether at least one of those current boundaries has its only omitted span exactly bound to direct <code>/Contents</code>.</p>
+
+      <h2>A deliberately tight control</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.19.0">PDF Change Assurance Benchmark 1.19.0</a> adds a deterministic pair where both semantic ByteRanges remain well-formed and both reach EOF. In the candidate, the gap is widened by one byte before the direct <code>/Contents</code> token. The generic signature-coverage inventory changes and PFP011 fires; PFP009 and PFP010 correctly remain quiet.</p>
+
+      <p>The raw scan is intentionally conservative: by default it is capped at 1 MiB per candidate signature dictionary and 16 MiB per source file. An unavailable, indirect, malformed, or over-limit object does not earn positive evidence. This keeps the feature bounded and makes PFP011 a review gate that requires evidence, rather than a claim that all other PDFs are invalid.</p>
+
+      <h2>Scope and validation</h2>
+
+      <p>The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause12.html">PDF 2.0 signature errata</a> explain the expected byte-range scope, while the <a href="https://pdfa.org/recently-identified-pdf-digital-signature-vulnerabilities/">PDF Association’s advisory</a> shows why static structural checks cannot replace conforming validation. PFP011 does not calculate a digest, validate <code>/Contents</code>, certificates, trust chains, transforms, or permissions, and it does not decide whether an update is valid, permitted, safe, or malicious. Delimiter positions and signature bytes never appear in public output.</p>
+
+      <p>PDFFence passed 245 tests and Ruff; PDFCAB passed 86 tests and Ruff. The source candidates scored all 156 benchmark pairs through the public process boundary. Both packages built reproducibly with fixed timestamps and passed Twine metadata checks. Clean paired wheel installs on Python 3.12 and 3.13, plus a clean paired Python 3.12 source-archive install, passed dependency checks, fixture verification, and all 156 score cases.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.19.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.19.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.19.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.19.0/pdffence-1.19.0-py3-none-any.whl
+
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
