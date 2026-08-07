@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.14 distinguishes executable PDF action paths from action-shaped private PieceInfo data.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-114.html">
+    <meta property="og:title" content="A PDF dictionary is not necessarily an action">
+    <meta property="og:description" content="PDFFence 1.14 scopes behavior-field detection to standard action triggers and keeps private PieceInfo changes byte-level.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-114.html">
+    <title>A PDF dictionary is not necessarily an action — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A PDF dictionary is not necessarily an action</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.14.0">PDFFence 1.14.0</a></p>
+
+      <p>A dictionary with <code>/Type /Action</code>, <code>/S /URI</code>, and <code>/URI</code> looks like a PDF action. That shape alone does not establish that a viewer can reach it. It may instead be application-private document data. <a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a> 1.14.0 makes that boundary explicit: it tracks action behavior only when the dictionary is reached through a standard action trigger.</p>
+
+      <h2>Shape is not an execution path</h2>
+
+      <p>The catalog <code>PieceInfo</code> entry is intended to carry application-specific piece data. A producer can place arbitrary private data under a standard <code>PieceInfo</code> record, including a dictionary whose keys happen to resemble an action. That is different from a document-open action, an annotation or page action, an additional action, or a continuation in an action <code>Next</code> chain.</p>
+
+      <p>The generic PDF object walk must still see that private data so a file-byte rewrite is not invisible. In earlier releases, however, an eligible behavior field in such an action-shaped dictionary could enter PDFFence's private active-content signature merely because of its shape. A change then produced <code>active_content_payload_changed</code> and policy finding <code>PFP001</code>, despite no standard action root reaching it.</p>
+
+      <h2>What 1.14 changes</h2>
+
+      <p>PDFFence now admits type-specific action behavior fields to the active-content comparison only in a recognized root context. The existing positional handling of <code>Next</code> action chains remains intact. Private <code>PieceInfo</code> data is therefore not silently trusted: changing it still produces the generic <code>stored_pdf_bytes_changed</code> result. It simply no longer claims an active-content behavior rewrite without an execution path.</p>
+
+      <p>This is a selectivity correction, not a claim about any viewer or an assertion that private data is harmless. PDFFence does not render PDFs, execute actions, follow URIs, open attachments, or infer viewer permission decisions. It is a static review gate whose active-content findings are deliberately scoped to standard trigger reachability.</p>
+
+      <h2>Eleven paired controls, not one special case</h2>
+
+      <p>The companion <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.14.0">PDF Change Assurance Benchmark 1.14.0</a> adds 11 deterministic pairs. Each places an action-shaped dictionary under catalog <code>PieceInfo</code> private data, omits <code>OpenAction</code>, and changes one behavior-bearing field: Thread, URI <code>IsMap</code>, Sound, Movie, Hide, Named, SubmitForm, ResetForm, Rendition, Trans, or RichMediaExecute.</p>
+
+      <p>For every pair, the expected semantic result is byte-level only. PDFFence 1.14.0 scores 139/139 across the packaged corpus. The released 1.13.0 wheel scores 128/139, flagging exactly these 11 controls under its former shape-based treatment. The same behavior fields still trigger review when they occur in the supported document-open action path.</p>
+
+      <h2>Validation and use</h2>
+
+      <p>The release passed 207 tests and Ruff, while PDFCAB passed 69 tests and Ruff. Fixed-timestamp wheel and source-archive builds were byte-for-byte reproducible, passed Twine metadata checks, and were exercised by fresh wheel installs on Python 3.12 and 3.13 plus a Python 3.12 source-archive install. Each clean install verified and scored all 139 fixture pairs.</p>
+
+      <p>The exact trigger boundary and report-privacy guarantees are documented in the tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.14.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.14.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.14.0/docs/validation.md">validation record</a>.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.14.0/pdffence-1.14.0-py3-none-any.whl
+
+pdffence init pdffence.yml
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. It is not a renderer, malware sandbox, signature validator, or proof that two PDFs are safe or visually identical.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
