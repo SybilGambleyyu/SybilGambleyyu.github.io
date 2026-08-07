@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.21 reviews whether each semantic signature ByteRange ends at its own incremental revision footer.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-121.html">
+    <meta property="og:title" content="A PDF signature ByteRange belongs to its own revision">
+    <meta property="og:description" content="PDFFence 1.21 adds PFP013: static own-revision ByteRange coverage without treating a historical signature as current-file coverage.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-121.html">
+    <title>A PDF signature ByteRange belongs to its own revision — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A PDF signature ByteRange belongs to its own revision</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.21.0">PDFFence 1.21.0</a></p>
+
+      <p>A PDF can accumulate signatures as incremental updates. That means an earlier signature's <code>/ByteRange</code> should normally stop at the end of <em>its own</em> revision, not at the end of the latest file. Treating every historical signature as stale just because another revision exists throws away an important distinction.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.21.0">PDFFence 1.21.0</a> adds that distinction as aggregate static evidence and an opt-in policy gate, PFP013. It is deliberately not a cryptographic signature validator.</p>
+
+      <h2>The boundary is a revision boundary</h2>
+
+      <p>The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause12.html">PDF 2.0 signature errata</a> describe the multiple-signature case: the byte range runs from the PDF header through the <code>%%EOF</code> marker, with a possible optional line ending, that terminates the incremental update adding that signature dictionary.</p>
+
+      <p>This explains why current-file coverage and signature coverage are different questions. A final signature can reach the latest EOF. An older, correctly preserved signature should still end at the EOF of its signing revision. Neither fact establishes certificate trust, digest validity, permissions, or whether a later update is acceptable.</p>
+
+      <h2>PFP013: require own-revision ByteRange coverage</h2>
+
+      <p>The opt-in <code>require_signature_byte_range_own_revision_coverage</code> rule requires every semantic signature dictionary with <code>/ByteRange</code> to have this bounded own-revision evidence on both sides of a comparison. Unsigned PDFs and semantic signature dictionaries without <code>/ByteRange</code> pass.</p>
+
+      <pre><code>version: 1
+rules:
+  require_signature_byte_range_own_revision_coverage: true</code></pre>
+
+      <p>PDFFence scopes the check to catalog-reachable AcroForm signature fields, including inherited <code>/FT</code>, and catalog <code>/Perms</code> DocMDP, UR, and UR3 entries. It follows a structurally confirmed <code>/Prev</code>-linked xref chain, finds an unambiguous matching revision footer within a bounded scan, and maps the current xref address of an indirect signature dictionary to the first footer after that object. The public report reveals only counts: never offsets, object references, revision boundaries, signature bytes, digests, certificates, transforms, or trust decisions.</p>
+
+      <p>The rule fails closed. A direct or compressed signature object, an unavailable or ambiguous revision chain, a malformed range, or an over-limit scan does not earn positive evidence. This is a review boundary, not a permissive parser fallback.</p>
+
+      <h2>Why this does not replace the existing coverage gates</h2>
+
+      <p>PFP009 reports a loss of current-file coverage across a comparison. PFP010 requires a current-file boundary, and PFP011 additionally requires that a current two-pair range exclude exactly direct hexadecimal <code>/Contents</code>. Those are useful policies when the latest stored file must be fully covered. PFP013 answers a different question: whether each signature's range reaches the revision that introduced it.</p>
+
+      <p>That makes PFP013 useful in multi-signature workflows where a correct historical signature should remain distinguishable from an arbitrary earlier endpoint.</p>
+
+      <h2>A benchmark pair that stays historically stale on both sides</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.21.0">PDF Change Assurance Benchmark 1.21.0</a> adds its 158th deterministic pair for this exact separation. Both PDFs contain a semantic signature followed by a later incremental update, so neither range reaches the current physical end. The baseline ends at the signing revision's footer. The candidate stops short of it while retaining the same stale current-file status and well-formed range.</p>
+
+      <p>Only <code>signature_own_revision_coverage_inventory_changed</code> and PFP013 are expected. PFP009 and PFP012 stay quiet. PDFFence 1.20 sees changed bytes alone on this pair, showing that the fixture captures a newly implemented boundary rather than restating an old signal.</p>
+
+      <h2>Evidence, not authenticity</h2>
+
+      <p>PDFFence 1.21 passed 254 tests and Ruff; PDFCAB passed 88 tests and Ruff. The public process-bound score was exact at 158 of 158 pairs. The packages built reproducibly with fixed timestamps, passed Twine metadata checks, and passed clean paired wheel installs on Python 3.12 and 3.13 plus a Python 3.12 source-archive install. A local pyHanko two-signature exercise counted both signatures at their own revisions while only the newest reached current EOF.</p>
+
+      <p>None of that validates a digest, <code>/Contents</code>, certificate chain, transform, permission, or trust decision. It does not decide whether a change is authentic, permitted, safe, or malicious. Use a conforming signature validator and the surrounding review process for those decisions.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.21.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.21.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.21.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.21.0/pdffence-1.21.0-py3-none-any.whl
+
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
