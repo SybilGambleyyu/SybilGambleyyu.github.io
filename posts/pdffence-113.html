@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.13 detects selected PDF action behavior-field rewrites while preserving generic, privacy-safe CI output.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-113.html">
+    <meta property="og:title" content="A PDF action can keep its type and still change behavior">
+    <meta property="og:description" content="PDFFence 1.13 detects selected action behavior-field rewrites without executing, decoding, or disclosing PDF payloads.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-113.html">
+    <title>A PDF action can keep its type and still change behavior — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A PDF action can keep its type and still change behavior</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.13.0">PDFFence 1.13.0</a></p>
+
+      <p>A PDF review can correctly say that an action is still a URI, sound, form, or RichMedia action and still miss what that action will ask a viewer to do. The action subtype is only part of its stored behavior. A same-type rewrite can change a destination selector, a coordinate-appending flag, a selected field set, a transition, a command, or another behavior-bearing member while a public type count stays fixed.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a> 1.13.0 adds a bounded, private comparison of selected standard action fields. It turns those same-inventory rewrites into the generic <code>active_content_payload_changed</code> result and the existing <code>PFP001</code> policy finding, without placing an action value or digest in a normal report.</p>
+
+      <h2>Count the type; retain the behavior</h2>
+
+      <p>The release covers direct document-open <code>Thread</code>, <code>URI</code>, <code>Sound</code>, <code>Movie</code>, <code>Hide</code>, <code>Named</code>, <code>SubmitForm</code>, <code>ResetForm</code>, <code>Rendition</code>, <code>Trans</code>, and <code>RichMediaExecute</code> actions. The selected fields include the Thread destination, URI <code>IsMap</code> flag, sound stream, movie and Hide selectors, named viewer command, form character set and fields, rendition JavaScript fallback, transition dictionary, and RichMedia command.</p>
+
+      <p>This is deliberately a narrow stored-data boundary, not a claim about a particular viewer. PDFFence never renders the file, runs an action, follows a URI, opens an attachment, or predicts whether a viewer permits a command. It records a static difference that deserves review.</p>
+
+      <h2>Raw evidence without payload execution</h2>
+
+      <p>Top-level JavaScript and Sound streams are compared as raw stored bytes plus bounded raw <code>Filter</code> and <code>DecodeParms</code> representation. PDFFence does not call a payload decoder to obtain that evidence. Nested streams remain outside this behavior-field coverage, which keeps the boundary explicit instead of treating arbitrary recursive data as action semantics.</p>
+
+      <p>Public output remains generic across JSON, Markdown, and SARIF: it contains categories, counts, and the policy finding, not a script, URI, command, field name, stream bytes, or private fingerprint. The precise policy and threat-model boundaries are part of the tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.13.0/docs/policy.md">policy reference</a> and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.13.0/docs/threat-model.md">threat model</a>.</p>
+
+      <h2>Make the claim scoreable</h2>
+
+      <p>The companion <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.13.0">PDF Change Assurance Benchmark 1.13.0</a> now contains 128 deterministic paired PDFs. Eleven new pairs hold action type and public inventory fixed while changing exactly one selected behavior field. PDFFence 1.13.0 passes all 128 pairs through its public CLI; the held 1.12.0 source candidate passes the prior 117 and misses exactly the eleven new rewrites.</p>
+
+      <p>The release passed 196 tests, Ruff, fixed-timestamp reproducible wheel and source-archive builds, Twine metadata checks, and fresh wheel installs on Python 3.12 and 3.13 plus a Python 3.12 source-archive install. Each clean install verified and scored the full 128-pair benchmark. The <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.13.0/docs/validation.md">validation record</a> states the exact scope and evidence.</p>
+
+      <h2>Use the release</h2>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.13.0/pdffence-1.13.0-py3-none-any.whl
+
+pdffence init pdffence.yml
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. It is a local, static review gate—not a renderer, malware sandbox, signature validator, or proof that two PDFs are safe or visually identical.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
