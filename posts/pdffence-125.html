@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.25 adds privacy-safe manifest batch review: explicit PDF pairings, opaque public IDs, and a CI gate for added or removed documents.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-125.html">
+    <meta property="og:title" content="A batch report should know less than its manifest">
+    <meta property="og:description" content="PDFFence 1.25 reviews many PDFs without publishing their private paths or filenames.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-125.html">
+    <title>A batch report should know less than its manifest — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A batch report should know less than its manifest</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.25.0">PDFFence 1.25.0</a></p>
+
+      <p>A handoff rarely contains one PDF. It contains a release directory, a contract set, an evidence bundle, or a deliverable tree. That creates a tension for a review tool: it needs a way to connect the before and after documents, including a rename, but the connection data itself can be sensitive. A CI artifact that includes customer directory names, document titles, or filenames is often not a safe artifact.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.25.0">PDFFence 1.25.0</a> adds <code>pdffence batch</code>, a manifest-driven batch workflow built around that boundary. The manifest knows the private paths. The report does not.</p>
+
+      <h2>Declare the review set; do not guess it</h2>
+
+      <p>Folder-comparison tools often infer a match from a relative filename. That is convenient until a document is renamed, moved, intentionally removed, or added. PDFFence instead takes two local roots and a small strict JSON manifest. Every item has a caller-chosen public ID plus independently selected <code>before</code> and <code>after</code> paths:</p>
+
+      <pre><code>{
+  "version": 1,
+  "documents": [
+    {
+      "id": "review-001",
+      "before": "contracts/draft.pdf",
+      "after": "contracts/final.pdf"
+    },
+    {
+      "id": "review-002",
+      "before": "retired/notice.pdf",
+      "after": null
+    }
+  ]
+}</code></pre>
+
+      <p>The first entry is an explicit rename. The second is a removed document. An added document uses <code>before: null</code>. PDFFence does not scan a directory, decide that same-looking files correspond, or silently omit an unpaired file. A malformed, missing, unsafe, or symbolic-link source stops the whole batch rather than emitting a partial success.</p>
+
+      <h2>Only the opaque review label is public</h2>
+
+      <p>The roots and every manifest path remain local inputs. JSON, Markdown, SARIF, findings, and expected errors contain no root, manifest path, filename, page text, URI, attachment name, or hash. Results are ordered by <code>id</code> and use a compact status:</p>
+
+      <ul>
+        <li><code>compared</code> for an explicit pair, with the ordinary PDFFence public snapshots and change events;</li>
+        <li><code>added</code> for an after-only entry; or</li>
+        <li><code>removed</code> for a before-only entry.</li>
+      </ul>
+
+      <p>The ID is deliberately public—SARIF places it in <code>properties.document_id</code> so a finding stays actionable without a file location. That means it should be an opaque label such as <code>review-001</code>, not a customer name or filename. PDFFence constrains it to a small ASCII syntax and documents that opt-in boundary rather than pretending a caller-provided label is secret.</p>
+
+      <h2>Make a changed document set fail CI</h2>
+
+      <p>Batch output always records an added or removed item. With a policy, the new high-severity <code>require_same_document_set</code> rule (PFP016) turns each such state into a CI finding. It is enabled by the conservative starter policy:</p>
+
+      <pre><code>pdffence init pdffence.yml
+pdffence batch baseline/ candidate/ \
+  --manifest review.json --policy pdffence.yml --format sarif</code></pre>
+
+      <p>Existing pair-level rules remain independent. For example, <code>no_active_content_changes</code> still runs for every <code>compared</code> entry, while PFP016 handles the separate question of whether the declared set itself changed. A normal two-file <code>pdffence check</code> has both inputs by definition, so PFP016 does not alter its behavior.</p>
+
+      <h2>Evidence across the full public corpus</h2>
+
+      <p>The release passed 269 tests, Ruff, and bytecode compilation. Its batch tests include an intentionally sensitive marker in both private paths and PDF content, then assert that JSON, Markdown, SARIF, and errors do not reproduce it. They also cover duplicate JSON keys, traversal attempts, renames, additions, removals, output exit status, and symbolic-link roots and sources.</p>
+
+      <p>For an independent integration exercise, an opaque-ID manifest paired every one of the 161 PDFs in <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.24.1">PDFCAB 1.24.1</a>. The batch report recorded 161 changed documents and no policy findings when run without a policy. For every entry, its public before snapshot, after snapshot, change list, and finding list exactly matched the corresponding standalone <code>pdffence diff --format json</code> result. Fixture roots and baseline/candidate paths were absent from the artifact.</p>
+
+      <p>The wheel and source archive built byte-for-byte reproducibly with a fixed timestamp, passed Twine checks, and passed fresh Python 3.12 and 3.13 installs. The public GitHub wheel was then downloaded, checksum-verified, installed through its published URL, and used for the same 161-document batch run.</p>
+
+      <h2>What batch review does not claim</h2>
+
+      <p>This is a structural review workflow, not a rendered visual comparison, a directory inventory, malware analysis, PDF conformance check, or signature validation service. A manifest is intentionally a declaration of the set to review; it cannot detect a file that was never declared. PDFFence never renders a page, executes an action, follows a URI, extracts text, decrypts a PDF, or decides whether a signature is valid, trusted, authorized, or safe.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.25.0/docs/batch.md">batch-manifest contract</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.25.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.25.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.25.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.25.0/pdffence-1.25.0-py3-none-any.whl</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
