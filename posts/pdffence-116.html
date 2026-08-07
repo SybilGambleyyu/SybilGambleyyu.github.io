@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.16 records a PDF action inventory only after an execution path establishes semantic meaning.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-116.html">
+    <meta property="og:title" content="An action inventory needs an execution path too">
+    <meta property="og:description" content="PDFFence 1.16 prevents private action-shaped PDF data from manufacturing public active-content inventory evidence.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-116.html">
+    <title>An action inventory needs an execution path too — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>An action inventory needs an execution path too</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.16.0">PDFFence 1.16.0</a></p>
+
+      <p>In a PDF review, an action count can look comfortably objective: count every dictionary whose <code>/S</code> value names an action. But the dictionary can be ordinary private application data. Its local shape does not establish that a viewer can execute it. <a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a> 1.16.0 applies the same path requirement to its public action inventory that 1.15 introduced for behavior-field evidence.</p>
+
+      <h2>The remaining boundary leak</h2>
+
+      <p>Version 1.15 correctly required a semantic document path before treating fields such as an action payload as behavior. Its generic object inventory, however, still counted every reachable action-shaped dictionary and every reachable <code>/AA</code> container. A private value below <code>/PieceInfo</code> could therefore manufacture <code>active_content_inventory_changed</code>, even though it was not a document action.</p>
+
+      <p>That distinction matters in an approval workflow. A reviewer should see that a document's stored bytes or reachable-object count changed. They should not be told that its active-content surface grew merely because a producer added metadata resembling an action.</p>
+
+      <h2>Inventory follows a semantic owner</h2>
+
+      <p>PDFFence 1.16 records action categories and additional-action-container counts only after bounded traversal establishes a supported execution owner: catalog actions, catalog JavaScript name-tree values, the actual catalog page tree and its annotations, AcroForm fields and widgets, outline items, or page presentation-step navigation nodes. A successor is included only through a <code>/Next</code> chain that begins at one of those roots.</p>
+
+      <p>The approach is deliberately narrower than recursively interpreting every dictionary in a PDF. It follows the format's context-sensitive meaning—an action name is meaningful because of its standard owner and route—not just a familiar key spelling. The relevant structures are described in the <a href="https://opensource.adobe.com/dc-acrobat-sdk-docs/standards/pdfstandards/pdf/PDF32000_2008.pdf">PDF 1.7 reference</a>.</p>
+
+      <h2>Two controls that would otherwise look active</h2>
+
+      <p>The companion <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.16.0">PDF Change Assurance Benchmark 1.16.0</a> adds two deterministic negative controls. One rewrites a private <code>PieceInfo</code> action subtype while keeping the object count fixed. The other adds a private <code>/AA</code> container and action. The expected results are, respectively, <code>stored_pdf_bytes_changed</code>, and <code>reachable_object_count_changed</code> plus <code>stored_pdf_bytes_changed</code>—not active-content inventory evidence or <code>PFP001</code>.</p>
+
+      <p>PDFFence 1.16.0 scores all 152 benchmark pairs. The released 1.15.0 wheel scores 150/152, adding an active-content inventory change to exactly these two private controls. Standard page additional-action and semantic action-chain inventory cases remain covered.</p>
+
+      <h2>Validation and scope</h2>
+
+      <p>PDFFence passed 227 tests and Ruff; PDFCAB passed 82 tests and Ruff. Two fixed-timestamp builds of each package were byte-for-byte reproducible and passed Twine metadata checks. Clean paired wheel installs on Python 3.12 and 3.13, plus a clean paired Python 3.12 source-archive install, passed dependency checks, fixture verification, and the complete 152-pair score.</p>
+
+      <p>This remains a static-review boundary, not a claim to emulate every PDF viewer or extension. PDFFence does not render documents, execute actions, follow URIs, or reveal private values in its public reports. The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.16.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.16.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.16.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.16.0/pdffence-1.16.0-py3-none-any.whl
+
+pdffence init pdffence.yml
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
