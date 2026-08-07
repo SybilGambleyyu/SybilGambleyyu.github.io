@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.27 detects accidentally reused private source paths in batch review manifests without publishing paths or inferring identity.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-127.html">
+    <meta property="og:title" content="A batch manifest must not double-count its sources">
+    <meta property="og:description" content="PDFFence 1.27 adds a privacy-safe guard against repeated batch source references.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-127.html">
+    <title>A batch manifest must not double-count its sources — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A batch manifest must not double-count its sources</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.27.0">PDFFence 1.27.0</a></p>
+
+      <p>A private batch manifest is a mapping: it says which before source belongs with which after source, while the public report uses only an opaque review ID. That mapping is often edited by hand to pair a rename. A copy-and-paste error can therefore assign one private source to two public IDs and make a handoff appear to contain more independently reviewed documents than it does.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.27.0">PDFFence 1.27.0</a> adds a narrow guard for that failure mode: <code>require_unique_document_sources</code> (PFP017).</p>
+
+      <h2>One source, one review item—unless a reviewer says otherwise</h2>
+
+      <p>With the conservative policy created by <code>pdffence init</code>, PFP017 fails when an <em>exact</em> private relative manifest path occurs under more than one opaque ID on the same before or after side. Each affected ID gets a high-severity generic finding:</p>
+
+      <pre><code>{
+  "rule_id": "PFP017",
+  "severity": "high",
+  "details": {
+    "side": "before",
+    "declared_document_count": 2
+  }
+}</code></pre>
+
+      <p>That is the entire public evidence. It does not reveal the repeated path, root, filename, file content, or hash. SARIF still has no locations or artifact URIs; it carries only the deliberately public review ID and the same generic detail.</p>
+
+      <p>The boundary is deliberately strict and small. PFP017 compares equal manifest paths on the same side. It does not inspect bytes to decide whether files are “really” the same, use filename similarity, guess a rename, or treat hard links and other filesystem aliases as identity. A genuine reviewed one-to-many workflow is allowed: disable this one policy switch explicitly, rather than letting a heuristic decide the mapping.</p>
+
+      <h2>Duplicated work should not multiply parser work</h2>
+
+      <p>Repeated source references had a second cost: the same PDF could be parsed once per manifest entry. PDFFence now reuses one validated snapshot for an exact same-side source during a batch invocation. The report remains one result per declared opaque ID, but a duplicated entry cannot turn a 4,096-document manifest limit into 4,096 parses of the same source.</p>
+
+      <h2>Evidence beyond the unit test</h2>
+
+      <p>PDFFence 1.27 passed 277 tests, Ruff, bytecode compilation, and dependency consistency checks. The test suite covers before- and after-side repeats, disabled-policy behavior, interaction with PFP016’s added/removed-document gate, JSON/Markdown/SARIF redaction, location-free SARIF, deterministic generic findings, and single-snapshot reuse.</p>
+
+      <p>For integration evidence, the 161-entry manifest generated from all <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.24.1">PDFCAB 1.24.1</a> pairs ran with PFP017 enabled and produced 161 changed documents with zero findings. An adversarial manifest then reused one real corpus before path with two distinct after paths. It produced exactly two PFP017 findings, each with only <code>side: before</code> and <code>declared_document_count: 2</code>; the reused path remained absent from the rendered report.</p>
+
+      <p>Two fixed-timestamp builds produced byte-identical wheel and source archives, both passed Twine checks, and fresh Python 3.12/3.13 wheel installs plus a fresh Python 3.12 source-archive install repeated the corpus and adversarial cases. The public GitHub assets were re-downloaded, checksum-verified, installed from the published wheel URL, and exercised again. A clean dependency audit found no known vulnerabilities.</p>
+
+      <h2>What it does not settle</h2>
+
+      <p>PFP017 catches an exact mapping mistake; it does not prove that a manifest is complete, that differently named files correspond, or that a review decision is correct. PDFFence remains structural, local review tooling: it does not render PDFs, compare visual appearance, validate PDF conformance or signatures, decrypt sources, extract text, execute actions, follow URIs, or detect malware.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.27.0/docs/batch.md">batch-manifest contract</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.27.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.27.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.27.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.27.0/pdffence-1.27.0-py3-none-any.whl</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
