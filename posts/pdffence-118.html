@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.18 adds a static review gate for semantic PDF signatures with no ByteRange reaching the current file end.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-118.html">
+    <meta property="og:title" content="A regression gate cannot see an already stale signature boundary">
+    <meta property="og:description" content="PDFFence 1.18 complements coverage-regression evidence with an opt-in current-file boundary requirement.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-118.html">
+    <title>A regression gate cannot see an already stale signature boundary — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A regression gate cannot see an already stale signature boundary</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.18.0">PDFFence 1.18.0</a></p>
+
+      <p>PDFFence 1.17 made one useful condition review-visible: a semantic PDF signature's <code>/ByteRange</code> used to reach the file end and no longer does after a comparison. That is a regression question. But serious review workflows often begin after history has already accumulated. If both sides already have a signature range behind their current physical file end, a regression-only rule correctly sees no new drop—and leaves the missing current boundary unreported.</p>
+
+      <h2>The question a baseline cannot answer</h2>
+
+      <p>A PDF can gain incremental revisions for many reasons. The PDF 2.0 signature guidance describes a signature's byte-range boundary for the incremental revision that adds it; later signatures, timestamps, or other updates complicate any validity decision. The key static question here is narrower: if a document has a standard semantic signature root, is there at least one corresponding well-formed range that reaches the current stored file end?</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a> still establishes a root only through a catalog-reachable AcroForm signature field, including inherited <code>/FT</code>, or catalog <code>/Perms</code> DocMDP, UR, or UR3. An arbitrary private <code>/PieceInfo</code> dictionary that looks like <code>/Type /Sig</code> does not meet that test.</p>
+
+      <h2>PFP010: require a current boundary when signatures exist</h2>
+
+      <p>PDFFence 1.18 adds the opt-in <code>require_current_file_signature_coverage</code> rule, <code>PFP010</code>. It fails only when an inspected PDF has one or more semantic signature roots and none of their ByteRanges reaches the current physical file end. An unsigned PDF passes: the rule does not demand that every document be signed.</p>
+
+      <p>This makes PFP010 complementary to PFP009, not a replacement. PFP009 answers “did current coverage fall?” PFP010 answers “is any current coverage present now?” A team can use the latter where it receives PDFs without a known-good predecessor and wants a generic review gate for an already-stale boundary.</p>
+
+      <pre><code>version: 1
+rules:
+  require_current_file_signature_coverage: true</code></pre>
+
+      <h2>A control with no coverage delta</h2>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.18.0">PDF Change Assurance Benchmark 1.18.0</a> adds a deterministic pair for exactly that distinction. Its baseline already contains a semantic field-root ByteRange before the current file end. The candidate appends another distinct incremental revision, but both aggregate coverage counts remain zero. The expected public changes are only the revision-chain and stored-byte signals; PFP009 has no regression to report, while PFP010 is the single policy finding.</p>
+
+      <p>The <a href="https://pdf-issues.pdfa.org/32000-2-2020/clause12.html">PDF 2.0 signature errata</a> and the <a href="https://pdfa.org/recently-identified-pdf-digital-signature-vulnerabilities/">PDF Association's signature-vulnerability advisory</a> motivate why byte-range boundaries deserve explicit review. They also make the limit clear: a static boundary is not a cryptographic verdict.</p>
+
+      <h2>Scope and validation</h2>
+
+      <p>PFP010 can flag a later update that a conforming signature validator may consider acceptable. PDFFence does not locate or validate <code>/Contents</code>, calculate a signed digest, validate certificates or trust chains, inspect transforms or permissions, or decide that an update is valid, permitted, safe, or malicious. It reports only aggregate counts and generic findings.</p>
+
+      <p>PDFFence passed 235 tests and Ruff; PDFCAB passed 85 tests and Ruff. The source candidate scores all 155 benchmark pairs. Two fixed-timestamp builds of both packages were byte-for-byte reproducible and passed Twine metadata checks. Clean paired wheel installs on Python 3.12 and 3.13, plus a clean paired Python 3.12 source-archive install, passed dependency checks, fixture verification, and the complete 155-pair score.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.18.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.18.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.18.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.18.0/pdffence-1.18.0-py3-none-any.whl
+
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
