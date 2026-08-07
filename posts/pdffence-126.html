@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.26 generates a private, deterministic PDF batch manifest from two safe directory trees without guessing renames or publishing paths.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-126.html">
+    <meta property="og:title" content="A batch manifest should be generated, not hand-written">
+    <meta property="og:description" content="PDFFence 1.26 creates a safe private starting manifest for large PDF handoffs.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-126.html">
+    <title>A batch manifest should be generated, not hand-written — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A batch manifest should be generated, not hand-written</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.26.0">PDFFence 1.26.0</a></p>
+
+      <p>A privacy-safe batch report needs an explicit manifest because it cannot safely reveal or guess the source paths that connect documents across a handoff. But hand-authoring that manifest for hundreds of PDFs is a poor trade: people make mistakes, and the safest review workflow becomes too tedious to use.</p>
+
+      <p><a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.26.0">PDFFence 1.26.0</a> adds <code>pdffence batch-init</code>, a deliberately narrow generator for the common case where a before and after tree preserve the same relative PDF paths.</p>
+
+      <h2>Generate the private map locally</h2>
+
+      <pre><code>pdffence batch-init baseline/ candidate/ review.json
+pdffence batch baseline/ candidate/ \
+  --manifest review.json --policy pdffence.yml --format sarif</code></pre>
+
+      <p>The first command recursively walks two selected local directory trees and writes a strict JSON manifest. It pairs only same-relative-path PDFs and assigns deterministic opaque labels such as <code>document-0001</code>. A file present only in one tree remains a one-sided entry, so the existing batch workflow reports it as added or removed and PFP016 can fail CI if the declared set changed.</p>
+
+      <p>The generated manifest itself contains relative paths. It is not an artifact and it is not a public report: store it where those paths are allowed, do not commit it casually, and do not upload it to a CI artifact. The command requires an explicit destination, writes atomically, and produces no path-bearing standard output.</p>
+
+      <h2>Why it does not “find” renames</h2>
+
+      <p>Two files with different paths are not reliably the same document merely because they look similar, have a comparable byte size, or share a name fragment. Treating a heuristic as identity creates the exact sort of silent omission a review tool should avoid.</p>
+
+      <p>So <code>batch-init</code> does not infer a rename. It writes separate added and removed entries. When a reviewer knows that <code>old/location.pdf</code> became <code>new/location.pdf</code>, they edit the private manifest to place those two paths under one existing opaque ID. The resulting batch report can then compare the real pair without publishing either path.</p>
+
+      <h2>A scan boundary, not a permissive file crawl</h2>
+
+      <p>The generator has hard limits: at most 100,000 scanned tree entries, the existing 4,096-document manifest limit, and the 256 KiB manifest limit. It rejects any symbolic link in the scanned tree rather than following or silently skipping it, rejects PDF-named non-regular entries and unrepresentable path forms, and detects repeated directory identities. Non-PDF files are ignored.</p>
+
+      <p>Those checks make the generated manifest a local starting point that is compatible with the same source-boundary rules used by <code>pdffence batch</code>. They do not make an arbitrary directory trustworthy, and they do not turn a scan into an assertion that it found every document relevant to a business process.</p>
+
+      <h2>Proved on a full paired corpus</h2>
+
+      <p>PDFFence 1.26 passed 273 tests, Ruff, and bytecode compilation. The new coverage exercises deterministic pairing, explicit unmatched paths, strict manifest round-tripping, no-root leakage, private marker-bearing path errors, force behavior, symbolic links, invalid names, and scanner/document/manifest-size limits.</p>
+
+      <p>For independent integration evidence, a fresh two-tree projection of all 161 <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.24.1">PDFCAB 1.24.1</a> pairs went through <code>batch-init</code>. The generated manifest contained 161 entries; its batch report recorded 161 changed documents with no policy findings. Every generator-routed entry's public snapshots, changes, and findings exactly matched the corresponding standalone <code>pdffence diff --format json</code> result.</p>
+
+      <p>The wheel and source archive built byte-for-byte reproducibly with a fixed timestamp, passed Twine checks, and passed clean Python 3.12/3.13 installations. The public GitHub wheel was re-downloaded, checksum-verified, installed from its published URL, and used to generate and review the 161-entry manifest again. A clean dependency audit found no known vulnerabilities.</p>
+
+      <h2>What this is—and is not</h2>
+
+      <p><code>batch-init</code> reduces manifest setup work; it does not replace review judgment. It neither renders PDFs, compares visual appearance, validates PDF conformance, executes actions, follows URIs, extracts text, decrypts documents, searches for malware, nor validates signatures, certificates, trust, authorization, or safety. It deliberately does not guess a rename or claim a tree is a complete business document set.</p>
+
+      <p>The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.26.0/docs/batch.md">batch-manifest contract</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.26.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.26.0/docs/validation.md">validation record</a> define the supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.26.0/pdffence-1.26.0-py3-none-any.whl</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
