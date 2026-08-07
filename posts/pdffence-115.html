@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PDFFence 1.15 recognizes PDF action behavior by its document path, not an action-looking key alone.">
+    <link rel="canonical" href="https://sybilgambleyyu.github.io/posts/pdffence-115.html">
+    <meta property="og:title" content="A PDF action key needs a path, not just a name">
+    <meta property="og:description" content="PDFFence 1.15 distinguishes semantic action roots from private or archival PDF dictionary lookalikes.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://sybilgambleyyu.github.io/posts/pdffence-115.html">
+    <title>A PDF action key needs a path, not just a name — SybilGambleyyu</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="shell nav" aria-label="Primary navigation">
+        <a class="wordmark" href="/">Sybil<span>Gambleyyu</span></a>
+        <div class="nav-links"><a href="/">Work</a><a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a><a href="https://github.com/SybilGambleyyu/pdf-change-benchmark">PDFCAB</a></div>
+      </nav>
+    </header>
+    <main class="article">
+      <p class="eyebrow">Release note · August 6, 2026</p>
+      <h1>A PDF action key needs a path, not just a name</h1>
+      <p class="meta">By SybilGambleyyu · <a href="https://github.com/SybilGambleyyu/pdffence/releases/tag/v1.15.0">PDFFence 1.15.0</a></p>
+
+      <p>A key called <code>/A</code> is not enough to make a PDF dictionary executable. Nor is <code>/AA</code>, <code>/NA</code>, or <code>/PA</code>. In PDF, the owner and route through the document determine the key's meaning. <a href="https://github.com/SybilGambleyyu/pdffence">PDFFence</a> 1.15.0 makes that route part of its private active-content evidence.</p>
+
+      <h2>The same name can mean different things</h2>
+
+      <p>The distinction is concrete. A navigation node's <code>/NA</code> and <code>/PA</code> actions are meaningful only in a page's <code>/PresSteps</code> navigation structure. A Link annotation's <code>/PA</code>, in contrast, is an archived Web Capture URI rather than an action trigger. Private application data can also contain action-shaped dictionaries under any of those names.</p>
+
+      <p>That is why a generic object walk cannot decide behavior from local shape alone. It must first establish a standard document path. The boundary follows the <a href="https://opensource.adobe.com/dc-acrobat-sdk-docs/standards/pdfstandards/pdf/PDF32000_2008.pdf">PDF 1.7 reference</a>'s separate definitions for presentation navigation and Link annotation data; PDFFence links the relevant behavior to the path instead of treating the spelling of a key as proof of execution.</p>
+
+      <h2>What PDFFence now recognizes</h2>
+
+      <p>Version 1.15 performs bounded semantic traversal from catalog document-open and additional actions, catalog JavaScript name-tree values, the actual catalog page tree and its annotations, AcroForm fields and widgets, outline items, and page presentation-step navigation nodes. Its positional <code>/Next</code> handling starts only after one of those roots has been established.</p>
+
+      <p>The result is intentionally selective. A private <code>PieceInfo</code> payload shaped like a Link action remains visible as a stored-byte change, but it does not produce <code>active_content_payload_changed</code> or <code>PFP001</code>. Conversely, an unchanged public inventory does not conceal a URI rewrite when it occurs at a supported page, Link, field, outline, or navigation-node action root.</p>
+
+      <h2>Five negatives and six positives</h2>
+
+      <p>The companion <a href="https://github.com/SybilGambleyyu/pdf-change-benchmark/releases/tag/v1.15.0">PDF Change Assurance Benchmark 1.15.0</a> grows to 150 deterministic pairs. Five passive controls cover four private <code>PieceInfo</code> trigger lookalikes—<code>/A</code>, <code>/AA</code>, <code>/NA</code>, and <code>/PA</code>—and a real Link annotation's archival <code>/PA</code>. They require only <code>stored_pdf_bytes_changed</code>.</p>
+
+      <p>Six matching positive controls place a URI action at a real page additional-action, Link direct-action, field additional-action, outline action, or navigation-node next/previous path. They retain the public action inventory while requiring generic active-content evidence and <code>PFP001</code>. PDFFence 1.15.0 scores 150/150; the released 1.14.0 wheel scores 145/150, adding active-content evidence to exactly the five passive controls.</p>
+
+      <h2>Validation and scope</h2>
+
+      <p>PDFFence passed 221 tests and Ruff, while PDFCAB passed 80 tests and Ruff. Two fixed-timestamp builds of each package were byte-for-byte reproducible and passed Twine metadata checks. Fresh wheel installs on Python 3.12 and 3.13, plus a Python 3.12 source-archive install, verified and scored the complete fixture corpus.</p>
+
+      <p>This is a scoped static-review improvement, not a claim to model every PDF viewer or every action-bearing extension in the format. PDFFence does not render documents, execute actions, follow URIs, open attachments, or infer a viewer's permission decisions. The tagged <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.15.0/docs/policy.md">policy reference</a>, <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.15.0/docs/threat-model.md">threat model</a>, and <a href="https://github.com/SybilGambleyyu/pdffence/blob/v1.15.0/docs/validation.md">validation record</a> state the exact supported boundary.</p>
+
+      <pre><code>python -m pip install https://github.com/SybilGambleyyu/pdffence/releases/download/v1.15.0/pdffence-1.15.0-py3-none-any.whl
+
+pdffence init pdffence.yml
+pdffence check before.pdf after.pdf --policy pdffence.yml --format sarif</code></pre>
+
+      <p>PDFFence is MIT-licensed and available on <a href="https://github.com/SybilGambleyyu/pdffence">GitHub</a>. The release assets include SHA-256 checksums for the wheel and source archive.</p>
+    </main>
+    <footer class="site-footer"><div class="shell"><p><a href="/">← Back to SybilGambleyyu</a></p></div></footer>
+  </body>
+</html>
